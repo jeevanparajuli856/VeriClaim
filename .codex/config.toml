@@ -1,0 +1,22 @@
+# Project-scoped Codex configuration. Project config loads only after the project is trusted.
+# External MCP servers are intentionally disabled in this reusable base repository.
+
+[agents]
+max_concurrent_threads_per_session = 4
+
+# When a real project selects Supabase for DEV/TEST, copy the example block from:
+#   .codex/config.supabase.example.toml
+# into this file, replace the DEV project_ref, then authenticate with:
+#   codex mcp login supabase
+#   codex mcp list
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp?project_ref=xyrwmtpyqdjxkhwzufmy&features=docs%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
+auth = "oauth"
+enabled = true
+required = false
+default_tools_approval_mode = "writes"
+startup_timeout_sec = 60
+tool_timeout_sec = 120
+
+# Keep write approvals enabled. Never point normal agent MCP at production.

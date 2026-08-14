@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project.schema.json",
+  "title": "Agentic Project Operational Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "components",
+    "verification",
+    "security"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "UNCONFIGURED",
+        "INCEPTION_DRAFT",
+        "INCEPTION_READY"
+      ]
+    },
+    "components": {
+      "type": "object",
+      "required": [
+        "backend",
+        "frontend",
+        "database"
+      ],
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/component"
+        },
+        "frontend": {
+          "$ref": "#/$defs/component"
+        },
+        "database": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "provider",
+            "migration_path"
+          ],
+          "properties": {
+            "enabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "provider": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "migration_path": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "verification": {
+      "$ref": "#/$defs/checkGroup"
+    },
+    "security": {
+      "$ref": "#/$defs/checkGroup"
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "path",
+        "technology"
+      ],
+      "properties": {
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "technology": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "checkGroup": {
+      "type": "object",
+      "required": [
+        "checks"
+      ],
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "check": {
+      "type": "object",
+      "required": [
+        "name",
+        "command",
+        "cwd",
+        "required"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

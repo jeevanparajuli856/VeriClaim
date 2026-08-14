@@ -1,0 +1,5 @@
+# Tooling required by the reusable agentic control plane and CI.
+# Keep application/runtime dependencies in the project-specific backend/frontend manifests.
+jsonschema>=4.26,<5
+openapi-spec-validator>=0.9,<1
+pytest>=9.1,<10

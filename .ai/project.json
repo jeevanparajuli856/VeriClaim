@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "status": "UNCONFIGURED",
+  "components": {
+    "backend": {
+      "enabled": null,
+      "path": "backend",
+      "technology": null
+    },
+    "frontend": {
+      "enabled": null,
+      "path": "frontend",
+      "technology": null
+    },
+    "database": {
+      "enabled": null,
+      "provider": null,
+      "migration_path": "supabase/migrations"
+    }
+  },
+  "verification": {
+    "checks": []
+  },
+  "security": {
+    "checks": []
+  }
+}

@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task.schema.json",
+  "title": "Agentic Development Task",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "title",
+    "type",
+    "status",
+    "priority",
+    "owners",
+    "spec",
+    "contracts",
+    "scope",
+    "permissions",
+    "state_write_policy",
+    "dependencies",
+    "acceptance_criteria",
+    "created_by"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_-]*-[0-9]+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "feature",
+        "bug",
+        "refactor",
+        "security",
+        "infra",
+        "research"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PROPOSED",
+        "PLANNING",
+        "ARCHITECTURE_READY",
+        "CONTRACT_READY",
+        "IMPLEMENTATION",
+        "INTEGRATION",
+        "SECURITY_REVIEW",
+        "REVIEW",
+        "PR_READY",
+        "DONE",
+        "BLOCKED",
+        "CANCELLED"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "owners": {
+      "type": "object",
+      "required": [
+        "orchestrator",
+        "architecture",
+        "database",
+        "backend",
+        "frontend",
+        "tester",
+        "security",
+        "review"
+      ],
+      "properties": {
+        "orchestrator": {
+          "type": "string"
+        },
+        "architecture": {
+          "type": "string"
+        },
+        "database": {
+          "type": "string"
+        },
+        "backend": {
+          "type": "string"
+        },
+        "frontend": {
+          "type": "string"
+        },
+        "tester": {
+          "type": "string"
+        },
+        "security": {
+          "type": "string"
+        },
+        "review": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "string"
+    },
+    "contracts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "database",
+        "backend",
+        "frontend",
+        "other"
+      ],
+      "properties": {
+        "database": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "backend": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frontend": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "other": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "object",
+      "required": [
+        "orchestrator",
+        "architecture",
+        "database",
+        "backend",
+        "frontend",
+        "tester",
+        "security",
+        "review"
+      ],
+      "properties": {
+        "orchestrator": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "architecture": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "database": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "backend": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "frontend": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "tester": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "security": {
+          "$ref": "#/$defs/permissionBlock"
+        },
+        "review": {
+          "$ref": "#/$defs/permissionBlock"
+        }
+      },
+      "additionalProperties": false
+    },
+    "state_write_policy": {
+      "type": "object",
+      "required": [
+        "task_file",
+        "single_writer",
+        "worker_agents_must_use_reports"
+      ],
+      "properties": {
+        "task_file": {
+          "type": "string"
+        },
+        "single_writer": {
+          "type": "string",
+          "const": "orchestrator"
+        },
+        "worker_agents_must_use_reports": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_by": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "permissionBlock": {
+      "type": "object",
+      "required": [
+        "allowed_write_paths",
+        "read_only_paths",
+        "forbidden_paths"
+      ],
+      "properties": {
+        "allowed_write_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "read_only_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

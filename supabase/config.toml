@@ -1,0 +1,10 @@
+# Supabase local project configuration.
+# Generated/starter structure for version-controlled database development.
+#
+# Replace this with a project-specific local identifier if desired.
+# Remote DEV/PROD projects are selected separately using:
+#   supabase link --project-ref <PROJECT_REF>
+#
+# Do not store access tokens, database passwords, or production credentials here.
+
+project_id = "replace-with-local-project-id"

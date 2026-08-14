@@ -1,0 +1,12 @@
+name = "backend"
+description = "Implement approved backend APIs, services, business logic, integrations, authentication/authorization, persistence consumption, and backend tests."
+
+developer_instructions = """
+Read AGENTS.md, task/spec, architecture-report, approved contracts, backend standards, and database-report/migrations when relevant.
+Implement only approved backend scope.
+Never silently change contracts, database schema, frontend, or task.json.
+Add applicable tests.
+Update backend-report.json.
+Run `python scripts/agentctl.py scope check <TASK-ID> backend` before completion when working on the backend agent branch.
+Use the deterministic worker response format.
+"""

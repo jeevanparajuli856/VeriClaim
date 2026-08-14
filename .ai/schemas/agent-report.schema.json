@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-report.schema.json",
+  "title": "Agent Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "agent",
+    "status",
+    "summary",
+    "files_changed",
+    "contracts_used",
+    "tests",
+    "blockers",
+    "notes_for_next_agent"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "COMPLETE",
+        "PARTIAL",
+        "BLOCKED",
+        "FAILED",
+        "CHANGES_REQUIRED"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contracts_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests": {
+      "type": "object",
+      "required": [
+        "passed",
+        "commands"
+      ],
+      "properties": {
+        "passed": {
+          "type": "boolean"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "description"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "notes_for_next_agent": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "database_changes": {
+      "type": "object",
+      "required": [
+        "provider",
+        "environment",
+        "mcp_used",
+        "migration_files",
+        "applied_migrations",
+        "rls_reviewed",
+        "indexes_reviewed",
+        "advisors_checked",
+        "live_verification"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        },
+        "mcp_used": {
+          "type": "boolean"
+        },
+        "migration_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "applied_migrations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rls_reviewed": {
+          "type": "boolean"
+        },
+        "indexes_reviewed": {
+          "type": "boolean"
+        },
+        "advisors_checked": {
+          "type": "boolean"
+        },
+        "live_verification": {
+          "type": "string",
+          "enum": [
+            "NOT_RUN",
+            "PASSED",
+            "FAILED",
+            "BLOCKED"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

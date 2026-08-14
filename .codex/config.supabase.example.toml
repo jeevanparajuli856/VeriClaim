@@ -1,0 +1,19 @@
+# Supabase MCP example for a REAL project that has selected Supabase.
+#
+# Copy this table into `.codex/config.toml`, then replace the project ref.
+# Use a DEVELOPMENT/TEST project only.
+#
+# Supabase supports project scoping and feature-group restriction through
+# URL parameters. The database, debugging, development, and docs groups are
+# sufficient for the database-development workflow in this repo.
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp?project_ref=Project_ref&features=docs%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
+auth = "oauth"
+enabled = true
+required = false
+default_tools_approval_mode = "writes"
+startup_timeout_sec = 60
+tool_timeout_sec = 120
+
+#command: codex mcp login supabase

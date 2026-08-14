@@ -1,0 +1,12 @@
+-- seed.sql
+-- Development/test seed DATA ONLY.
+--
+-- Supabase applies seed data after migrations during local reset workflows.
+-- Keep schema changes in supabase/migrations/, not here.
+--
+-- Use synthetic/de-identified development data only.
+-- Never commit production secrets or real sensitive records.
+--
+-- Example:
+-- insert into public.example (id)
+-- values ('00000000-0000-0000-0000-000000000001');
