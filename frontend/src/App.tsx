@@ -68,10 +68,18 @@ export const App: React.FC = () => {
       setTriggerElement(trigger);
     }
 
-    // Scroll evidence explorer into view smoothly
+    // Scroll evidence explorer into view respecting user motion preference
     const explorerEl = document.getElementById('evidence-explorer');
     if (explorerEl) {
-      explorerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      explorerEl.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
     }
   }, []);
 

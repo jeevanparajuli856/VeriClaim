@@ -211,7 +211,7 @@ test.describe('VeriClaim Dashboard E2E', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('evidence reference navigation and focus return flow', async ({ page }) => {
+  test('evidence reference navigation, visible destination focus outline, and return flow', async ({ page }) => {
     await page.route('**/api/v1/analyze-demo', async (route) => {
       await route.fulfill({
         status: 200,
@@ -229,16 +229,81 @@ test.describe('VeriClaim Dashboard E2E', () => {
     const chipRef = page.locator('.findings-grid').getByRole('button', { name: 'sig:DATE-001:0001' });
     await chipRef.click();
 
-    // Verify Evidence Explorer is visible and return button is available
+    // Verify Evidence Explorer detail heading is focused
+    const detailHeading = page.locator('#selected-evidence-focus-target .detail-title');
+    await expect(detailHeading).toBeVisible();
+    await expect(detailHeading).toBeFocused();
+
+    // Verify visible AA focus indicator on destination heading
+    const outlineStyle = await detailHeading.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        style: computed.outlineStyle,
+        width: computed.outlineWidth,
+      };
+    });
+    expect(outlineStyle.style).not.toBe('none');
+    expect(parseFloat(outlineStyle.width)).toBeGreaterThanOrEqual(2);
+
+    // Verify return button and return focus
     const returnBtn = page.getByRole('button', { name: '← Return to trigger' });
     await expect(returnBtn).toBeVisible();
-
-    // Click return button to restore focus
     await returnBtn.click();
     await expect(chipRef).toBeFocused();
   });
 
-  test('handles duplicate evidence IDs by rendering inert targets and integrity warning', async ({ page }) => {
+  test('handles missing evidence reference with visible destination focus outline', async ({ page }) => {
+    const dataWithMissingRef = {
+      ...mockSuccessData,
+      gemini: {
+        ...mockSuccessData.gemini,
+        candidate_findings: [
+          {
+            title: 'Missing Reference Finding',
+            explanation: 'Points to unindexed fact.',
+            evidence_refs: ['ev:missing:/unindexed'],
+          },
+        ],
+      },
+    };
+
+    await page.route('**/api/v1/analyze-demo', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(dataWithMissingRef),
+      });
+    });
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Run analysis' }).click();
+
+    // Click missing reference chip
+    const chipRef = page.locator('.findings-grid').getByRole('button', { name: 'ev:missing:/unindexed' });
+    await chipRef.click();
+
+    // Verify missing target alert heading is focused with visible outline
+    const missingHeading = page.getByRole('heading', { name: 'Evidence Target Not Found' });
+    await expect(missingHeading).toBeVisible();
+    await expect(missingHeading).toBeFocused();
+
+    const outlineStyle = await missingHeading.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        style: computed.outlineStyle,
+        width: computed.outlineWidth,
+      };
+    });
+    expect(outlineStyle.style).not.toBe('none');
+    expect(parseFloat(outlineStyle.width)).toBeGreaterThanOrEqual(2);
+
+    // Verify return restores trigger focus
+    const returnBtn = page.getByRole('button', { name: '← Return to trigger' });
+    await returnBtn.click();
+    await expect(chipRef).toBeFocused();
+  });
+
+  test('handles duplicate evidence IDs with inert target, visible focus outline, and return flow', async ({ page }) => {
     const dataWithDuplicates = {
       ...mockSuccessData,
       evidence_index: [
@@ -269,9 +334,25 @@ test.describe('VeriClaim Dashboard E2E', () => {
     const chipRef = page.locator('.findings-grid').getByRole('button', { name: 'sig:DATE-001:0001' });
     await chipRef.click();
 
-    // Verify inert duplicate target alert is displayed and focused
-    await expect(page.getByRole('heading', { name: 'Duplicate Evidence Target (Inert)' })).toBeVisible();
-    await expect(page.getByText(/Target navigation is made inert to prevent ambiguous evidence attribution/i)).toBeVisible();
+    // Verify inert duplicate target alert is displayed and focused with visible outline
+    const duplicateHeading = page.getByRole('heading', { name: 'Duplicate Evidence Target (Inert)' });
+    await expect(duplicateHeading).toBeVisible();
+    await expect(duplicateHeading).toBeFocused();
+
+    const outlineStyle = await duplicateHeading.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        style: computed.outlineStyle,
+        width: computed.outlineWidth,
+      };
+    });
+    expect(outlineStyle.style).not.toBe('none');
+    expect(parseFloat(outlineStyle.width)).toBeGreaterThanOrEqual(2);
+
+    // Verify return restores focus
+    const returnBtn = page.getByRole('button', { name: '← Return to trigger' });
+    await returnBtn.click();
+    await expect(chipRef).toBeFocused();
   });
 
   test('handles typed fallback state when Gemini fails validation', async ({ page }) => {
@@ -346,7 +427,7 @@ test.describe('VeriClaim Dashboard E2E', () => {
     await expect(page.getByRole('heading', { name: 'Source & Sample Metadata' })).toBeVisible();
   });
 
-  test('supports reduced-motion preference without layout breakages', async ({ page }) => {
+  test('supports reduced-motion preference during evidence navigation with non-animated scroll', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
 
     await page.route('**/api/v1/analyze-demo', async (route) => {
@@ -358,9 +439,36 @@ test.describe('VeriClaim Dashboard E2E', () => {
     });
 
     await page.goto('/');
-    await page.getByRole('button', { name: 'Run analysis' }).click();
 
+    // Spy on scrollIntoView to verify non-animated scroll behavior when reduced motion is preferred
+    await page.evaluate(() => {
+      (window as unknown as { __scrollIntoViewCalls: unknown[] }).__scrollIntoViewCalls = [];
+      const orig = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = function (arg?: boolean | ScrollIntoViewOptions) {
+        (window as unknown as { __scrollIntoViewCalls: unknown[] }).__scrollIntoViewCalls.push(arg);
+        return orig.apply(this, [arg]);
+      };
+    });
+
+    await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.getByRole('heading', { name: 'Deterministic Rule Checks' })).toBeVisible();
+
+    // Activate evidence navigation under reduced motion
+    const chipRef = page.locator('.findings-grid').getByRole('button', { name: 'sig:DATE-001:0001' });
+    await chipRef.click();
+
+    // Verify non-animated scroll behavior was requested
+    const scrollCalls = await page.evaluate(() => {
+      return (window as unknown as { __scrollIntoViewCalls: unknown[] }).__scrollIntoViewCalls;
+    });
+    expect(scrollCalls.length).toBeGreaterThan(0);
+    expect(scrollCalls[0]).toEqual(expect.objectContaining({ behavior: 'auto' }));
+
+    // Verify destination received focus
+    const detailHeading = page.locator('#selected-evidence-focus-target .detail-title');
+    await expect(detailHeading).toBeFocused();
+
+    // Verify responsive overflow
     const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(hasOverflow).toBe(false);
   });
