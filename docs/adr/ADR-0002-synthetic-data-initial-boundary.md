@@ -16,6 +16,12 @@ Data described as de-identified is not automatically inside this boundary: its p
 
 Introducing real PHI, production claims, or production system connectivity requires a separate explicit human approval and a revised privacy, security, compliance, data-governance, architecture, and operating assessment.
 
+### Inception refinement — 2026-08-14
+
+The initial local development source is the repository-root `dataset/` directory (`../dataset` from the planned `backend/` working directory). It contains CMS Blue Button sample FHIR R4 Patient, Coverage, and ExplanationOfBenefit examples for a single synthetic beneficiary. This replaces the earlier assumption that Synthea would be evaluated first; Synthea remains an optional future source if additional synthetic scenarios require it.
+
+Selection does not waive provenance or privacy controls. Before the corpus is frozen as a benchmark, its source, license/usage basis, immutable version or content hashes, transformations, limitations, and synthetic classification must be recorded. Application code must treat it as read-only, untrusted input and must never write credentials, prompts, traces, or generated outputs into it.
+
 ## Alternatives considered
 
 - **Use real claims during initial research:** rejected because it is unnecessary for inception and introduces unsupported risk and obligations.
@@ -45,4 +51,3 @@ Introducing real PHI, production claims, or production system connectivity requi
 
 - Dataset provenance, license, generator/version, perturbations, and benchmark splits must be recorded.
 - Production credentials and live healthcare integrations are not needed for initial work.
-

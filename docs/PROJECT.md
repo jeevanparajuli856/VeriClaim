@@ -20,7 +20,7 @@ VeriClaim is a governed Agentic AI research and decision-support platform that h
 
 ### Status
 
-Inception draft. The product and safety boundaries are established, but material scope, stack, provider, data, security, and deployment choices remain subject to approval.
+**Inception ready.** On 2026-08-14, the sponsor approved the recommended first-milestone package R-001 through R-014, with two refinements: the existing CMS Blue Button sample FHIR data at repository-root `dataset/` is the initial local development dataset (`../dataset` from `backend/`), and Vertex AI Gemini is the agent-development LLM provider when credentials are configured later through the local environment. Questions Q-013 through Q-019 remain deliberately deferred to their named design milestones and do not block the first foundation task.
 
 ---
 
@@ -91,7 +91,7 @@ AI agents, ML models, and external providers are system actors, not accountable 
 3. **Audit an investigation** — reconstruct significant model, prompt, retrieval, tool, governance, and human-review activity using a stable trace identifier.
 4. **Evaluate system variants** — compare at least the conceptual variants: single LLM, single LLM plus RAG, multi-agent, multi-agent plus RAG, and multi-agent plus RAG plus governance.
 
-### Recommended for the first demonstration
+### Confirmed for the first demonstration
 
 1. **Ingest a bounded synthetic corpus** — import a deliberately small, versioned FHIR R4 dataset and reject malformed or unsupported inputs.
 2. **Score transparent risk signals** — combine deterministic/heuristic baselines with an interpretable ML baseline and retain feature-level explanations.
@@ -112,7 +112,7 @@ AI agents, ML models, and external providers are system actors, not accountable 
 - Human review and recorded feedback.
 - Reproducible evaluation across ML, retrieval, LLM/RAG, agentic, governance, human-review, latency, and cost dimensions.
 
-### Recommended / proposed
+### Approved initial direction
 
 - A narrow end-to-end vertical slice before broader payer, policy, FHIR, model, or deployment coverage.
 - A single deployable application with clearly separated modules before considering independently deployed microservices.
@@ -132,14 +132,14 @@ AI agents, ML models, and external providers are system actors, not accountable 
 - Define a research path for risk analysis, policy retrieval, AI-assisted investigation, governance, audit, and human review.
 - Identify material decisions without selecting technologies or vendors by implication.
 
-### Recommended first-demonstration scope (approval required)
+### Confirmed first-demonstration scope
 
 - One synthetic line of business and one bounded claim scenario family.
 - Batch or controlled submission of synthetic FHIR R4 claim bundles; no live production feed.
 - A versioned public/synthetic policy corpus with jurisdiction and effective-date metadata.
 - Transparent anomaly/duplicate/baseline signals plus one interpretable supervised or semi-supervised ML baseline if labels justify it.
 - Bounded investigation workflows, a governance gate, an analyst case view, and immutable-style audit records.
-- Research execution in a local/containerized or isolated development environment.
+- Research execution in a local Docker-based development environment, with Vertex AI Gemini as the only approved external agent-development LLM endpoint when explicitly configured.
 
 ### Out of scope for the first demonstration
 
@@ -214,6 +214,7 @@ AI agents, ML models, and external providers are system actors, not accountable 
 
 ### Data involved
 
+- The initial local development corpus is the repository-root `dataset/` directory (addressed as `../dataset` from `backend/`). It currently contains CMS Blue Button sample FHIR R4 Patient, Coverage, and ExplanationOfBenefit data for a single synthetic beneficiary.
 - Synthetic patient, coverage, claim, explanation-of-benefit, provider, practitioner, and organization records.
 - Public or project-authored policy documents and their source/version metadata.
 - Derived features, risk scores, evidence links, embeddings, model output, governance results, and evaluation metrics.
@@ -229,15 +230,17 @@ AI agents, ML models, and external providers are system actors, not accountable 
 ### Data boundaries
 
 - Approved synthetic/public sources enter through controlled ingestion.
+- The local `dataset/` corpus is development input, not an application write target. Its files must remain versioned/provenanced, must be treated as untrusted input, and must not receive generated secrets, credentials, traces, or model output.
 - Original source payloads remain logically separated from validated normalized records and derived features.
 - Only the minimum necessary context may be sent to model, embedding, or reranking providers.
+- Approved synthetic context may be sent to Vertex AI Gemini for agent development only after credentials, project/region, model identifier, retention/data-use settings, and cost controls are explicitly configured. Real PHI, production claims, secrets, and unnecessary identifiers remain prohibited.
 - Retrieval content is untrusted input and cannot directly alter instructions, permissions, or tool policy.
 - Exports must preserve source attribution while excluding secrets, hidden prompts, and unnecessary identity data.
 
 ### Open privacy/compliance questions
 
-- Which exact synthetic/public datasets and licenses are approved?
-- Are any external model/embedding providers allowed to receive synthetic healthcare-shaped data, and under what retention/training terms?
+- What license/usage record and immutable version identifier should accompany the selected Blue Button sample corpus before the benchmark is frozen?
+- Which approved Vertex AI project/region/model settings and contractual retention/training terms apply before the first call, and may any future embedding/reranking provider receive synthetic healthcare-shaped data?
 - What identity, audit, and evaluation-data retention periods apply?
 - What proof would be required before accepting a dataset described as de-identified rather than fully synthetic?
 - Which geographic or contractual data-residency constraints apply to any future cloud deployment?
@@ -277,16 +280,16 @@ No document in this repository should describe VeriClaim as HIPAA compliant unle
 
 | System / provider | Purpose | Status |
 |---|---|---|
-| HL7 FHIR R4 | Healthcare interoperability representation | Candidate standard; exact profiles/resources open |
-| Synthea | Synthetic clinical record generation | Recommended initial source; approval and claim-fit validation required |
-| CMS Blue Button sandbox/synthetic data | Synthetic Medicare-like data/API evaluation | Candidate; exact use and access requirements open |
+| HL7 FHIR R4 | Healthcare interoperability representation | Approved initial standard; exact project profile remains a DATA-001 decision |
+| Local `dataset/` (CMS Blue Button sample data) | Initial synthetic development corpus containing Patient, Coverage, and ExplanationOfBenefit examples | Approved for local development; provenance/license/version and benchmark fitness must be recorded before benchmark freeze |
+| Synthea | Optional future synthetic clinical record generation | Not selected for the initial corpus; may be evaluated later if additional scenarios require generated data |
 | CMS coverage/policy sources | Public policy research corpus | Recommended bounded source; licensing, versioning, and ingestion method open |
-| Model provider | LLM reasoning and/or embeddings/reranking | Unknown; data terms, quality, cost, residency, and credentials require approval |
-| Identity provider | Authentication and identity lifecycle | Unknown; depends on deployment and user model |
-| Database/vector storage provider | Operational records, policy index, traces, and evaluation data | Unknown; PostgreSQL/pgvector is recommended but not approved |
-| Cloud provider | Hosted deployment, storage, networking, and observability | Unknown; local isolated development is recommended first |
+| Google Cloud Vertex AI Gemini | Agent-development LLM reasoning | Approved for synthetic-only development when later configured through environment/ADC; exact project, region, model, quotas, data terms, and credentials are intentionally not stored in source control |
+| Identity provider | Authentication and identity lifecycle | Standards-based OIDC approved; a local/test provider may be selected during platform design, while hosted identity remains deferred |
+| PostgreSQL with pgvector | Operational records, policy index, traces, and evaluation data | Approved for local development with native full-text search and Git-tracked migrations; managed hosting remains unselected |
+| Cloud provider | Hosted application deployment, storage, networking, and observability | No hosted application platform selected; local Docker development is approved first, and Vertex AI approval does not approve general Google Cloud hosting |
 
-No external integration is approved for production or write-capable use by this inception draft.
+No external integration is approved for production or write-capable claim-system use. Vertex AI Gemini is approved only as the bounded, synthetic-only development LLM boundary described above.
 
 ---
 
@@ -309,7 +312,7 @@ No external integration is approved for production or write-capable use by this 
 ### Time / resource
 
 - Budget, delivery timeline, team size, expected case volume, and cloud/provider spending authority are not yet provided.
-- Model/provider credentials and access are not approved.
+- Vertex AI credentials and access will be configured later when needed and must remain outside Git; no credential is required to begin the foundation task.
 
 ---
 
@@ -339,69 +342,66 @@ The project is successful when it can demonstrate, on an approved versioned synt
 
 | ID | Assumption | Why needed | Validation needed |
 |---|---|---|---|
-| A-001 | The first release is a research demonstration, not an operational payer product | Narrows safety, compliance, and integration scope | Sponsor approval of the first-demonstration scope |
 | A-002 | FHIR R4 is the initial interoperability baseline | Provides a stable healthcare representation | Dataset fit assessment and approved minimal resource/profile list |
-| A-003 | Synthea plus controlled claim perturbations can seed the benchmark | Avoids PHI while enabling reproducibility | Data-quality, licensing, representativeness, and scenario review |
 | A-004 | A bounded public CMS policy corpus is sufficient for initial retrieval research | Enables source-grounded experiments | Source/license/version review and domain-expert relevance check |
-| A-005 | A modular monolith is sufficient for the first demonstration | Reduces distributed-system complexity | Workload, isolation, and deployment review |
 | A-006 | Human reviewers can provide meaningful structured feedback | Supports evaluation and escalation | Define reviewer qualifications, rubric, and agreement process |
-| A-007 | External AI services may be usable with approved synthetic inputs | Enables rapid research | Approve provider terms, retention/training settings, cost, and credentials |
 | A-008 | FHIR Provenance/AuditEvent supplement rather than replace detailed internal traces | Healthcare interoperability records differ from AI telemetry | Prototype mapping and audit-requirement review |
 
----
-
-## 16. Recommended Decisions
-
-| ID | Recommendation | Rationale | Human approval needed? |
-|---|---|---|---|
-| R-001 | Make the first milestone a narrow, end-to-end research vertical slice using only synthetic data | Tests the core safety/research thesis without premature breadth | Yes |
-| R-002 | Use FHIR R4 with a project-defined minimal profile; evaluate Synthea first and Blue Button sandbox as a supplemental source | Keeps interoperability explicit while limiting the initial surface | Yes |
-| R-003 | Start with a Python modular-monolith backend using FastAPI and Pydantic | Fits healthcare parsing, ML, evaluation, and explicit typed boundaries | Yes |
-| R-004 | Include a minimal TypeScript/Next.js analyst UI in the first vertical slice | Human review is easier to validate through an actual review workflow | Yes |
-| R-005 | Use PostgreSQL with pgvector and native full-text search, with Git-tracked migrations; choose hosting separately | Supports structured data, audit relationships, and hybrid retrieval without an extra vector vendor initially | Yes |
-| R-006 | Use local Docker-based development first; defer AWS/Azure selection until a hosted demonstration is justified | Avoids early cloud cost, credentials, and residency commitments | Yes |
-| R-007 | Use standards-based OIDC and deny-by-default RBAC; select the identity provider based on the approved deployment | Avoids custom authentication and preserves a clear authorization boundary | Yes |
-| R-008 | Implement bounded orchestration as a deterministic state machine with a coordinator and typed specialist tools; represent research variants behind a common interface | Makes autonomy limits and comparative evaluation testable | Yes |
-| R-009 | Use provider adapters for LLM, embeddings, and reranking, but approve one initial provider/model set with explicit data-use and cost controls | Portability is useful, while reproducibility requires a pinned starting configuration | Yes |
-| R-010 | Begin risk research with deterministic baselines and interpretable scikit-learn models; add boosted/deep models only when data and metrics justify them | Produces transparent baselines and avoids overstating synthetic labels | Yes |
-| R-011 | Adopt NIST AI RMF as a governance vocabulary and OWASP guidance as threat input, without claiming certification or compliance | Supplies useful structure while keeping project-specific controls evidence-based | Yes |
-| R-012 | Use OpenTelemetry-compatible traces/metrics/logs and keep the first backend, worker, and UI in one deployment boundary unless isolation needs prove otherwise | Enables cross-component evaluation without premature infrastructure | Yes |
-| R-013 | Establish hard per-case tool, token, time, recursion, and cost budgets before enabling autonomous tool loops | Limits runaway behavior and makes cost a testable governance property | Yes |
-| R-014 | Treat all retrieved content and model/tool output as untrusted; require origin metadata and governance checks before analyst-ready status | Directly addresses injection, poisoning, and unsupported-output risk | No; this follows confirmed safety requirements |
+The former assumptions that the first milestone might not be approved (A-001), that Synthea would seed the initial benchmark (A-003), that the modular monolith was merely provisional (A-005), and that an external AI provider might be allowed (A-007) are obsolete. They were resolved by the 2026-08-14 approval package: the first milestone and modular-monolith direction are confirmed, the existing Blue Button sample corpus is the initial dataset, and Vertex AI Gemini is approved within the synthetic-only development boundary.
 
 ---
 
-## 17. Open Questions
+## 16. Approved Inception Decisions
 
-### Approval package blocking `INCEPTION_READY`
-
-| ID | Question | Why it matters | Blocks first task? |
+| ID | Approved decision | Rationale | Status |
 |---|---|---|---|
-| Q-001 | Approve the narrow synthetic end-to-end vertical slice in R-001 as the first milestone, or prioritize a different milestone? | Determines product scope and backlog ordering | Yes |
-| Q-002 | Approve backend, frontend, and database as enabled components with the technologies in R-003 through R-005? | Required by `.ai/project.json` and verification planning | Yes |
-| Q-003 | Approve the initial FHIR/data direction in R-002, including the initial synthetic-only boundary and a later profile-design task? | Determines dataset acquisition and interoperability work | Yes |
-| Q-004 | Approve local Docker development first, with no cloud provider selected yet, as in R-006? | Establishes the initial platform, credential, cost, and data boundary | Yes |
-| Q-005 | Is standards-based OIDC plus analyst/governance/operator/admin RBAC the right target, and may the first local demo use a local/test identity provider? | Defines identity and authorization trust boundaries | Yes |
-| Q-006 | Approve bounded deterministic orchestration and the common-variant interface in R-008? | Determines agent autonomy, permissions, and evaluation architecture | Yes |
-| Q-007 | May external model/embedding services receive approved synthetic healthcare-shaped data, and which provider/model/data-retention/cost constraints apply? | Determines provider choice, privacy controls, reproducibility, credentials, and cost | Yes |
-| Q-008 | Approve PostgreSQL/pgvector hybrid retrieval and Git-tracked migrations, while deferring managed hosting? | Resolves the operational database/vector-storage choice | Yes |
-| Q-009 | Approve the transparent ML baseline in R-010 and acknowledge that synthetic-label results will not be represented as clinical or production validity? | Defines the first ML research path and claims boundary | Yes |
-| Q-010 | Approve NIST AI RMF/OWASP as non-certifying reference frameworks and the fail-closed governance boundary? | Defines governance vocabulary and release-blocking behavior | Yes |
-| Q-011 | What initial per-case and monthly experiment cost ceilings should apply, or should the first task measure baselines before ceilings are finalized? | Controls provider usage and architecture tradeoffs | Yes |
-| Q-012 | Approve OpenTelemetry-compatible observability and local-only telemetry for the first milestone? | Determines trace format and external telemetry exposure | Yes |
+| R-001 | Make the first milestone a narrow, end-to-end research vertical slice using only synthetic data | Tests the core safety/research thesis without premature breadth | Approved 2026-08-14 |
+| R-002 | Use FHIR R4 with a project-defined minimal profile; use the existing local Blue Button sample corpus first and consider Synthea only if later scenarios need it | Keeps interoperability explicit while limiting the initial surface | Approved with dataset refinement 2026-08-14 |
+| R-003 | Start with a Python modular-monolith backend using FastAPI and Pydantic | Fits healthcare parsing, ML, evaluation, and explicit typed boundaries | Approved 2026-08-14 |
+| R-004 | Include a minimal TypeScript/Next.js analyst UI in the first vertical slice | Human review is easier to validate through an actual review workflow | Approved 2026-08-14 |
+| R-005 | Use PostgreSQL with pgvector and native full-text search, with Git-tracked migrations; choose hosting separately | Supports structured data, audit relationships, and hybrid retrieval without an extra vector vendor initially | Approved 2026-08-14 |
+| R-006 | Use local Docker-based development first; defer hosted application-cloud selection until justified | Avoids early cloud cost, credentials, and residency commitments | Approved 2026-08-14 |
+| R-007 | Use standards-based OIDC and deny-by-default RBAC; allow a local/test identity provider for the first demonstration | Avoids custom authentication and preserves a clear authorization boundary | Approved 2026-08-14 |
+| R-008 | Implement bounded orchestration as a deterministic state machine with a coordinator and typed specialist tools; represent research variants behind a common interface | Makes autonomy limits and comparative evaluation testable | Approved 2026-08-14 |
+| R-009 | Use provider adapters; select Vertex AI Gemini for agent-development LLM calls, configured later outside Git; select embedding/reranking models only when a task requires them | Portability is useful, while reproducibility requires pinned model/configuration identifiers | Approved with provider refinement 2026-08-14 |
+| R-010 | Begin risk research with deterministic baselines and interpretable scikit-learn models; add boosted/deep models only when data and metrics justify them | Produces transparent baselines and avoids overstating synthetic labels | Approved 2026-08-14 |
+| R-011 | Adopt NIST AI RMF as a governance vocabulary and OWASP guidance as threat input, without claiming certification or compliance | Supplies useful structure while keeping project-specific controls evidence-based | Approved 2026-08-14 |
+| R-012 | Use OpenTelemetry-compatible traces/metrics/logs and keep the first backend, worker, and UI in one deployment boundary unless isolation needs prove otherwise | Enables cross-component evaluation without premature infrastructure | Approved 2026-08-14 |
+| R-013 | Establish hard per-case tool, token, time, recursion, and cost budgets before enabling autonomous tool loops; use the foundation task to measure baselines before final ceilings | Limits runaway behavior and makes cost a testable governance property | Approved 2026-08-14 |
+| R-014 | Treat all retrieved content and model/tool output as untrusted; require origin metadata and governance checks before analyst-ready status | Directly addresses injection, poisoning, and unsupported-output risk | Confirmed safety requirement |
+
+---
+
+## 17. Decision Resolution and Deferred Questions
+
+### Approval package resolved for `INCEPTION_READY`
+
+| ID | Resolution | Result |
+|---|---|---|
+| Q-001 | Approve R-001. | The narrow synthetic end-to-end vertical slice is the first milestone. |
+| Q-002 | Approve R-003 through R-005. | Backend, frontend, and database are enabled using Python/FastAPI/Pydantic, TypeScript/Next.js, and PostgreSQL/pgvector respectively. |
+| Q-003 | Approve the FHIR R4 and synthetic-only direction, refined to use repository-root `dataset/` first. | Exact FHIR profiles remain a DATA-001 design decision; Synthea is no longer assumed to be the first source. |
+| Q-004 | Approve local Docker development first. | No hosted application cloud is selected; using Vertex AI does not approve general Google Cloud hosting. |
+| Q-005 | Approve standards-based OIDC, deny-by-default RBAC, and a local/test identity provider for the first demo. | Detailed role permissions and provider selection belong to PLATFORM-001. |
+| Q-006 | Approve R-008. | Orchestration is bounded and deterministic, with typed specialist tools and a common experiment interface. |
+| Q-007 | Approve Vertex AI Gemini for agent-development LLM use with approved synthetic context. | Credentials are configured later outside Git; exact project, region, model, quotas, data terms, and cost controls must be pinned before the first external call. Embedding/reranking providers remain task-scoped decisions. |
+| Q-008 | Approve R-005. | PostgreSQL/pgvector, native full-text search, and Git-tracked migrations are the initial persistence/retrieval platform; managed hosting is deferred. |
+| Q-009 | Approve R-010 and its validity limitation. | Transparent baselines come first and synthetic results cannot be represented as clinical or production validity. |
+| Q-010 | Approve R-011 and the fail-closed governance boundary. | NIST AI RMF and OWASP are non-certifying references, not compliance claims. |
+| Q-011 | Measure baselines in FOUNDATION-001 before finalizing ceilings. | No autonomous tool loop may be enabled until hard per-case limits are approved. |
+| Q-012 | Approve OpenTelemetry-compatible observability and local-only telemetry. | External telemetry remains prohibited until separately approved. |
 
 ### Important questions that need not block the first foundation task
 
 | ID | Question | Why it matters | Blocks first task? |
 |---|---|---|---|
-| Q-013 | Which precise synthetic claim scenarios, line of business, and policy jurisdiction should form the benchmark? | Affects relevance and expert validation | No; resolve during benchmark design |
-| Q-014 | Which exact FHIR profiles, required fields, terminology bindings, and validation packages are needed? | Prevents accidental semantic invention | No; resolve in a healthcare-data design task |
+| Q-013 | Which scenarios, line of business, and policy jurisdiction should be built from the selected Blue Button sample corpus, and what additional synthetic fixtures are needed? | Affects relevance and expert validation | No; resolve during benchmark design |
+| Q-014 | Which exact FHIR profiles, required fields, terminology bindings, and validation packages are needed for Patient, Coverage, and ExplanationOfBenefit? | Prevents accidental semantic invention | No; resolve in a healthcare-data design task |
 | Q-015 | Which policy sources, dates, licenses, update cadence, and historical-version rules are approved? | Ensures citation correctness and reproducibility | No; resolve before corpus ingestion |
-| Q-016 | What reviewer qualifications, rubric, conflict-resolution process, and accessibility target apply? | Affects evaluation validity and UX | No; resolve before analyst workflow testing |
+| Q-016 | What reviewer qualifications, rubric, and conflict-resolution process apply? WCAG 2.2 AA is the approved analyst-interface target. | Affects evaluation validity and UX | No; resolve before analyst workflow testing |
 | Q-017 | What retention/deletion periods apply to source data, traces, prompts, reviewer identity, and evaluation results? | Affects privacy, storage, and audit design | No; resolve before persistent multi-user use |
 | Q-018 | What scale, latency, availability, recovery, and concurrency targets apply? | Affects deployment architecture | No for the first local benchmark; required before hosted use |
-| Q-019 | When, if ever, should a cloud provider, managed database, managed identity provider, or external telemetry backend be selected? | Introduces vendor, credential, residency, and ongoing cost commitments | No for local development |
-| Q-020 | Should the repository directory name `VeriClam` be renamed to match the confirmed product name `VeriClaim`? | Avoids naming ambiguity in tooling and documentation | No |
+| Q-019 | When, if ever, should a hosted application platform, managed database, managed identity provider, or external telemetry backend be selected? | Introduces vendor, credential, residency, and ongoing cost commitments beyond the bounded Vertex AI development endpoint | No for local development |
 
 ---
 
@@ -423,7 +423,7 @@ The project is successful when it can demonstrate, on an approved versioned synt
 | 10 | EVALUATION-001 | Execute the comparative research experiment | Compare variants A–E on approved quality, safety, human, latency, token, and cost measures | REVIEW-001; benchmark frozen |
 | 11 | DEPLOYMENT-001 | Prepare a hardened demonstration environment | Add the approved hosted or isolated deployment, operational controls, monitoring, and recovery evidence | EVALUATION-001; separate platform approval |
 
-### Recommended first task
+### Selected first task
 
 **FOUNDATION-001 — Define synthetic benchmark and evaluation protocol**
 
@@ -431,27 +431,43 @@ Reason: the benchmark, scenarios, labels, validity limits, and metrics determine
 
 ---
 
-## 19. Project-Level Decisions Already Approved
+## 19. Decision Impact Assessment (2026-08-14)
+
+| Concern | Changed? | Recorded outcome |
+|---|---|---|
+| `docs/PROJECT.md` | Yes | Promotes the R-001–R-014 approval package, records the selected local Blue Button corpus and Vertex AI Gemini boundary, resolves obsolete assumptions, and marks inception ready. |
+| `docs/architecture/SYSTEM.md` | Yes | Promotes the approved stack/topology and adds the local-dataset and Vertex AI trust/data flows. |
+| ADRs | Yes | ADR-0002 is refined with the selected initial corpus; ADR-0003 records the approved initial application platform; ADR-0004 records the bounded Vertex AI Gemini development-provider decision. |
+| Security/privacy boundaries | Yes, without relaxing the synthetic-only classification | The external trust boundary now includes approved synthetic-only calls to Vertex AI Gemini. Data minimization, explicit configuration, uncommitted credentials, provider-term review, quotas, audit, and fail-closed behavior are required; PHI and production claims remain prohibited. |
+| Database/provider configuration | Yes | PostgreSQL with pgvector and native full-text search is enabled for local development; migrations are Git-tracked under `database/migrations/`; managed hosting remains unselected. |
+| Operational project configuration | Yes | `.ai/project.json` is set to `INCEPTION_READY`, all component enablement/technology fields are resolved, and the database provider/migration path are declared. Vertex details remain in product/architecture/ADR artifacts because the operational schema has no model-provider field. |
+
+---
+
+## 20. Project-Level Decisions Already Approved
 
 - VeriClaim is a governed healthcare payment-integrity research and decision-support platform.
 - Humans retain authority for consequential claim, payment, clinical, and operational decisions.
 - The system may identify claims for further review and assemble evidence, but may not autonomously approve, deny, adjudicate, or modify payment.
-- Initial development uses synthetic or appropriate public data and does not require real PHI.
-- FHIR is to be evaluated as the primary interoperability standard; the exact supported subset is not yet approved.
+- Initial development uses the local Blue Button sample data at `dataset/` and other explicitly approved synthetic/public data; real PHI is prohibited.
+- FHIR R4 is the initial interoperability standard; the exact supported project profile remains a DATA-001 decision.
+- The initial stack is a Python/FastAPI/Pydantic modular-monolith backend, TypeScript/Next.js frontend, and local PostgreSQL/pgvector database with Git-tracked migrations and Docker-based development.
+- Vertex AI Gemini is the approved agent-development LLM provider for minimized synthetic context when explicitly configured outside Git; this is not approval for PHI, production claims, or general hosted deployment.
+- Standards-based OIDC, deny-by-default RBAC, deterministic bounded orchestration, OpenTelemetry-compatible observability, transparent ML baselines, and the NIST AI RMF/OWASP non-certifying reference direction are approved.
 - Evidence grounding, citations, governance, traceability, security, and reproducible evaluation are first-class requirements.
 - The five research variants A–E are evaluation targets, not preselected production architectures.
-- No technology or provider listed in the raw idea is approved merely by being listed.
 - The project must not claim HIPAA compliance without independent support for that claim.
 
 ---
 
-## 20. Related Repository Documents
+## 21. Related Repository Documents
 
 - `docs/architecture/SYSTEM.md`
 - `docs/adr/ADR-0001-human-authority-over-claim-outcomes.md`
 - `docs/adr/ADR-0002-synthetic-data-initial-boundary.md`
+- `docs/adr/ADR-0003-initial-application-platform.md`
+- `docs/adr/ADR-0004-vertex-ai-gemini-development-provider.md`
 - `docs/standards/`
 - `contracts/`
 - `.ai/project.json`
 - `.ai/tasks/`
-

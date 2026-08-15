@@ -1,12 +1,12 @@
 # VeriClaim System Architecture
 
-> Status: **Inception draft**. This document defines confirmed architecture constraints, a provider-neutral logical architecture, recommendations, and unresolved decisions. A recommendation is not an approved implementation choice.
+> Status: **Inception ready**. The initial application platform and bounded development-provider decisions were approved on 2026-08-14. Detailed feature contracts, schemas, benchmark thresholds, and hosted-production design remain subject to their named tasks.
 
 ## 1. System context
 
 VeriClaim is a governed healthcare payment-integrity research and decision-support platform. It accepts approved synthetic healthcare claims, validates and normalizes supported data, calculates risk signals, gathers evidence, retrieves relevant policy material, synthesizes an investigation, applies governance checks, and presents the result to a human analyst. It also supports controlled experiments comparing single-model, RAG, multi-agent, and governed multi-agent variants.
 
-Primary human actors are payment-integrity analysts and project researchers/evaluators. Governance reviewers, operators, and administrators are recommended roles pending approval of the user and deployment model.
+Primary human actors are payment-integrity analysts and project researchers/evaluators. Governance reviewers, operators, and administrators are approved initial roles; their detailed permissions and any role combination remain a PLATFORM-001 design decision.
 
 The system is not an adjudication, payment, fraud-determination, diagnosis, or clinical decision system. See `docs/adr/ADR-0001-human-authority-over-claim-outcomes.md`.
 
@@ -16,31 +16,33 @@ The system is not an adjudication, payment, fraud-determination, diagnosis, or c
 
 - Human authority over consequential claim and clinical outcomes.
 - Synthetic/public data initially; no real PHI or production claims.
-- FHIR must be evaluated as the primary healthcare interoperability standard.
+- FHIR R4 is the initial healthcare interoperability standard; the exact project profile remains to be designed.
 - Structured risk output, evidence grounding, citations, governance, traceability, and reproducible evaluation are required.
 - Agent and tool autonomy must be explicitly bounded.
 - Retrieved content, model output, tool output, and client input are untrusted.
-- No vendor or technology is selected merely because it was listed as a candidate.
+- The approved initial application stack is Python/FastAPI/Pydantic, TypeScript/Next.js, PostgreSQL/pgvector, and local Docker development.
+- Vertex AI Gemini is the approved external agent-development LLM boundary when explicitly configured with synthetic-only, minimized context.
 
-### Recommended architecture direction
+### Approved initial architecture direction
 
-- A narrow vertical slice implemented as a modular monolith with explicit internal component boundaries.
-- A deterministic investigation state machine coordinating typed specialist capabilities.
+- A narrow vertical slice implemented as a Python/FastAPI/Pydantic modular monolith with explicit internal component boundaries.
+- A TypeScript/Next.js analyst interface in the same initial deployment boundary.
+- A deterministic investigation state machine coordinating typed specialist capabilities through provider adapters.
 - A shared investigation interface for research variants A–E.
-- PostgreSQL plus pgvector and full-text retrieval for initial persistence and hybrid search.
+- PostgreSQL plus pgvector and native full-text retrieval for initial persistence and hybrid search, with Git-tracked migrations under `database/migrations/`.
 - Local Docker-based development before a cloud provider is selected.
 - Standards-based OIDC, deny-by-default RBAC, and per-object authorization.
 - OpenTelemetry-compatible traces, metrics, and logs.
+- Vertex AI Gemini for agent-development LLM calls; credentials/project/region/model/quota settings are injected later outside Git and must be pinned before use.
 
 ### Open architecture decisions
 
-- Enabled deployable components and their technologies.
 - Exact FHIR resource/profile and terminology support.
-- Dataset and policy corpus selection.
-- Model, embedding, and reranking providers/models.
-- Identity provider and local authentication approach.
-- Database hosting and any future cloud platform.
-- Agent framework, if any; tool execution isolation; memory and retry limits.
+- Benchmark scenarios derived from the selected local Blue Button sample corpus, additional fixtures, and policy corpus selection.
+- Exact Vertex AI Gemini model identifier and region, plus any embedding and reranking providers/models.
+- Specific local/test OIDC provider and detailed role mapping.
+- Managed database hosting and any future hosted application platform.
+- Agent framework, if any; detailed tool execution isolation; memory and retry limits.
 - Evaluation thresholds, retention, capacity, latency, availability, and cost budgets.
 
 ## 3. Safety and authority invariants
@@ -92,7 +94,7 @@ Human analyst / researcher / operator
 
 ### 4.1 Analyst and research interface
 
-Classification: **Recommended; frontend enablement and framework are open.**
+Classification: **Confirmed for the initial vertical slice; detailed contracts and component design remain open.**
 
 Responsibilities:
 
@@ -102,11 +104,11 @@ Responsibilities:
 - Provide research/evaluation controls only to authorized roles.
 - Avoid storing secrets or enforcing authorization solely in browser state.
 
-Recommendation: a minimal TypeScript/Next.js interface for the first vertical slice, with WCAG 2.2 AA as the target. Neither choice is approved.
+Approved direction: a minimal TypeScript/Next.js interface for the first vertical slice, targeting WCAG 2.2 AA.
 
 ### 4.2 Case and access service
 
-Classification: **Logical capability confirmed; backend technology open.**
+Classification: **Logical capability and initial backend technology confirmed.**
 
 Responsibilities:
 
@@ -116,7 +118,7 @@ Responsibilities:
 - Validate request/output schemas and mediate access to data, investigations, reviews, and exports.
 - Apply idempotency, concurrency control, rate limits, and safe error handling where required.
 
-Recommendation: Python with FastAPI and Pydantic in a modular monolith. No API contract exists yet and none should be inferred from this document.
+Approved direction: Python with FastAPI and Pydantic in a modular monolith. No API contract exists yet and none should be inferred from this document.
 
 ### 4.3 FHIR/data processing
 
@@ -125,12 +127,13 @@ Classification: **Capability confirmed; exact profile open.**
 Responsibilities:
 
 - Register source, license, generator, dataset version, and synthetic/public classification.
+- Read the initial local development corpus from repository-root `dataset/` (`../dataset` from the backend working directory). Treat it as read-only, untrusted source input.
 - Preserve the original accepted payload and validate it against the approved FHIR R4/profile rules.
 - Normalize only explicitly mapped fields and record transformations/errors.
 - Produce versioned features and evidence references for risk and investigation components.
 - Reject unsupported resources, ambiguous semantics, invalid references, and prohibited data classes safely.
 
-Recommendation: initially profile a minimal set selected from Patient, Coverage, Claim, ExplanationOfBenefit, Organization, and Practitioner. Evaluate DocumentReference for evidence and Provenance/AuditEvent for interoperable trace summaries. Do not assume every listed resource is required.
+Approved initial focus: begin profile design from the selected Blue Button sample corpus's Patient, Coverage, and ExplanationOfBenefit resources. DATA-001 must define exact fields, terminology, validation packages, and whether any additional resources are needed. Evaluate DocumentReference for evidence and Provenance/AuditEvent for interoperable trace summaries rather than silently assuming support.
 
 ### 4.4 Risk analysis
 
@@ -162,7 +165,7 @@ Recommendation: PostgreSQL full-text search plus pgvector for the first hybrid b
 
 ### 4.6 Investigation workflow controller
 
-Classification: **Agentic capability confirmed; orchestration design open.**
+Classification: **Agentic capability and bounded deterministic orchestration direction confirmed; detailed framework/tool design open.**
 
 Responsibilities:
 
@@ -172,7 +175,7 @@ Responsibilities:
 - Produce a structured report that distinguishes evidence from synthesis and includes uncertainty and missing evidence.
 - Route failed, incomplete, contradictory, or unsafe work to an explicit stopped/escalated state.
 
-Recommendation: use a deterministic state machine with a coordinator and logical specialist roles (data intake, risk, policy retrieval, investigation, governance, audit). Start with logical roles inside one security boundary; split services or processes only for proven isolation or scaling needs.
+Approved direction: use a deterministic state machine with a coordinator and logical specialist roles (data intake, risk, policy retrieval, investigation, governance, audit). Start with logical roles inside one security boundary; split services or processes only for proven isolation or scaling needs.
 
 No framework is approved. Framework selection must be based on resumability, state persistence, typed tools, testability, observability, failure handling, provider portability, and permission enforcement—not on the ability to produce more autonomous dialogue.
 
@@ -278,18 +281,19 @@ Every derived artifact should reference its input/source and transformation or m
 - No real PHI or production claims.
 - Original, normalized, derived, retrieved, generated, and human-authored data remain distinguishable.
 - Dataset, transformation, benchmark, and corpus versions must be recorded.
+- The repository-root `dataset/` directory (`../dataset` from `backend/`) is the initial local development source. It currently contains CMS Blue Button sample FHIR R4 Patient, Coverage, and ExplanationOfBenefit data for one synthetic beneficiary.
+- The selected dataset is read-only application input. Its source, license/usage basis, content hash/version, limitations, and benchmark role must be recorded before benchmark freeze.
 
-### Recommended
+### Approved direction
 
-- Use Synthea as the first clinical-record generator candidate and evaluate whether its claim/EOB output supports chosen scenarios.
-- Add controlled, documented perturbations for known anomaly scenarios rather than pretending naturally occurring synthetic labels are ground truth.
-- Evaluate CMS Blue Button sandbox/synthetic data as a supplemental compatibility dataset.
+- Use the existing Blue Button sample corpus first; evaluate Synthea later only when additional generated scenarios are justified.
+- Add controlled, documented perturbations or additional synthetic fixtures for known anomaly scenarios rather than pretending naturally occurring synthetic labels are ground truth.
 - Maintain an explicit data card for each dataset and benchmark covering origin, license, schema/profile, generation, perturbations, limitations, splits, leakage controls, and intended use.
 - Keep test, development, and benchmark data logically separated; freeze evaluation sets and prevent retrieval/training leakage.
 
 ### Open
 
-- Initial line of business, claim scenarios, FHIR packages/profiles, terminology services, volume, and refresh policy.
+- Initial line of business, claim scenarios built from the selected corpus, additional fixture needs, FHIR packages/profiles, terminology services, volume, and refresh policy.
 - Whether attachments or DocumentReference content are in the first milestone.
 - Retention/deletion policy and whether reviewer identifiers are pseudonymous in research exports.
 
@@ -302,7 +306,7 @@ Every derived artifact should reference its input/source and transformation or m
 | Data ingestion | Malformed FHIR, prohibited data, oversized files, malicious narrative/attachments | Source allowlist, size/type limits, profile validation, classification gate, quarantine, content isolation |
 | Workflow to tool broker | Prompt-directed unauthorized calls, excessive loops, unsafe parameters | Registered typed tools, per-call authorization, allowlists, budgets, idempotency, audit, cancellation |
 | Retrieval corpus to model | Direct/indirect injection, poisoning, stale/inapplicable policy | Origin labels, instruction/data separation, corpus approval, version/date filters, adversarial testing, citation validation |
-| Application to AI provider | Data leakage, retention/training, version drift, outage, cost | Minimize/redact context, approved endpoints/models/terms, pinned versions where possible, timeouts, budgets, fallback/escalation |
+| Application to Vertex AI Gemini | Synthetic-data leakage, retention/training terms, credential exposure, region/model drift, outage, cost | Synthetic-only minimized context; explicit project/region/model configuration; credentials through environment/ADC outside Git; approved terms; quotas/timeouts/budgets; traceable version; fail-closed fallback/escalation |
 | Application to data store | Cross-user/tenant leakage, injection, tampering, trace rewriting | Parameterized access, encryption, least privilege, row/object policy as needed, integrity constraints, append-only semantics |
 | Observability/export | Secret/PHI/prompt leakage, excessive retention | Structured redaction, access control, sampling policy, retention/deletion, export review |
 | CI/supply chain | Malicious dependency/action/image | Pinning, lockfiles, provenance/scanning, least-privilege CI tokens, protected changes |
@@ -317,7 +321,7 @@ Tenant isolation is not yet a confirmed requirement. If multi-tenancy is approve
 - Model reasoning cannot authorize an action.
 - Tool use, source access, case access, review actions, configuration changes, and exports require explicit permissions.
 
-### Recommendation
+### Approved initial direction
 
 - Standards-based OIDC rather than custom password/authentication implementation.
 - Deny-by-default roles initially scoped as analyst, governance reviewer, researcher, operator, and administrator, with combined roles only when explicitly granted.
@@ -325,9 +329,9 @@ Tenant isolation is not yet a confirmed requirement. If multi-tenancy is approve
 - Separate service credentials for workflow, retrieval, database, and provider access; no shared all-powerful agent credential.
 - A local/test identity provider for development and an approved managed provider only when deployment context is known.
 
-### Open decisions
+### Open implementation decisions
 
-- User population, organization/tenant model, identity provider, MFA/session requirements, role combinations, administrative workflow, and emergency access.
+- User population, organization/tenant model, specific local/test identity provider, MFA/session requirements, role combinations, administrative workflow, and emergency access.
 
 ## 10. Agent and tool security architecture
 
@@ -451,30 +455,30 @@ Metric definitions, gold labels, thresholds, confidence intervals, sample size, 
 - Governance policies/results and human reviews.
 - Audit events, experiments, metrics, cost, and operational telemetry references.
 
-### Recommendation
+### Approved initial direction
 
-Use PostgreSQL as the primary transactional/research store, pgvector for semantic vectors, native full-text search for lexical retrieval, and Git-tracked migrations. Store large immutable document bodies in filesystem/object storage only if size and lifecycle requirements justify it, with hashes and metadata in the database.
+Use local PostgreSQL as the primary transactional/research store, pgvector for semantic vectors, native full-text search for lexical retrieval, and Git-tracked migrations under `database/migrations/`. Store large immutable document bodies in filesystem/object storage only if size and lifecycle requirements justify it, with hashes and metadata in the database.
 
-### Open decisions
+### Open implementation/hosting decisions
 
-- Provider/hosting, migration path, row-level security versus service authorization split, tenant model, encryption/key ownership, object storage, backup/recovery, retention/deletion, vector dimension/model migrations, and audit immutability mechanism.
+- Managed hosting, migration tool/format, row-level security versus service authorization split, tenant model, encryption/key ownership, object storage, backup/recovery, retention/deletion, vector dimension/model migrations, and audit immutability mechanism.
 
-No live database configuration is authorized by this document.
+The local PostgreSQL/pgvector architecture is authorized; no managed or production database is selected or authorized by this document.
 
 ## 16. Deployment and platform considerations
 
-### Recommended initial topology
+### Approved initial topology
 
 ```text
 local developer machine / isolated development host
-  -> containerized UI (if approved)
+  -> containerized TypeScript/Next.js UI
   -> containerized application/workflow process
-  -> local PostgreSQL/vector extension (if approved)
-  -> approved external model endpoint only when configured
+  -> local PostgreSQL/pgvector
+  -> Vertex AI Gemini only when explicitly configured for synthetic-only development
   -> local structured telemetry by default
 ```
 
-This recommendation defers AWS/Azure and managed-service selection. It does not make Docker, a cloud, or a particular hosting provider an approved choice.
+This approved topology uses local Docker development and defers a hosted application platform and managed services. The Vertex AI Gemini endpoint is a narrow model-provider approval, not approval to host the application or database on Google Cloud.
 
 ### Cloud-selection criteria for later approval
 
@@ -488,7 +492,7 @@ Production deployment is not in the initial approved scope.
 
 ## 17. Observability and audit
 
-### Recommendation
+### Approved initial direction
 
 Use OpenTelemetry-compatible identifiers and instrumentation so an investigation can be correlated across API, workflow, retrieval, model, tool, governance, and review operations. Keep operational telemetry distinct from the durable decision/audit record.
 
@@ -508,7 +512,7 @@ Use OpenTelemetry-compatible identifiers and instrumentation so an investigation
 
 ## 18. Security and privacy verification direction
 
-Project-specific commands cannot be declared until technologies are approved. The eventual verification plan should include, where applicable:
+The technologies are approved, but stack manifests and runnable application checks do not exist during inception. PLATFORM-001 must add the required backend, frontend, database, and security commands to `.ai/project.json` with the first runnable skeleton. The verification plan must include, where applicable:
 
 - FHIR/profile fixture validation and prohibited-data checks.
 - Unit, integration, contract, end-to-end, and benchmark reproducibility tests.
@@ -518,7 +522,7 @@ Project-specific commands cannot be declared until technologies are approved. Th
 - Migration/reset tests, backup/restore evidence, and database policy/advisor checks for the selected provider.
 - Accessibility testing for the analyst workflow.
 
-These are requirements for later verification design, not invented commands in `.ai/project.json`.
+These are requirements for PLATFORM-001 verification design. Until runnable manifests exist, `.ai/project.json` intentionally relies on the control plane's built-in schema, contract, agentic-framework, and baseline-security checks instead of declaring commands that would be skipped or unavailable.
 
 ## 19. Key failure modes and required response
 
@@ -535,9 +539,9 @@ These are requirements for later verification design, not invented commands in `
 | Human disagreement | Preserve each review and follow an approved adjudication/research protocol; do not auto-label |
 | Suspected real PHI | Stop processing, quarantine access, follow an approved incident/data review process |
 
-## 20. Architecture decisions requiring approval
+## 20. Architecture decisions resolved for inception
 
-The material approval package is maintained in `docs/PROJECT.md` section 17. The following groupings must be reconciled before `INCEPTION_READY`:
+The material approval package is maintained in `docs/PROJECT.md` section 17. The following groupings are resolved sufficiently for `INCEPTION_READY`; detailed items explicitly deferred there remain future task decisions:
 
 1. First-milestone scope and user workflow.
 2. Backend/frontend/database enablement and technologies.
@@ -550,9 +554,11 @@ The material approval package is maintained in `docs/PROJECT.md` section 17. The
 9. Governance framework, fail-closed thresholds, retention, and escalation.
 10. Initial deployment, observability, cloud deferral/selection, and cost ceilings.
 
-No contracts or implementation tasks should be created until the operational project configuration can truthfully be marked `INCEPTION_READY`.
+The operational project configuration can now be marked `INCEPTION_READY`. Inception itself does not create contracts, implementation tasks, or worktrees.
 
 ## 21. Approved decision records
 
 - `docs/adr/ADR-0001-human-authority-over-claim-outcomes.md`
 - `docs/adr/ADR-0002-synthetic-data-initial-boundary.md`
+- `docs/adr/ADR-0003-initial-application-platform.md`
+- `docs/adr/ADR-0004-vertex-ai-gemini-development-provider.md`

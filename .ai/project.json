@@ -1,21 +1,21 @@
 {
   "schema_version": "1.0",
-  "status": "INCEPTION_DRAFT",
+  "status": "INCEPTION_READY",
   "components": {
     "backend": {
-      "enabled": null,
+      "enabled": true,
       "path": "backend",
-      "technology": null
+      "technology": "Python / FastAPI / Pydantic modular monolith"
     },
     "frontend": {
-      "enabled": null,
+      "enabled": true,
       "path": "frontend",
-      "technology": null
+      "technology": "TypeScript / Next.js"
     },
     "database": {
-      "enabled": null,
-      "provider": null,
-      "migration_path": null
+      "enabled": true,
+      "provider": "PostgreSQL with pgvector (local development; managed hosting deferred)",
+      "migration_path": "database/migrations"
     }
   },
   "verification": {
