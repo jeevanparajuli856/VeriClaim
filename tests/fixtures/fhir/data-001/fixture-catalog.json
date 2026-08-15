@@ -49,6 +49,20 @@
     {"id":"narrative-text","recipe":"Add narrative text content to Patient.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
     {"id":"attachment","recipe":"Add attachment content to Patient.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
     {"id":"bundle-request","recipe":"Add request content to the first Coverage Bundle entry.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
-    {"id":"bundle-response","recipe":"Add response content to the first Coverage Bundle entry.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"}
+    {"id":"bundle-response","recipe":"Add response content to the first Coverage Bundle entry.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"undeclared-nested-field","recipe":"Add an undeclared instruction field under the first Patient name.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"wrong-primitive-type","recipe":"Replace the declared Patient gender string with an object.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"nonfinite-nan","recipe":"Serialize NaN into the preserve-only Patient gender path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"JSON-SYNTAX-001"},
+    {"id":"nonfinite-infinity","recipe":"Serialize Infinity into the preserve-only Patient gender path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"JSON-SYNTAX-001"},
+    {"id":"nonfinite-negative-infinity","recipe":"Serialize -Infinity into the preserve-only Patient gender path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"JSON-SYNTAX-001"},
+    {"id":"parser-recursion","recipe":"Replace Patient with syntactically nested JSON beyond the parser recursion boundary.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"JSON-SYNTAX-001"},
+    {"id":"maximum-nesting-depth","recipe":"Add a forty-level nested array under an undeclared Patient name field.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"maximum-array-items","recipe":"Expand Patient name to 257 items.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"maximum-object-members","recipe":"Replace a Patient name object with 65 members.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"maximum-object-key-bytes","recipe":"Add a Patient name member whose UTF-8 key is 129 bytes.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"maximum-string-bytes","recipe":"Replace Patient gender with a 4097-byte string.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
+    {"id":"maximum-document-bytes","recipe":"Pad the Patient JSON document to 524289 observed bytes.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"maximum-total-input-bytes","recipe":"Pad three individually bounded JSON documents until the observed source set exceeds 1048576 bytes.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"maximum-source-files","recipe":"Declare a fifth project-authored source file.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"}
   ]
 }

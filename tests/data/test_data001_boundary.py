@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import replace
 import json
 import os
+from pathlib import Path
 import socket
 import urllib.request
 
@@ -15,10 +16,13 @@ from reference_validator import (
     CONTRACT_DIR,
     REPO_ROOT,
     ReferenceValidator,
+    declared_source_set_digest,
     load_seed_source_set,
     mutate_json_document,
+    observed_source_set_digest,
     project_fixture_from_seed,
     sha256_bytes,
+    source_set_digest,
     strict_json_loads,
 )
 
@@ -99,6 +103,13 @@ def _set_nested(resource: dict, path: tuple[object, ...], value: object = None, 
         current[path[-1]] = value
 
 
+def _deep_array(depth: int) -> list:
+    value: object = 0
+    for _ in range(depth):
+        value = [value]
+    return value
+
+
 def build_case(case_id: str):
     fixture = project_fixture_from_seed(case_id)
     if case_id == "duplicate-key":
@@ -120,6 +131,37 @@ def build_case(case_id: str):
             for item in fixture.documents
         )
         return replace(fixture, documents=documents)
+    if case_id in {"nonfinite-nan", "nonfinite-infinity", "nonfinite-negative-infinity"}:
+        patient = strict_json_loads(fixture.document("patient").raw)
+        constants = {
+            "nonfinite-nan": float("nan"),
+            "nonfinite-infinity": float("inf"),
+            "nonfinite-negative-infinity": float("-inf"),
+        }
+        patient["gender"] = constants[case_id]
+        raw = json.dumps(patient, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        return fixture.replace_document("patient", raw)
+    if case_id == "parser-recursion":
+        raw = b'{"resourceType":"Patient","nested":' + b"[" * 2000 + b"0" + b"]" * 2000 + b"}"
+        return fixture.replace_document("patient", raw)
+    if case_id == "maximum-document-bytes":
+        patient = fixture.document("patient")
+        raw = patient.raw + b" " * (524289 - len(patient.raw))
+        return fixture.replace_document("patient", raw)
+    if case_id == "maximum-total-input-bytes":
+        for role in ("patient", "coverage-searchset", "pharmacy-eob-searchset"):
+            document = fixture.document(role)
+            fixture = fixture.replace_document(role, document.raw + b" " * (400000 - len(document.raw)))
+        return fixture
+    if case_id == "maximum-source-files":
+        patient = fixture.document("patient")
+        extra = replace(
+            patient,
+            path="tests/fixtures/fhir/data-001/generated/maximum-source-files/extra.json",
+            role="extra",
+        )
+        documents = fixture.documents + (extra,)
+        return replace(fixture, documents=documents, expected_digest=source_set_digest(documents))
 
     mutations = {
         "unsupported-resource": ("patient", lambda value: value.__setitem__("resourceType", "Practitioner")),
@@ -145,6 +187,13 @@ def build_case(case_id: str):
         "attachment": ("patient", lambda value: value.__setitem__("attachment", {"data": "RVZJTF9NQVJLRVI="})),
         "bundle-request": ("coverage-searchset", lambda value: value["entry"][0].__setitem__("request", {"method": "POST", "url": "https://evil.invalid"})),
         "bundle-response": ("coverage-searchset", lambda value: value["entry"][0].__setitem__("response", {"status": "200"})),
+        "undeclared-nested-field": ("patient", lambda value: value["name"][0].__setitem__("instruction", "EVIL_MARKER")),
+        "wrong-primitive-type": ("patient", lambda value: value.__setitem__("gender", {"value": "male"})),
+        "maximum-nesting-depth": ("patient", lambda value: value["name"][0].__setitem__("instruction", _deep_array(40))),
+        "maximum-array-items": ("patient", lambda value: value.__setitem__("name", [deepcopy(value["name"][0]) for _ in range(257)])),
+        "maximum-object-members": ("patient", lambda value: value.__setitem__("name", [{f"member{i}": "x" for i in range(65)}])),
+        "maximum-object-key-bytes": ("patient", lambda value: value["name"][0].__setitem__("k" * 129, "x")),
+        "maximum-string-bytes": ("patient", lambda value: value.__setitem__("gender", "x" * 4097)),
     }
     role, mutation = mutations[case_id]
     return mutate_json_document(fixture, role, mutation)
@@ -169,6 +218,62 @@ def test_fixture_catalog_has_durable_synthetic_lineage_and_expected_results():
         build_case(fixture["id"])
 
 
+def test_shape_registry_digest_types_and_limits_are_exact_contract_evidence(
+    validator: ReferenceValidator,
+):
+    registry = validator.shape_registry
+    records = sorted(
+        (entry["role"], entry["json_pointer"], entry["type"])
+        for entry in registry["entries"]
+    )
+    canonical = "".join(f"{role}\0{pointer}\0{item_type}\n" for role, pointer, item_type in records)
+    assert len(records) == registry["canonical_registry"]["entry_count"] == 261
+    assert sha256_bytes(canonical.encode("utf-8")) == registry["canonical_registry"]["sha256"]
+    assert {item_type for _, _, item_type in records} == {"object", "array", "string", "number", "boolean"}
+    assert registry["limits"] == {
+        "maximum_source_files": 4,
+        "maximum_total_input_bytes": 1048576,
+        "maximum_document_bytes": 524288,
+        "maximum_nesting_depth": 32,
+        "maximum_array_items": 256,
+        "maximum_object_members": 64,
+        "maximum_object_key_utf8_bytes": 128,
+        "maximum_string_utf8_bytes": 4096,
+    }
+
+
+@pytest.mark.parametrize("token", [b"NaN", b"Infinity", b"-Infinity"])
+def test_strict_json_loader_rejects_every_non_finite_constant(token: bytes):
+    with pytest.raises(ValueError):
+        strict_json_loads(b'{"value":' + token + b"}")
+
+
+def test_strict_json_loader_converts_parser_recursion_to_safe_rejection():
+    raw = b"[" * 2000 + b"0" + b"]" * 2000
+    with pytest.raises(ValueError):
+        strict_json_loads(raw)
+
+
+def test_nesting_limit_uses_iterative_fail_closed_traversal(
+    monkeypatch: pytest.MonkeyPatch,
+    validator: ReferenceValidator,
+):
+    entries = set()
+    pointer = ""
+    for _ in range(40):
+        entries.add(("patient", pointer, "array"))
+        pointer += "/[]"
+    entries.add(("patient", pointer, "number"))
+    monkeypatch.setattr(validator, "shape_entries", entries)
+    failure = validator._validate_shape(
+        "patient",
+        "tests/fixtures/fhir/data-001/generated/maximum-nesting-depth/patient.json",
+        _deep_array(40),
+    )
+    assert failure["machine_code"] == "NESTING_DEPTH_EXCEEDED"
+    assert failure["rule_id"] == "FHIR-COMPAT-CONTENT-001"
+
+
 def test_unchanged_seed_passes_minimal_boundary_with_ordered_advisory_states(
     accepted_seed: dict,
     outcome_schema_validator: Draft202012Validator,
@@ -180,6 +285,9 @@ def test_unchanged_seed_passes_minimal_boundary_with_ordered_advisory_states(
         "terminology-unverified",
     ]
     assert accepted_seed["project_findings"] == []
+    manifest = strict_json_loads((CONTRACT_DIR / "source-manifest.json").read_bytes())
+    assert accepted_seed["declared_source_set_sha256"] == manifest["source_set_digest"]["sha256"]
+    assert accepted_seed["observed_source_set_sha256"] == manifest["source_set_digest"]["sha256"]
     assert accepted_seed["layers"] == [
         {"name": name, "status": "passed"}
         for name in ("source", "json", "support", "required-fields", "references", "content-isolation")
@@ -204,15 +312,47 @@ def test_carin_errors_are_complete_structured_diagnostics_not_acceptance(
         "sha256": EXPECTED_RAW_DIGEST,
         "format": "FHIR-R4-Bundle-of-OperationOutcome",
         "trusted_content": False,
+        "bytes": 1556152,
+        "issue_count": 895,
     }
     observed = Counter((item["source_path"], item["severity"]) for item in carin["findings"])
     for source_path, counts in EXPECTED_COUNTS.items():
         for severity, count in counts.items():
             assert observed[(source_path, severity)] == count
     assert len(carin["findings"]) == 895
+    assert len(carin["verified_artifacts"]) == 32
+    assert {item["kind"] for item in carin["verified_artifacts"]} == {"validator", "runtime", "package"}
+    assert all(len(item["evidence_sha256"]) == 64 for item in carin["findings"])
+    assert all(item["machine_code"].startswith("CARIN_") for item in carin["findings"])
+    assert any(item["json_pointer"] == "/extension/0" for item in carin["findings"])
+    assert any(item["json_pointer"].startswith("/entry/0/resource") for item in carin["findings"])
     serialized = json.dumps(accepted_seed, sort_keys=True).lower()
     assert "carin-conformant" not in serialized
     assert '"acceptance_authority": true' not in serialized
+
+
+def test_each_carin_finding_digest_matches_the_complete_canonical_raw_issue(
+    accepted_seed: dict,
+):
+    raw = strict_json_loads(
+        (CONTRACT_DIR / ".offline/evidence/seed-carin-operationoutcomes.json").read_bytes()
+    )
+    canonical_digests = []
+    for entry in raw["entry"]:
+        for issue in entry["resource"]["issue"]:
+            canonical = json.dumps(
+                issue,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
+            canonical_digests.append(sha256_bytes(canonical))
+    assert [item["evidence_sha256"] for item in accepted_seed["carin"]["findings"]] == canonical_digests
+    assert all(
+        item["message"] == "Checksum-verified CARIN diagnostic issue retained by canonical issue digest."
+        for item in accepted_seed["carin"]["findings"]
+    )
 
 
 def test_raw_carin_evidence_digest_is_independently_confirmed_when_materialized():
@@ -234,26 +374,77 @@ def test_raw_carin_evidence_digest_is_independently_confirmed_when_materialized(
         ]
 
 
-def test_exact_validator_jre_and_carin_archives_match_lock_when_materialized():
+@pytest.mark.parametrize("mode", ["missing", "changed"])
+def test_missing_or_changed_raw_diagnostic_evidence_is_unavailable_not_synthesized(
+    mode: str,
+    monkeypatch: pytest.MonkeyPatch,
+    validator: ReferenceValidator,
+    outcome_schema_validator: Draft202012Validator,
+):
+    target = validator.offline_dir / "evidence/seed-carin-operationoutcomes.json"
+    original = Path.read_bytes
+
+    def controlled_read(path: Path) -> bytes:
+        if path == target:
+            if mode == "missing":
+                raise FileNotFoundError(path)
+            return original(path) + b"changed"
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", controlled_read)
+    result = validator.validate()
+    assert result["decision"] == "accepted"
+    assert result["states"][1] == "carin-diagnostic-unavailable"
+    assert result["carin"]["status"] == "diagnostic-unavailable"
+    assert result["carin"]["counts"] == {"fatal": 0, "error": 0, "warning": 0, "information": 0}
+    assert result["carin"]["findings"] == []
+    assert "raw_evidence" not in result["carin"]
+    assert_schema_valid(outcome_schema_validator, result)
+
+
+def test_missing_locked_package_makes_diagnostics_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+    validator: ReferenceValidator,
+):
+    first_package = validator.package_lock["packages"][0]
+    target = validator.offline_dir / "packages" / f"{first_package['name']}#{first_package['version']}.tgz"
+    original = Path.open
+
+    def controlled_open(path: Path, *args, **kwargs):
+        if path == target:
+            raise FileNotFoundError(path)
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", controlled_open)
+    result = validator.validate()
+    assert result["decision"] == "accepted"
+    assert result["carin"]["status"] == "diagnostic-unavailable"
+    assert result["carin"]["findings"] == []
+
+
+def test_exact_validator_jre_and_every_locked_archive_are_verified(
+    accepted_seed: dict,
+):
     package_lock = strict_json_loads((CONTRACT_DIR / "packages.lock.json").read_bytes())
     validator_tool, jre_tool = package_lock["tooling"]
-    carin_package = next(
-        package for package in package_lock["packages"]
-        if package["name"] == "hl7.fhir.us.carin-bb" and package["version"] == "2.2.0"
-    )
-    materialized = [
-        (CONTRACT_DIR / ".offline/tooling/validator_cli-6.10.2.jar", validator_tool),
-        (CONTRACT_DIR / ".offline/tooling/OpenJDK21U-jre_x64_linux_hotspot_21.0.12_8.tar.gz", jre_tool),
-        (CONTRACT_DIR / ".offline/packages/hl7.fhir.us.carin-bb#2.2.0.tgz", carin_package),
+    expected = [
+        ("validator", validator_tool),
+        ("runtime", jre_tool),
     ]
-    for path, lock_entry in materialized:
-        if os.environ.get("DATA001_REQUIRE_OFFLINE") == "1":
-            assert path.is_file(), f"required offline artifact is unavailable: {path.name}"
-        if path.exists():
-            raw = path.read_bytes()
-            assert sha256_bytes(raw) == lock_entry["sha256"]
-            if "bytes" in lock_entry:
-                assert len(raw) == lock_entry["bytes"]
+    expected.extend(
+        ("package", package)
+        for package in package_lock["packages"]
+    )
+    verified = accepted_seed["carin"]["verified_artifacts"]
+    assert len(expected) == len(verified) == 32
+    for observed, (kind, lock_entry) in zip(verified, expected):
+        assert observed["kind"] == kind
+        assert observed["name"] == lock_entry["name"]
+        assert observed["version"] == lock_entry["version"]
+        assert observed["sha256"] == lock_entry["sha256"]
+        assert observed["bytes"] > 0
+        if "bytes" in lock_entry:
+            assert observed["bytes"] == lock_entry["bytes"]
 
 
 def test_opaque_ncpdp_systems_and_codes_remain_unverified_without_semantics(
@@ -285,14 +476,35 @@ def test_opaque_ncpdp_systems_and_codes_remain_unverified_without_semantics(
 def test_validation_is_networkless_even_with_source_uris(
     monkeypatch: pytest.MonkeyPatch,
     validator: ReferenceValidator,
+    accepted_seed: dict,
 ):
     def deny_network(*_args, **_kwargs):
         raise AssertionError("network access is forbidden")
 
     monkeypatch.setattr(socket, "create_connection", deny_network)
     monkeypatch.setattr(urllib.request, "urlopen", deny_network)
+    monkeypatch.setattr(
+        validator,
+        "_verified_artifacts",
+        lambda: deepcopy(accepted_seed["carin"]["verified_artifacts"]),
+    )
     result = validator.validate()
     assert result["decision"] == "accepted"
+
+
+def test_required_offline_project_verification_check_is_declared_and_enforced(
+    accepted_seed: dict,
+):
+    project = strict_json_loads((REPO_ROOT / ".ai/project.json").read_bytes())
+    checks = project["verification"]["checks"]
+    check = next(item for item in checks if item["name"] == "DATA-001 required offline validation suite")
+    assert check["required"] is True
+    assert check["command"] == [
+        "/usr/bin/env", "DATA001_REQUIRE_OFFLINE=1", "python3", "-m", "pytest", "-q", "tests/data"
+    ]
+    if os.environ.get("DATA001_REQUIRE_OFFLINE") == "1":
+        assert accepted_seed["carin"]["status"] == "nonconformant"
+        assert len(accepted_seed["carin"]["verified_artifacts"]) == 32
 
 
 @pytest.mark.parametrize(
@@ -327,6 +539,20 @@ def test_validation_is_networkless_even_with_source_uris(
         ("attachment", "FHIR-COMPAT-CONTENT-001"),
         ("bundle-request", "FHIR-COMPAT-CONTENT-001"),
         ("bundle-response", "FHIR-COMPAT-CONTENT-001"),
+        ("undeclared-nested-field", "FHIR-COMPAT-CONTENT-001"),
+        ("wrong-primitive-type", "FHIR-COMPAT-CONTENT-001"),
+        ("nonfinite-nan", "JSON-SYNTAX-001"),
+        ("nonfinite-infinity", "JSON-SYNTAX-001"),
+        ("nonfinite-negative-infinity", "JSON-SYNTAX-001"),
+        ("parser-recursion", "JSON-SYNTAX-001"),
+        ("maximum-nesting-depth", "FHIR-COMPAT-CONTENT-001"),
+        ("maximum-array-items", "FHIR-COMPAT-CONTENT-001"),
+        ("maximum-object-members", "FHIR-COMPAT-CONTENT-001"),
+        ("maximum-object-key-bytes", "FHIR-COMPAT-CONTENT-001"),
+        ("maximum-string-bytes", "FHIR-COMPAT-CONTENT-001"),
+        ("maximum-document-bytes", "SOURCE-MANIFEST-001"),
+        ("maximum-total-input-bytes", "SOURCE-MANIFEST-001"),
+        ("maximum-source-files", "SOURCE-MANIFEST-001"),
     ],
 )
 def test_project_authored_invalid_and_unsupported_input_fails_closed(
@@ -357,6 +583,26 @@ def test_rejection_messages_are_sanitized_and_do_not_echo_untrusted_values(
         assert "evil.invalid" not in findings
         assert "<script>" not in findings
         assert "\nINJECT" not in findings
+
+
+def test_declared_and_observed_source_digests_distinguish_tampered_payloads(
+    validator: ReferenceValidator,
+    outcome_schema_validator: Draft202012Validator,
+):
+    base = project_fixture_from_seed("observed-provenance")
+    patient = base.document("patient")
+    first = base.replace_document("patient", patient.raw + b" A", update_identity=False)
+    second = base.replace_document("patient", patient.raw + b" B", update_identity=False)
+    first_result = validator.validate(first)
+    second_result = validator.validate(second)
+    assert first_result["decision"] == second_result["decision"] == "rejected"
+    assert first_result["declared_source_set_sha256"] == second_result["declared_source_set_sha256"]
+    assert first_result["declared_source_set_sha256"] == declared_source_set_digest(base.documents)
+    assert first_result["observed_source_set_sha256"] == observed_source_set_digest(first.documents)
+    assert second_result["observed_source_set_sha256"] == observed_source_set_digest(second.documents)
+    assert first_result["observed_source_set_sha256"] != second_result["observed_source_set_sha256"]
+    assert_schema_valid(outcome_schema_validator, first_result)
+    assert_schema_valid(outcome_schema_validator, second_result)
 
 
 def test_diagnostic_unavailability_is_distinct_and_does_not_reject_minimal_input(
@@ -392,6 +638,17 @@ def test_schema_rejects_inconsistent_accepted_layer_state_and_diagnostic_combina
 ):
     invalid = deepcopy(accepted_seed)
     mutation(invalid)
+    assert_schema_invalid(outcome_schema_validator, invalid)
+
+
+@pytest.mark.parametrize("field", ["declared_source_set_sha256", "observed_source_set_sha256"])
+def test_schema_requires_both_declared_and_observed_source_digests(
+    field: str,
+    accepted_seed: dict,
+    outcome_schema_validator: Draft202012Validator,
+):
+    invalid = deepcopy(accepted_seed)
+    invalid.pop(field)
     assert_schema_invalid(outcome_schema_validator, invalid)
 
 

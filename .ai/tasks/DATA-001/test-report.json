@@ -3,16 +3,18 @@
   "task_id": "DATA-001",
   "agent": "codex-tester",
   "status": "COMPLETE",
-  "summary": "Independent networkless tests prove the unchanged synthetic seed is minimal-profile-valid while CARIN nonconformance and unverified terminology remain non-authoritative evidence, and 29 project-authored negative/adversarial fixtures fail closed.",
+  "summary": "Independent networkless tests prove all five security remediations: exact bounded shapes, strict JSON, checksum-derived CARIN issues and closure, the required offline lifecycle check, and distinct declared/observed source provenance.",
   "files_changed": [
+    "tests/agentic/conftest.py",
+    "tests/agentic/test_sandbox_copy.py",
     "tests/data/reference_validator.py",
     "tests/data/test_data001_boundary.py",
-    "tests/fixtures/fhir/data-001/duplicate-key-patient.json",
     "tests/fixtures/fhir/data-001/fixture-catalog.json",
     ".ai/tasks/DATA-001/test-report.json"
   ],
   "contracts_used": [
     "contracts/fhir/data-001/boundary.json",
+    "contracts/fhir/data-001/shape-registry.json",
     "contracts/fhir/data-001/packages.lock.json",
     "contracts/fhir/data-001/validation-outcome.schema.json",
     "contracts/fhir/data-001/source-manifest.json",
@@ -24,16 +26,17 @@
     "commands": [
       "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/tmp/data001-agent-deps python3 -m pytest -q tests/data",
       "DATA001_REQUIRE_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/tmp/data001-agent-deps python3 -m pytest -q tests/data",
-      "python3 -c 'from collections import Counter; import hashlib,json,pathlib; p=pathlib.Path(\"contracts/fhir/data-001/.offline/evidence/seed-carin-operationoutcomes.json\"); raw=p.read_bytes(); value=json.loads(raw); observed=[dict(Counter(issue.get(\"severity\") for issue in entry[\"resource\"].get(\"issue\", []))) for entry in value[\"entry\"]]; expected=[{\"error\":16,\"warning\":5},{\"error\":216,\"warning\":12},{\"error\":218,\"warning\":428}]; assert hashlib.sha256(raw).hexdigest()==\"2eb1271891b41794b665b639aa2f63138ed597cace33fbd2e3ce45673dcf7d15\" and observed==expected; print(\"PASS raw_digest=2eb1271891b41794b665b639aa2f63138ed597cace33fbd2e3ce45673dcf7d15 counts=16e/5w,216e/12w,218e/428w,total=450e/445w\")'",
+      "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/tmp/data001-agent-deps python3 -m pytest -q tests/agentic",
+      "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/tmp/data001-agent-deps python3 scripts/verify.py DATA-001 --tests-only",
       "PYTHONPATH=/tmp/data001-agent-deps python3 scripts/agentctl.py task validate DATA-001",
-      "python3 -m py_compile tests/data/reference_validator.py tests/data/test_data001_boundary.py",
+      "python3 -m py_compile tests/data/reference_validator.py tests/data/test_data001_boundary.py tests/agentic/conftest.py tests/agentic/test_sandbox_copy.py",
       "git diff --check",
       "PYTHONPATH=/tmp/data001-agent-deps python3 scripts/agentctl.py scope check DATA-001 tester"
     ],
-    "notes": "Final portable run: 47 passed in 7.14s; final required-offline run: 47 passed in 6.64s. No tests were skipped, xfailed, flaky, or retried. Required-offline mode fails when the pinned validator JAR, JRE archive, CARIN 2.2.0 archive, or raw OperationOutcome is absent and verifies every available checksum/byte count. The raw evidence command passed with digest 2eb1271891b41794b665b639aa2f63138ed597cace33fbd2e3ce45673dcf7d15 and exact per-file/total counts 16e/5w, 216e/12w, 218e/428w, total 450e/445w. Task validation returned [OK]. Compilation, diff check, and tester scope check passed. Root dataset hashes matched the manifest before and after both suites. An initial development run had 1 failed and 44 passed because a test incorrectly expected unavailable NCPDP system URIs to appear in the seed; it was corrected to prove byte-preserved Blue Button source systems remain opaque and licensed NCPDP systems are not substituted. Final runs are deterministic and fully passing."
+    "notes": "Final portable DATA-001 run: 75 passed in 14.22s. Final DATA001_REQUIRE_OFFLINE=1 run: 75 passed in 13.10s. Final agentic regression: 12 passed in 10.86s. The tests-only lifecycle runner passed project schema, task/report schemas, all 12 agentic tests, and the required offline DATA-001 check (75 passed in that nested run). No tests were skipped, xfailed, flaky, or retried. The 261-tuple shape registry and all eight limits are enforced with iterative traversal; 43 cataloged project-authored negative/adversarial fixtures cover undeclared nested paths, wrong types, NaN/Infinity/-Infinity, recursion, depth/byte/count/key/string limits, and prior fail-closed cases. CARIN evidence is parsed issue-by-issue only after verifying the raw digest/bytes plus 2 tooling and all 30 package archives; 895 canonical issue digests preserve exact counts 16e/5w, 216e/12w, 218e/428w, total 450e/445w without raw-message echo. Missing or changed evidence emits diagnostic-unavailable with zero non-synthesized counts. Distinct tampered bytes retain identical declared but different observed source-set digests. Root seed hashes matched before and after all suites. During development, two expectation failures were updated for the tightened schema, and one legitimate shape-registry digest mismatch blocked the suite until the orchestrator corrected the contract in c590837; all final runs pass. Task validation, compilation, diff check, and tester scope check passed."
   },
   "blockers": [],
   "notes_for_next_agent": [
-    "Orchestrator should run the repository verification gate on the integrated committed revision; the portable accepted result intentionally allows carin-diagnostic-unavailable, while DATA001_REQUIRE_OFFLINE=1 enforces diagnostic evidence availability for this task gate."
+    "Orchestrator should commit the integrated remediation and run the full repository verification gate so its durable report identifies the corrected commit; tests-only lifecycle verification already passes the required offline project check."
   ]
 }

@@ -15,7 +15,7 @@ def repo(tmp_path):
         src = SOURCE / rel
         dst = root / rel
         if src.is_dir():
-            shutil.copytree(src, dst)
+            shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".offline", "cache"))
         else:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)

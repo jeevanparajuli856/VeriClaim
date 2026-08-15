@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import hashlib
 import json
+import math
 from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Callable, Iterable
@@ -43,12 +44,19 @@ def _reject_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 
 def strict_json_loads(raw: bytes) -> Any:
+    def reject_constant(_token: str) -> None:
+        raise StrictJsonError("non-finite-number")
+
     try:
         text = raw.decode("utf-8", errors="strict")
-        return json.loads(text, object_pairs_hook=_reject_duplicate_pairs)
+        return json.loads(
+            text,
+            object_pairs_hook=_reject_duplicate_pairs,
+            parse_constant=reject_constant,
+        )
     except StrictJsonError:
         raise
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
         raise StrictJsonError("invalid-json") from exc
 
 
@@ -56,18 +64,41 @@ def sha256_bytes(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def sha256_path(path: Path) -> tuple[str, int]:
+    digest = hashlib.sha256()
+    size = 0
+    with path.open("rb") as stream:
+        while True:
+            chunk = stream.read(1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            digest.update(chunk)
+    return digest.hexdigest(), size
+
+
 def _pointer_token(value: str) -> str:
     return value.replace("~", "~0").replace("/", "~1")
 
 
 def _walk(value: Any, pointer: str = "") -> Iterable[tuple[str, Any]]:
-    yield pointer, value
-    if isinstance(value, dict):
-        for key, child in value.items():
-            yield from _walk(child, f"{pointer}/{_pointer_token(key)}")
-    elif isinstance(value, list):
-        for index, child in enumerate(value):
-            yield from _walk(child, f"{pointer}/{index}")
+    """Iteratively traverse untrusted JSON without consuming Python stack depth."""
+    pending = [(pointer, value)]
+    while pending:
+        current_pointer, current = pending.pop()
+        yield current_pointer, current
+        if isinstance(current, dict):
+            children = [
+                (f"{current_pointer}/{_pointer_token(key)}", child)
+                for key, child in current.items()
+            ]
+            pending.extend(reversed(children))
+        elif isinstance(current, list):
+            children = [
+                (f"{current_pointer}/{index}", child)
+                for index, child in enumerate(current)
+            ]
+            pending.extend(reversed(children))
 
 
 @dataclass(frozen=True)
@@ -116,13 +147,24 @@ class SourceSet:
         return replace(self, documents=tuple(replaced), expected_digest=digest)
 
 
-def source_set_digest(documents: Iterable[SourceDocument]) -> str:
+def declared_source_set_digest(documents: Iterable[SourceDocument]) -> str:
     records = []
     for item in sorted(documents, key=lambda document: document.path):
         records.append(
             f"{item.path}\0{item.expected_bytes}\0{item.expected_sha256}\n"
         )
     return sha256_bytes("".join(records).encode("utf-8"))
+
+
+def observed_source_set_digest(documents: Iterable[SourceDocument]) -> str:
+    records = []
+    for item in sorted(documents, key=lambda document: document.path):
+        records.append(f"{item.path}\0{len(item.raw)}\0{sha256_bytes(item.raw)}\n")
+    return sha256_bytes("".join(records).encode("utf-8"))
+
+
+# Backward-compatible helper name used by fixture construction.
+source_set_digest = declared_source_set_digest
 
 
 def load_seed_source_set(repo_root: Path = REPO_ROOT) -> SourceSet:
@@ -174,12 +216,25 @@ def project_fixture_from_seed(case_id: str) -> SourceSet:
 class ReferenceValidator:
     """Small executable interpretation of the versioned DATA-001 contract."""
 
-    def __init__(self, repo_root: Path = REPO_ROOT) -> None:
+    def __init__(
+        self,
+        repo_root: Path = REPO_ROOT,
+        *,
+        offline_dir: Path | None = None,
+    ) -> None:
         self.repo_root = repo_root
-        self.boundary_raw = (CONTRACT_DIR / "boundary.json").read_bytes()
-        self.package_lock_raw = (CONTRACT_DIR / "packages.lock.json").read_bytes()
+        self.contract_dir = repo_root / "contracts/fhir/data-001"
+        self.offline_dir = offline_dir or self.contract_dir / ".offline"
+        self.boundary_raw = (self.contract_dir / "boundary.json").read_bytes()
+        self.package_lock_raw = (self.contract_dir / "packages.lock.json").read_bytes()
+        self.shape_registry_raw = (self.contract_dir / "shape-registry.json").read_bytes()
         self.boundary = strict_json_loads(self.boundary_raw)
         self.package_lock = strict_json_loads(self.package_lock_raw)
+        self.shape_registry = strict_json_loads(self.shape_registry_raw)
+        self.shape_entries = {
+            (item["role"], item["json_pointer"], item["type"])
+            for item in self.shape_registry["entries"]
+        }
 
     def validate(
         self,
@@ -257,6 +312,29 @@ class ReferenceValidator:
         return self._accepted(source_set, statuses, resources, carin_available)
 
     def _validate_source(self, source_set: SourceSet) -> dict[str, Any] | None:
+        limits = self.shape_registry["limits"]
+        if len(source_set.documents) > limits["maximum_source_files"]:
+            return self._finding(
+                "SOURCE-MANIFEST-001",
+                "SOURCE_FILE_LIMIT_EXCEEDED",
+                "The declared source set exceeds the bounded file count.",
+                "dataset/readme.txt",
+            )
+        if sum(len(item.raw) for item in source_set.documents) > limits["maximum_total_input_bytes"]:
+            return self._finding(
+                "SOURCE-MANIFEST-001",
+                "SOURCE_TOTAL_BYTES_EXCEEDED",
+                "The observed source set exceeds the bounded total byte limit.",
+                "dataset/readme.txt",
+            )
+        for item in source_set.documents:
+            if len(item.raw) > limits["maximum_document_bytes"]:
+                return self._finding(
+                    "SOURCE-MANIFEST-001",
+                    "SOURCE_DOCUMENT_BYTES_EXCEEDED",
+                    "An observed source document exceeds the bounded byte limit.",
+                    item.path if self._safe_source_path(item.path) else "dataset/readme.txt",
+                )
         accepted = self.boundary["source_set"]["accepted_classifications"]
         if source_set.classification not in accepted:
             return self._finding(
@@ -299,7 +377,7 @@ class ReferenceValidator:
                     "A source byte length or digest does not match its declaration.",
                     item.path,
                 )
-        if source_set_digest(source_set.documents) != source_set.expected_digest:
+        if declared_source_set_digest(source_set.documents) != source_set.expected_digest:
             return self._finding(
                 "SOURCE-MANIFEST-001",
                 "SOURCE_SET_DIGEST_MISMATCH",
@@ -523,6 +601,11 @@ class ReferenceValidator:
         resources: list[tuple[SourceDocument, str, Any]],
         parsed: dict[str, tuple[SourceDocument, Any]],
     ) -> dict[str, Any] | None:
+        for role, (document, value) in parsed.items():
+            failure = self._validate_shape(role, document.path, value)
+            if failure:
+                return failure
+
         rejected_keys = set(self.boundary["rejected_content_keys_any_depth"])
         for document, pointer, resource in resources:
             allowed = set(self.boundary["resources"][resource["resourceType"]]["allowed_top_level_fields"])
@@ -561,26 +644,23 @@ class ReferenceValidator:
         terminology = self._terminology(resources)
         if carin_available:
             carin = self._carin_evidence()
-            carin_state = "carin-nonconformant"
         else:
+            carin = None
+        if carin is None:
             carin = {
                 "status": "diagnostic-unavailable",
                 "acceptance_authority": False,
                 "tool": "HL7 FHIR Validator CLI#6.10.2",
                 "package": "hl7.fhir.us.carin-bb#2.2.0",
                 "counts": dict(ZERO_COUNTS),
-                "findings": [
-                    self._finding(
-                        "CARIN-DIAGNOSTIC-001",
-                        "PINNED_DIAGNOSTIC_UNAVAILABLE",
-                        "Pinned offline CARIN diagnostic evidence is unavailable.",
-                        source_set.documents[0].path,
-                        source="carin",
-                    )
-                ],
+                "findings": [],
                 "availability_error": "Pinned offline diagnostic evidence unavailable",
             }
             carin_state = "carin-diagnostic-unavailable"
+        elif carin["status"] == "nonconformant":
+            carin_state = "carin-nonconformant"
+        else:
+            carin_state = "carin-no-errors-reported"
         states = ["minimal-profile-valid", carin_state]
         if terminology["status"] == "unverified":
             states.append("terminology-unverified")
@@ -638,7 +718,8 @@ class ReferenceValidator:
             "contract_version": self.boundary["contract_version"],
             "decision": decision,
             "states": states,
-            "source_set_sha256": source_set_digest(source_set.documents),
+            "declared_source_set_sha256": declared_source_set_digest(source_set.documents),
+            "observed_source_set_sha256": observed_source_set_digest(source_set.documents),
             "boundary_sha256": sha256_bytes(self.boundary_raw),
             "package_lock_sha256": sha256_bytes(self.package_lock_raw),
             "layers": [{"name": name, "status": statuses[name]} for name in LAYER_NAMES],
@@ -647,42 +728,218 @@ class ReferenceValidator:
             "terminology": terminology,
         }
 
-    def _carin_evidence(self) -> dict[str, Any]:
-        evidence = self.package_lock["compatibility_evidence"]
-        counts = evidence["counts"]
-        findings = []
-        ordinal = 0
-        for path in (
+    def _carin_evidence(self) -> dict[str, Any] | None:
+        """Return diagnostics only when raw evidence and the complete closure verify."""
+        evidence_lock = self.package_lock["compatibility_evidence"]["raw_operation_outcome"]
+        evidence_path = self.offline_dir / "evidence/seed-carin-operationoutcomes.json"
+        try:
+            raw = evidence_path.read_bytes()
+        except OSError:
+            return None
+        if (
+            len(raw) != evidence_lock["bytes"]
+            or sha256_bytes(raw) != evidence_lock["sha256"]
+        ):
+            return None
+
+        verified_artifacts = self._verified_artifacts()
+        if verified_artifacts is None:
+            return None
+        try:
+            operation_outcomes = strict_json_loads(raw)
+            entries = operation_outcomes["entry"]
+            if (
+                operation_outcomes.get("resourceType") != "Bundle"
+                or operation_outcomes.get("type") != "collection"
+                or not isinstance(entries, list)
+                or len(entries) != 3
+            ):
+                return None
+        except (KeyError, TypeError, StrictJsonError):
+            return None
+
+        source_paths = (
             "dataset/patient_bbuser29999.json",
             "dataset/coverage_bundle_bbuser29999.json",
             "dataset/eob_bundle_bbuser29999.json",
-        ):
-            for severity in ("fatal", "error", "warning", "information"):
-                for _ in range(counts[path][severity]):
-                    ordinal += 1
-                    findings.append(
-                        self._finding(
-                            "CARIN-DIAGNOSTIC-001",
-                            f"PINNED_RAW_FINDING_{ordinal:06d}",
-                            "Pinned CARIN diagnostic finding retained in digest-addressed untrusted evidence.",
-                            path,
-                            source="carin",
-                            severity=severity,
-                        )
+        )
+        findings: list[dict[str, Any]] = []
+        counts = dict(ZERO_COUNTS)
+        for source_path, entry in zip(source_paths, entries):
+            try:
+                resource = entry["resource"]
+                issues = resource["issue"]
+                if resource.get("resourceType") != "OperationOutcome" or not isinstance(issues, list):
+                    return None
+            except (KeyError, TypeError):
+                return None
+            for issue in issues:
+                if not isinstance(issue, dict):
+                    return None
+                severity = issue.get("severity")
+                if severity not in counts:
+                    return None
+                counts[severity] += 1
+                canonical = json.dumps(
+                    issue,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                ).encode("utf-8")
+                findings.append(
+                    self._finding(
+                        "CARIN-DIAGNOSTIC-001",
+                        self._sanitized_carin_code(issue.get("code")),
+                        "Checksum-verified CARIN diagnostic issue retained by canonical issue digest.",
+                        source_path,
+                        self._safe_issue_pointer(issue),
+                        source="carin",
+                        severity=severity,
+                        evidence_sha256=sha256_bytes(canonical),
                     )
+                )
         return {
-            "status": "nonconformant",
+            "status": "nonconformant" if counts["fatal"] or counts["error"] else "no-errors-reported",
             "acceptance_authority": False,
             "tool": "HL7 FHIR Validator CLI#6.10.2",
             "package": "hl7.fhir.us.carin-bb#2.2.0",
-            "counts": dict(counts["total"]),
+            "counts": counts,
             "raw_evidence": {
-                "sha256": evidence["raw_operation_outcome"]["sha256"],
+                "sha256": sha256_bytes(raw),
                 "format": "FHIR-R4-Bundle-of-OperationOutcome",
                 "trusted_content": False,
+                "bytes": len(raw),
+                "issue_count": len(findings),
             },
             "findings": findings,
+            "verified_artifacts": verified_artifacts,
         }
+
+    def _verified_artifacts(self) -> list[dict[str, Any]] | None:
+        specifications: list[tuple[str, Path, dict[str, Any]]] = []
+        validator, runtime = self.package_lock["tooling"]
+        specifications.extend((
+            ("validator", self.offline_dir / "tooling/validator_cli-6.10.2.jar", validator),
+            ("runtime", self.offline_dir / "tooling/OpenJDK21U-jre_x64_linux_hotspot_21.0.12_8.tar.gz", runtime),
+        ))
+        for package in self.package_lock["packages"]:
+            specifications.append((
+                "package",
+                self.offline_dir / "packages" / f"{package['name']}#{package['version']}.tgz",
+                package,
+            ))
+        verified = []
+        for kind, path, specification in specifications:
+            try:
+                observed_sha256, observed_bytes = sha256_path(path)
+            except OSError:
+                return None
+            if observed_sha256 != specification["sha256"]:
+                return None
+            if "bytes" in specification and observed_bytes != specification["bytes"]:
+                return None
+            verified.append({
+                "kind": kind,
+                "name": specification["name"],
+                "version": specification["version"],
+                "sha256": specification["sha256"],
+                "bytes": observed_bytes,
+            })
+        return verified
+
+    def _validate_shape(
+        self,
+        role: str,
+        source_path: str,
+        value: Any,
+    ) -> dict[str, Any] | None:
+        limits = self.shape_registry["limits"]
+        pending: list[tuple[Any, str, str, int]] = [(value, "", "", 0)]
+        while pending:
+            current, normalized, concrete, depth = pending.pop()
+            if depth > limits["maximum_nesting_depth"]:
+                return self._bounded_content_finding(source_path, concrete, "NESTING_DEPTH_EXCEEDED")
+            json_type = self._json_type(current)
+            if (role, normalized, json_type) not in self.shape_entries:
+                declared_types = {
+                    item_type
+                    for entry_role, pointer, item_type in self.shape_entries
+                    if entry_role == role and pointer == normalized
+                }
+                code = "SHAPE_TYPE_MISMATCH" if declared_types else "UNDECLARED_SHAPE_PATH"
+                parent = concrete.rsplit("/", 1)[0] if "/" in concrete else ""
+                return self._bounded_content_finding(source_path, parent, code)
+
+            if isinstance(current, str):
+                if len(current.encode("utf-8")) > limits["maximum_string_utf8_bytes"]:
+                    return self._bounded_content_finding(source_path, concrete, "STRING_BYTES_EXCEEDED")
+            elif isinstance(current, dict):
+                if len(current) > limits["maximum_object_members"]:
+                    return self._bounded_content_finding(source_path, concrete, "OBJECT_MEMBERS_EXCEEDED")
+                children = []
+                for key, child in current.items():
+                    if len(key.encode("utf-8")) > limits["maximum_object_key_utf8_bytes"]:
+                        return self._bounded_content_finding(source_path, concrete, "OBJECT_KEY_BYTES_EXCEEDED")
+                    token = _pointer_token(key)
+                    children.append((child, f"{normalized}/{token}", f"{concrete}/{token}", depth + 1))
+                pending.extend(reversed(children))
+            elif isinstance(current, list):
+                if len(current) > limits["maximum_array_items"]:
+                    return self._bounded_content_finding(source_path, concrete, "ARRAY_ITEMS_EXCEEDED")
+                children = [
+                    (child, f"{normalized}/[]", f"{concrete}/{index}", depth + 1)
+                    for index, child in enumerate(current)
+                ]
+                pending.extend(reversed(children))
+        return None
+
+    @staticmethod
+    def _json_type(value: Any) -> str:
+        if isinstance(value, bool):
+            return "boolean"
+        if isinstance(value, str):
+            return "string"
+        if isinstance(value, dict):
+            return "object"
+        if isinstance(value, list):
+            return "array"
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if isinstance(value, float) and not math.isfinite(value):
+                return "non-finite"
+            return "number"
+        if value is None:
+            return "null"
+        return "unsupported"
+
+    @staticmethod
+    def _sanitized_carin_code(value: Any) -> str:
+        if not isinstance(value, str):
+            return "CARIN_UNKNOWN"
+        sanitized = re.sub(r"[^A-Z0-9]+", "_", value.upper()).strip("_")[:96]
+        return f"CARIN_{sanitized or 'UNKNOWN'}"
+
+    @staticmethod
+    def _safe_issue_pointer(issue: dict[str, Any]) -> str:
+        expressions = issue.get("expression")
+        if not isinstance(expressions, list) or not expressions or not isinstance(expressions[0], str):
+            return ""
+        expression = expressions[0]
+        if len(expression) > 2048:
+            return ""
+        expression = re.sub(r"/\*.*?\*/", "", expression)
+        tokens = expression.split(".")
+        if not tokens or tokens[0] not in {"Patient", "Bundle"}:
+            return ""
+        pointer = ""
+        for token in tokens[1:]:
+            matched = re.fullmatch(r"([A-Za-z][A-Za-z0-9]*)(?:\[([0-9]+)\])?", token)
+            if matched is None:
+                return ""
+            pointer += f"/{matched.group(1)}"
+            if matched.group(2) is not None:
+                pointer += f"/{matched.group(2)}"
+        return pointer
 
     def _terminology(
         self, resources: list[tuple[SourceDocument, str, Any]]
@@ -708,19 +965,20 @@ class ReferenceValidator:
 
     @staticmethod
     def _collect_registries(value: Any, extensions: set[str], systems: set[str]) -> None:
-        if isinstance(value, dict):
-            extension = value.get("extension")
-            if isinstance(extension, list):
-                for item in extension:
-                    if isinstance(item, dict) and isinstance(item.get("url"), str):
-                        extensions.add(item["url"])
-            if isinstance(value.get("system"), str):
-                systems.add(value["system"])
-            for child in value.values():
-                ReferenceValidator._collect_registries(child, extensions, systems)
-        elif isinstance(value, list):
-            for child in value:
-                ReferenceValidator._collect_registries(child, extensions, systems)
+        pending = [value]
+        while pending:
+            current = pending.pop()
+            if isinstance(current, dict):
+                extension = current.get("extension")
+                if isinstance(extension, list):
+                    for item in extension:
+                        if isinstance(item, dict) and isinstance(item.get("url"), str):
+                            extensions.add(item["url"])
+                if isinstance(current.get("system"), str):
+                    systems.add(current["system"])
+                pending.extend(current.values())
+            elif isinstance(current, list):
+                pending.extend(current)
 
     @staticmethod
     def _nonempty_string(value: Any) -> bool:
@@ -752,6 +1010,30 @@ class ReferenceValidator:
             pointer,
         )
 
+    def _bounded_content_finding(
+        self,
+        source_path: str,
+        pointer: str,
+        machine_code: str,
+    ) -> dict[str, Any]:
+        return self._finding(
+            "FHIR-COMPAT-CONTENT-001",
+            machine_code,
+            "Input violates the exact bounded role, path, and JSON-type registry.",
+            source_path,
+            pointer,
+        )
+
+    @staticmethod
+    def _safe_source_path(value: str) -> bool:
+        pure = PurePosixPath(value)
+        return (
+            not pure.is_absolute()
+            and ".." not in pure.parts
+            and str(pure) == value
+            and (value.startswith("dataset/") or value.startswith("tests/fixtures/fhir/data-001/"))
+        )
+
     @staticmethod
     def _finding(
         rule_id: str,
@@ -762,8 +1044,9 @@ class ReferenceValidator:
         *,
         source: str = "project",
         severity: str = "error",
+        evidence_sha256: str | None = None,
     ) -> dict[str, Any]:
-        return {
+        finding = {
             "rule_id": rule_id,
             "source": source,
             "severity": severity,
@@ -772,6 +1055,9 @@ class ReferenceValidator:
             "source_path": source_path,
             "json_pointer": json_pointer,
         }
+        if evidence_sha256 is not None:
+            finding["evidence_sha256"] = evidence_sha256
+        return finding
 
 
 def mutate_json_document(
