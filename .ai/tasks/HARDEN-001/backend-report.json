@@ -2,17 +2,47 @@
   "schema_version": "1.0",
   "task_id": "HARDEN-001",
   "agent": "codex-backend",
-  "status": "PARTIAL",
-  "summary": "",
-  "files_changed": [],
+  "status": "COMPLETE",
+  "summary": "Separated fixed Gemini policy from synthetic user data at the SDK role boundary, preserved the combined 128 KiB zero-call guard, and added a reproducible Python 3.12 hash lock plus a required strict dependency-audit gate with all applicable advisories resolved.",
+  "files_changed": [
+    ".ai/project.json",
+    ".github/workflows/ci.yml",
+    ".github/workflows/contracts.yml",
+    ".github/workflows/security.yml",
+    "backend/app/gemini.py",
+    "backend/requirements.txt",
+    "requirements-agent.txt",
+    "requirements.lock",
+    "tests/backend/test_dependency_hardening.py",
+    "tests/backend/test_gemini.py"
+  ],
   "contracts_used": [
     "contracts/openapi.yaml"
   ],
   "tests": {
-    "passed": false,
-    "commands": [],
-    "notes": ""
+    "passed": true,
+    "commands": [
+      "/tmp/vericlaim-lock-env/bin/python -m piptools compile --upgrade --generate-hashes --allow-unsafe --resolver=backtracking --strip-extras --output-file=requirements.lock requirements-agent.txt",
+      "/tmp/vericlaim-harden-install2/bin/python -m pip install --disable-pip-version-check --require-hashes -r requirements.lock",
+      "/tmp/vericlaim-harden-install2/bin/python -m pip check",
+      "/tmp/vericlaim-harden-install2/bin/python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r requirements.lock",
+      "/tmp/vericlaim-harden-install2/bin/python -m pytest -q tests/backend",
+      "/tmp/vericlaim-harden-install2/bin/python -m pytest -q tests/agentic",
+      "PATH=\"/tmp/vericlaim-harden-install2/bin:$PATH\" python scripts/agentctl.py project validate",
+      "PATH=\"/tmp/vericlaim-harden-install2/bin:$PATH\" python scripts/validate-contracts.py",
+      "PATH=\"/tmp/vericlaim-harden-install2/bin:$PATH\" /tmp/vericlaim-harden-install2/bin/python scripts/agentctl.py verify --security-only",
+      "PATH=\"/tmp/vericlaim-harden-install2/bin:$PATH\" /tmp/vericlaim-harden-install2/bin/python scripts/agentctl.py verify",
+      "git diff --check",
+      "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py scope check HARDEN-001 backend"
+    ],
+    "notes": "CPython 3.12.14 and pip-tools 7.5.0 generated the 70-package lock with 973 SHA-256 artifact hashes. A clean Python 3.12 installation from requirements.lock passed pip check. pip-audit 2.10.1 initially failed closed on applicable python-dotenv 1.1.1 and Starlette 0.47.3 advisories; exact direct pins were updated to python-dotenv 1.2.2 and FastAPI 0.141.1, resolving Starlette 1.6.0, after which the strict no-ignore audit reported no known vulnerabilities. All 48 backend and 12 agentic tests passed without application credentials or a live Vertex AI call; project, contract, full repository verification, security-only verification, diff-hygiene, and backend-scope checks passed."
   },
   "blockers": [],
-  "notes_for_next_agent": []
+  "notes_for_next_agent": [
+    "The Google Gen AI SDK now receives the immutable SYSTEM_INSTRUCTION only through GenerateContentConfig.system_instruction; contents is exactly the fixed SUPPLIED_SYNTHETIC_DATA_JSON label plus canonical JSON, and the combined UTF-8 byte limit is enforced before invocation.",
+    "Focused fake-client tests inspect actual SDK arguments and prove adversarial instruction-like data remains user content, the policy is absent from user content, environment sentinels and tools are absent, and an over-limit combined request makes zero provider calls.",
+    "requirements-agent.txt documents the exact clean Python 3.12/pip-tools 7.5.0 regeneration command and exactly pins pip-audit 2.10.1; requirements.lock SHA-256 is c9c96628d193ac836dfde12e51137549da155158c35639cdbb8f111403969420.",
+    "All three Python-installing GitHub Actions workflows install only requirements.lock with --require-hashes, and .ai/project.json requires the same strict, hash-enforced, no-resolution, no-ignore audit used by local security verification.",
+    "No contract, frontend, database, dataset, deterministic-rule, endpoint, model-authority, credential, tool, retry, or fallback behavior changed; independent testing and integrated verification remain orchestration gates."
+  ]
 }
