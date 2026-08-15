@@ -3,9 +3,8 @@
   "task_id": "DEMO-001",
   "agent": "codex-tester",
   "status": "COMPLETE",
-  "summary": "Independent testing at 532c9e6 proves all three final-review blockers are remediated: REPEAT-001 excludes incomplete signatures with canonical signal IDs, accepted long facts remain bounded end to end, and exact finite Decimal strings either serialize strictly or fail with a typed pre-model response.",
+  "summary": "Independent CI-environment testing proves b0eb183 correctly makes requirements-agent.txt install the pinned backend manifest, allowing the unchanged workflow verification command to pass the complete repository gate in a clean virtual environment.",
   "files_changed": [
-    "tests/backend/test_independent_acceptance.py",
     ".ai/tasks/DEMO-001/test-report.json"
   ],
   "contracts_used": [
@@ -14,17 +13,17 @@
   "tests": {
     "passed": true,
     "commands": [
+      "python3 -m venv /tmp/vericlaim-ci-final.uJE4uR/venv",
+      "/tmp/vericlaim-ci-final.uJE4uR/venv/bin/python -m pip install -r requirements-agent.txt",
       "sha256sum dataset/patient_bbuser29999.json dataset/coverage_bundle_bbuser29999.json dataset/eob_bundle_bbuser29999.json",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/backend -p no:cacheprovider",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/backend/test_independent_acceptance.py -p no:cacheprovider",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/validate-contracts.py",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/agentic -p no:cacheprovider",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/agentctl.py task validate DEMO-001",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python -m py_compile tests/backend/test_independent_acceptance.py tests/backend/test_api.py tests/backend/test_extraction_and_rules.py",
+      "PATH=\"/tmp/vericlaim-ci-final.uJE4uR/venv/bin:$PATH\" /tmp/vericlaim-ci-final.uJE4uR/venv/bin/python scripts/agentctl.py verify",
+      "/tmp/vericlaim-ci-final.uJE4uR/venv/bin/python -m pip check",
+      "PATH=\"/tmp/vericlaim-ci-final.uJE4uR/venv/bin:$PATH\" /tmp/vericlaim-ci-final.uJE4uR/venv/bin/python scripts/agentctl.py task validate DEMO-001",
+      "PATH=\"/tmp/vericlaim-ci-final.uJE4uR/venv/bin:$PATH\" /tmp/vericlaim-ci-final.uJE4uR/venv/bin/python scripts/validate-contracts.py",
       "git diff --check",
-      "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/agentctl.py scope check DEMO-001 tester"
+      "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/agentctl.py scope check DEMO-001 tester --base HEAD"
     ],
-    "notes": "Current integrated HEAD 532c9e6: 43 backend tests passed in 5.59s, including 22 independently owned acceptance tests; the focused independent suite passed 22 tests in 6.36s; and 12 agentic regressions passed in 15.67s. Static OpenAPI validation, DEMO-001 task/report validation, compilation of the independent and backend remediation test modules, diff hygiene, and tester scope all passed. No tests were skipped, xfailed, flaky, or retried. Tests were deliberately credential-free: they did not load .env or invoke live Vertex AI. Independent REPEAT-001 cases prove a single complete unique item has neither signals nor missing evidence; an otherwise matching item with one valid plus one missing Coverage-reference slot is excluded from exact-duplicate grouping and records canonical missing evidence; and multiple opaque repetition groups receive stable IDs in rule-key order despite unsorted item input. Independent endpoint cases prove a 600-character fact is returned unchanged while its evidence summary is ellipsized to exactly 500 characters, a high-precision supported Decimal is returned as the exact canonical string and survives json.dumps(..., allow_nan=false), and Decimal('1e999') produces the sanitized EXTRACTION_LIMIT_EXCEEDED HTTP 500 with model_called=false and zero summarizer calls. Existing independent coverage continues to prove exact 0.01 versus 0.0101 arithmetic, frozen Tukey values, evidence resolution, fixed-loader errors, model zero/one-call behavior, output/citation rejection, and real-response OpenAPI validity. Review of the exact remediation confirmed the implementation uses complete Coverage-reference slots for duplicate signatures, bounded Decimal arithmetic/text and evidence summaries, and no contract/trust-boundary expansion. Documentation now correctly delegates lifecycle state to task.json and describes the 30-second/2,048-token limits as fixed source-controlled constants rather than environment variables. Source hashes before and after all current tests remained patient=6fb43e72120e3a3cfb7bc756d0661eebcc0925a2bc994f60ecbf573813e3f58a, coverage=fef088d7c6df3fb33bc02a1e32be53a67db0815046b1e2d998d44cb1536ec33c, eob=d48c12a8d94e331c786f3876ea94df4356209c216c54392346dae87f84fc34f0. Tester scope check is repeated after this report update so both tester-owned files are covered."
+    "notes": "Final dependency remediation b0eb183 with orchestrator evidence lineage ab86ae8 was independently reproduced in the new /tmp/vericlaim-ci-final.uJE4uR/venv environment. Installing only requirements-agent.txt followed its new -r backend/requirements.txt include and installed the pinned FastAPI, Google Gen AI, HTTPX, AnyIO, Pydantic, pytest, dotenv, and Uvicorn runtime packages plus the agentic validation packages; pip check reported no broken requirements. The unchanged CI-equivalent `python scripts/agentctl.py verify` command then passed project schema, all task/report schemas, OpenAPI, 12 agentic tests in 7.04s, 43 backend tests in 2.35s, and the tracked-secret-file baseline. Explicit DEMO-001 task and OpenAPI validations plus diff hygiene also passed. No tests were skipped, xfailed, flaky, or retried. The run did not load .env or invoke live Vertex AI. The local host offers Python 3.10.12 rather than GitHub Actions' configured Python 3.12, so exact interpreter-version parity was unavailable; all declared packages installed cleanly from their Python-compatible distributions, and the complete CI command passed in isolation. The final remediation preserves .github/workflows/ci.yml unchanged and keeps backend pins authoritative in backend/requirements.txt rather than duplicating them. Source hashes before and after remained patient=6fb43e72120e3a3cfb7bc756d0661eebcc0925a2bc994f60ecbf573813e3f58a, coverage=fef088d7c6df3fb33bc02a1e32be53a67db0815046b1e2d998d44cb1536ec33c, eob=d48c12a8d94e331c786f3876ea94df4356209c216c54392346dae87f84fc34f0. The final scope check uses the clean committed HEAD base so only this report-only tester update is attributed."
   },
   "blockers": [],
   "notes_for_next_agent": [
