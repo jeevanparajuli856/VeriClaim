@@ -2,10 +2,9 @@
   "schema_version": "1.0",
   "task_id": "DATA-001",
   "agent": "codex-architect",
-  "status": "COMPLETE",
-  "summary": "Defined the minimal versioned FHIR R4 ingestion-data contract for the immutable Blue Button seed: a declared cross-file source set containing one standalone Patient and homogeneous Coverage or pharmacy-EOB searchset pages, with fail-closed package evidence, offline layered validation, inert untrusted content, structured outcomes, provenance/data-card and fixture rules, and no application implementation before PLATFORM-001.",
+  "status": "BLOCKED",
+  "summary": "The approved DATA-001 boundary cannot currently be completed: official hl7.fhir.us.carin-bb#2.2.0 on FHIR R4 4.0.1, validated offline with HL7 validator 6.10.2 and its pinned local dependency closure, does not validate the unchanged Patient seed, while the human has prohibited an older package, a substitute profile, and invented compatibility semantics.",
   "files_changed": [
-    "docs/features/DATA-001.md",
     ".ai/tasks/DATA-001/architecture-report.json"
   ],
   "impacts": {
@@ -17,10 +16,15 @@
     "contract_change": true
   },
   "decisions": [
+    "The official package evidence resolves the package-selection gate to hl7.fhir.us.carin-bb#2.2.0, FHIR R4 4.0.1, and HL7 validator 6.10.2 with a full pinned local closure usable under -no-http-access; no latest-version resolution or older/substitute package is permitted.",
+    "This evidence does not satisfy the separate compatibility gate. The unchanged Patient's unversioned meta.profile does not meet the 2.2 major.minor assertion, the validator cannot match the required Patient.identifier:memberid slice, and the observed CMS Blue Button variable and identifier-currency extensions have no definitions in the official CARIN package closure and are reported as disallowed structural content.",
+    "The seed's unversioned CARIN canonical is ambiguous evidence of its intended historical profile version. Resolving that canonical to 2.2.0 is deterministic under the selected lock, but it does not make the instance conformant to 2.2.0 and cannot be used to infer that the seed was authored for that version.",
+    "The architecture cannot make this input accepted by downgrading validator errors, removing or rewriting source fields, injecting a version into meta.profile, translating identifier codes, fabricating extension StructureDefinitions, validating a filtered copy, or silently treating CARIN conformance as base-R4-only conformance. Each option changes evidence, semantics, or the approved fail-closed boundary.",
+    "No feature-spec change is made during this reconciliation. The existing requirement that the selected official package validate the unchanged seed remains an unmet architecture gate and makes the task BLOCKED until an authorized upstream decision changes the corpus or the acceptance/profile boundary, or supplies authoritative compatible definitions without substitution.",
     "DATA-001 defines a cross-component ingestion-data contract under contracts/fhir/data-001, not an HTTP API. It requires boundary.json, packages.lock.json, validation-outcome.schema.json, source-manifest.json, data-card.json, and a pinned offline README; contracts/openapi.yaml remains unchanged unless a later task approves an API.",
     "The validation unit is one declared source set so the standalone Patient and separate searchset pages can resolve relative Coverage-to-Patient and EOB-to-Patient/Coverage references across files without network lookup.",
     "The minimal accepted envelope is a standalone Patient with the exact observed Patient canonical, or a homogeneous Bundle[type=searchset] containing only Coverage entries with the exact observed Coverage canonical or only ExplanationOfBenefit entries with the exact observed pharmacy canonical. Standalone Coverage/EOB, mixed bundles, other Bundle types, resources, and profiles are unsupported.",
-    "The repository contains only unversioned CARIN canonicals and no authoritative exact FHIR core/CARIN/terminology package version, validator release, digest, dependency, or redistribution-license evidence. Before CONTRACT_READY, authoritative evidence must populate the lock; missing/ambiguous/unavailable material fails closed and cannot silently degrade to base-only validation.",
+    "Package identity and offline availability are now evidenced, but a completed lock remains subject to the contract worker's authorized artifact work and digest/license recording. Package availability must not be conflated with seed compatibility.",
     "Base/profile-required elements plus narrowly enumerated observed paths and exact extension URLs form the machine allowlist. Profile-valid but unlisted content remains unsupported; modifier extensions, contained resources, attachments, executable Bundle request/response content, and non-JSON forms are not accepted initially.",
     "Narratives, coding displays, extensions, identifiers, Bundle links/fullUrls, and source content are untrusted inert data. Profile-valid narratives may be preserved raw with an explicit warning but are not rendered, executed, treated as instructions, or echoed into logs; URLs and canonicals are never dereferenced.",
     "Terminology validation uses only locked offline artifacts. Required resolvable bindings reject invalid codes; weaker bindings preserve their defined strength. Enumerated observed CMS codes without locked authoritative definitions are preserved as unverified and cannot support payer or domain semantics.",
@@ -32,9 +36,19 @@
   ],
   "risks": [
     {
+      "severity": "critical",
+      "description": "Marking the unchanged seed accepted under CARIN 2.2.0 despite the pinned validator's structural errors would create a false conformance claim and violate the fail-closed contract.",
+      "mitigation": "Keep DATA-001 blocked and do not advance to contract implementation until the orchestrator records an authorized source-of-truth decision that can be validated without mutating evidence or inventing semantics."
+    },
+    {
       "severity": "high",
-      "description": "Selecting a CARIN or FHIR package/version from sample dates, unversioned canonicals, memory, or a validator default could validate against the wrong historical rules and make results irreproducible.",
-      "mitigation": "Require authoritative package publications, exact versions, dependency graph, immutable digests, validator digest, license/usage evidence, and an approved offline materialization in packages.lock.json before CONTRACT_READY; fail closed otherwise."
+      "description": "The unversioned profile canonical cannot identify the historical CARIN version intended by the source, and selecting an older version by trial would be both ambiguous and expressly prohibited.",
+      "mitigation": "Record the ambiguity; retain the exact 2.2.0 lock; require authoritative source provenance or an explicit human decision to change the corpus or supported-profile requirements."
+    },
+    {
+      "severity": "high",
+      "description": "Project-authored extension definitions or identifier/profile rewrites could appear to repair validation while silently assigning datatype, context, cardinality, terminology, or identity semantics not established by an authoritative source.",
+      "mitigation": "Do not create compatibility artifacts or transforms unless their exact semantics and authority are separately approved and versioned through architecture/contract reconciliation."
     },
     {
       "severity": "high",
@@ -62,10 +76,29 @@
       "mitigation": "Retain unverified data-card fields, restrict use to the approved local boundary, require authorized source/license review before benchmark freeze/distribution, and never let validator success promote provenance status."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "type": "PINNED_PROFILE_INCOMPATIBILITY",
+      "description": "Official hl7.fhir.us.carin-bb#2.2.0 with FHIR R4 4.0.1 and HL7 validator 6.10.2, run against the full pinned local closure under -no-http-access, reports the unchanged Patient as nonconformant. The captured OperationOutcome at /tmp/data-001-patient-validation.json includes a missing required Patient.identifier:memberid slice and the patient-meta-profile-version finding. The source declares an unversioned canonical; its identifiers include an MB coding without the profile pattern's stated terminology version and a separate Medicare identifier coded MC, and the validator finds no 2.2.0 memberid slice match.",
+      "suggestion": "The orchestrator must obtain an authorized upstream decision: replace/add an immutable officially 2.2.0-conformant source while retaining this seed as rejected evidence, or revise the feature's acceptance/profile boundary so the unchanged seed is explicitly nonconformant/unsupported rather than accepted. An older or substitute package is not an allowed resolution."
+    },
+    {
+      "type": "AUTHORITATIVE_EXTENSION_DEFINITIONS_MISSING",
+      "description": "The unchanged Patient contains CMS Blue Button variable extensions and an identifier-currency extension that are absent from the official CARIN 2.2.0 package closure; the offline validator reports them as unknown and disallowed structural content. The approved architecture simultaneously requires the observed CMS extensions to be supported and the unchanged seed to pass profile validation.",
+      "suggestion": "A source owner may provide exact authoritative, versioned, digest-pinned definitions compatible with CARIN 2.2.0 and approved usage terms. Otherwise the orchestrator must change the corpus or acceptance boundary; the project must not fabricate extension StructureDefinitions or downgrade these errors."
+    },
+    {
+      "type": "UPSTREAM_DECISION_REQUIRED",
+      "description": "The immutable-seed requirement, accepted-CARIN-profile requirement, exact 2.2.0 pin, and prohibition on substitution/invented semantics cannot all be satisfied by the current evidence. Choosing which requirement or source artifact changes is product/source-of-truth authority outside the architect's write scope.",
+      "suggestion": "Keep task state reconciliation with the orchestrator. Do not advance DATA-001 to CONTRACT_READY or ask contract/test workers to encode a passing exception until the human selects and documents a compatible boundary."
+    }
+  ],
   "notes_for_next_agent": [
-    "The orchestrator must reconcile the task contract scope and run contract definition/validation because contract_change=true; do not edit OpenAPI merely because a FHIR input contract is added.",
-    "The contract worker must resolve the exact official FHIR R4 core, CARIN Blue Button, transitive terminology package, validator versions, immutable digests, and license/offline-distribution evidence from authoritative sources. If that evidence is unavailable or requires approval, stop before CONTRACT_READY rather than guessing.",
+    "The orchestrator must reconcile the mutually incompatible upstream requirements before contract work continues. The task should not advance to CONTRACT_READY while this report is BLOCKED.",
+    "Do not select latest, try older CARIN releases, substitute another profile, edit dataset/, filter fields before validation, or create project-owned compatibility definitions as an implicit workaround.",
+    "If the human authorizes a new compatible source, keep the current four-file corpus byte-identical and preserve it as provenance-bearing rejected/nonconformant evidence unless the revised specification explicitly says otherwise.",
+    "If exact authoritative CMS extension definitions are supplied, independently verify their identity, version, compatibility, dependency closure, digest, license/usage basis, and offline behavior; that alone does not resolve the meta.profile and memberid-slice incompatibilities.",
+    "After upstream reconciliation, the orchestrator must rerun architecture because contract_change=true and testing=true remain required; database, backend, frontend, and infrastructure impacts remain false.",
     "Generate the exact observed element, extension, and terminology registries deterministically from the unchanged source, but review them against the locked profiles; do not use wildcard CMS-prefix acceptance or claim CMS code meaning that the repository does not establish.",
     "The tester is required. Its independent fixtures/harness belong under tests/fixtures/fhir/data-001 and tests/data, must run with network disabled, and must prove the repository-root dataset hashes are identical before/after validation.",
     "PLATFORM-001 owns runtime parsing/normalization, APIs, persistence/quarantine, authorization, size limits for an endpoint, Docker/application dependencies, and deployment. DATA-001 must not create those components.",

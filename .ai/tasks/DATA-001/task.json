@@ -3,7 +3,7 @@
   "task_id": "DATA-001",
   "title": "Define and validate the minimal FHIR R4 profile",
   "type": "feature",
-  "status": "ARCHITECTURE_READY",
+  "status": "BLOCKED",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",
@@ -16,7 +16,9 @@
     "review": "codex"
   },
   "spec": "docs/features/DATA-001.md",
-  "contracts": [],
+  "contracts": [
+    "contracts/fhir/data-001/packages.lock.json"
+  ],
   "scope": {
     "database": [],
     "backend": [],
