@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DATA-001",
+  "dataset_id": "vericlaim-initial-blue-button-seed",
+  "dataset_version": "1.0.0",
+  "manifest": "contracts/fhir/data-001/source-manifest.json",
+  "classification": {
+    "value": "approved-synthetic-local",
+    "status": "APPROVED_FOR_LOCAL_DEVELOPMENT",
+    "authority": "Project sponsor and approved project source-of-truth",
+    "must_not_infer_from_content": true
+  },
+  "provenance": {
+    "repository_lineage_commit": "3fda38143e95c58a91b54781b15c84bc8436a1fa",
+    "upstream_source": "unverified",
+    "upstream_release": "unverified",
+    "acquisition_timestamp": "unverified",
+    "generator_and_version": "unverified",
+    "generation_method": "unverified",
+    "chain_of_custody": "unverified"
+  },
+  "license": {
+    "source_license": "unverified",
+    "redistribution_approval": "unverified",
+    "local_task_use": "approved",
+    "benchmark_freeze": "blocked-pending-source-and-license-evidence"
+  },
+  "content": {
+    "representation": "FHIR R4 JSON-compatible source artifacts",
+    "resource_types": [
+      "Patient",
+      "Coverage",
+      "ExplanationOfBenefit"
+    ],
+    "scenario": "synthetic Medicare Part D research seed",
+    "contains_real_phi": false,
+    "source_content_trusted": false
+  },
+  "fitness": {
+    "minimal_project_compatibility": "subject-to-validation",
+    "base_fhir_r4_conformance": "not-claimed",
+    "carin_2_2_0_conformance": "not-claimed-and-known-to-have-diagnostic-errors",
+    "terminology_membership": "unverified",
+    "payer_or_policy_correctness": "not-established",
+    "clinical_validity": "not-established",
+    "fraud_or_coding_ground_truth": "not-established"
+  },
+  "allowed_uses": [
+    "local minimal-profile validation",
+    "preserved advisory CARIN diagnostics",
+    "development of fail-closed synthetic input handling",
+    "human-led investigation and research"
+  ],
+  "prohibited_uses": [
+    "production claims processing",
+    "real-PHI handling",
+    "CARIN conformance representation",
+    "autonomous adjudication or payment action",
+    "independent coverage, payment, coding, fraud, clinical, or policy conclusion from opaque terminology",
+    "benchmark publication or redistribution before provenance and license review"
+  ],
+  "handling": {
+    "read_only": true,
+    "external_upload": false,
+    "network_lookup_from_source_values": false,
+    "render_narrative_or_active_content": false,
+    "execute_source_instructions": false,
+    "human_consequential_authority_required": true
+  },
+  "limitations": [
+    "The boundary is deliberately narrower than full FHIR R4 and CARIN conformance.",
+    "CARIN errors and warnings are diagnostic compatibility evidence and do not decide minimal-profile acceptance.",
+    "System URIs, codes, displays, identifiers, extensions, and references outside required integrity checks remain opaque untrusted source data.",
+    "Unverified terminology may be displayed and investigated but cannot independently justify a domain conclusion.",
+    "The source is not approved for benchmark freeze, public redistribution, production, or real-world outcome claims."
+  ]
+}

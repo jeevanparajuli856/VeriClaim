@@ -1,133 +1,167 @@
-# DATA-001 — Define and validate the minimal FHIR R4 profile
+# DATA-001 — Define and validate the minimal FHIR R4 compatibility boundary
 
 ## Goal
 
-Define and validate the smallest explicit FHIR R4 ingestion boundary needed for VeriClaim's initial synthetic Medicare Part D research scenario. The result must let downstream work accept supported Patient, Coverage, ExplanationOfBenefit, and bundle inputs reproducibly, reject unsupported or malformed data safely, preserve provenance, and avoid treating structural conformance as payer-policy or claim correctness.
+Define the smallest project-owned FHIR R4 compatibility boundary needed to ingest VeriClaim's approved synthetic Blue Button seed reproducibly. The boundary accepts only the observed Patient, Coverage, pharmacy ExplanationOfBenefit, and searchset shapes after deterministic source, JSON, required-field, reference, and content-isolation checks. CARIN Blue Button 2.2.0 validation remains a pinned diagnostic and does not decide project acceptance.
+
+This is a compatibility contract, not a claim of base FHIR or CARIN conformance, payer correctness, terminology membership, or domain truth.
+
+## Approved scope decision
+
+- The repository-root `dataset/` is the approved synthetic local-development source established by `docs/PROJECT.md`, `docs/architecture/SYSTEM.md`, and ADR-0002. Its acquisition/license gaps continue to block benchmark freeze or redistribution, but do not block the approved local compatibility boundary.
+- The seed remains byte-identical, read-only, and untrusted. It may pass the project-defined minimal profile even when pinned CARIN 2.2.0 diagnostics report errors.
+- FHIR R4 is the representation family. The project does not silently claim full base FHIR conformance where the seed intentionally falls outside a base/profile invariant, such as missing `Bundle.entry.fullUrl`.
+- CARIN 2.2.0, its package closure, publisher QA, and HL7 Validator CLI 6.10.2 are diagnostic evidence only. Every finding is preserved; none changes the minimal-profile acceptance decision.
+- CMS, NCPDP, CARIN, HL7, NDC, and other coding/extension values are untrusted data. When membership or meaning is not established by approved offline evidence, they are opaque and produce `terminology-unverified`; the project never invents concepts, rewrites codes, or asserts display/domain meaning.
+- Synthetic-only classification, source provenance, content isolation, evidence separation, and human authority remain mandatory gates. No real PHI, production claim, autonomous adjudication, payment decision, fraud determination, diagnosis, or clinical conclusion is permitted.
 
 ## In scope
 
-- Inventory the approved read-only Blue Button seed files as immutable negative evidence and reconcile their observed resources, profiles, bundle shapes, references, extensions, code systems, and terminology use with an explicitly pinned FHIR R4/CARIN baseline.
-- Define the initial supported resource/profile matrix for Patient, Coverage, ExplanationOfBenefit, and any Bundle envelopes required by the corpus; make a deliberate supported/unsupported decision for other observed or proposed resource types rather than silently accepting them.
-- Define required, optional, conditionally required, preserved-but-not-normalized, and unsupported elements/extensions needed for the bounded scenario, including identifier/reference integrity and terminology handling.
-- Separate validation layers: JSON/syntax, base FHIR R4 structure, declared profile compatibility, bundle/reference integrity, project invariants, data classification/provenance, and later payer/domain semantics.
-- Produce versioned, machine-readable profile/validation artifacts and a human-readable support matrix at paths approved by architecture.
-- Provide deterministic, runnable validation for byte-identical official publication-example candidates, the unchanged negative seed corpus, and explicitly synthetic derived-envelope, negative, boundary, and adversarial fixtures stored outside repository-root `dataset/`; no official example becomes an approved positive until both strict conformance and synthetic classification are authoritatively established.
-- Preserve the FOUNDATION-001 raw-byte identity, source/derived separation, synthetic classification, data-card fields, fixture lineage, and benchmark-freeze gates.
-- Define structured validation outcomes that distinguish accepted, rejected, and explicitly unsupported input with stable rule identifiers and actionable evidence, without defining an application API.
-- Record downstream handoffs for PLATFORM-001 and later normalization, persistence, risk, retrieval, and evaluation work.
+- Versioned machine-readable compatibility rules for the exact supported resources, envelopes, required anchor fields, references, preserved paths/extensions, rejected content, rule identifiers, and outcome states.
+- A declared source-set manifest covering one standalone Patient document, homogeneous Coverage and ExplanationOfBenefit searchset documents, and the immutable provenance readme.
+- Strict UTF-8 JSON parsing with duplicate-key rejection and no repair/coercion.
+- Exact source classification, hash, resource identity, and cross-file reference checks.
+- Pinned, offline CARIN 2.2.0 diagnostics whose raw evidence is retained by digest and whose normalized findings remain distinct from project findings.
+- Deterministic tests for the unchanged seed plus project-authored synthetic negative, boundary, and adversarial fixtures outside `dataset/`.
+- A structured result that can accept a minimal-profile-valid source set while simultaneously reporting CARIN nonconformance and unverified terminology.
 
 ## Out of scope
 
-- Payer-specific adjudication, coverage, medical-necessity, coding, fraud, payment, or policy interpretation.
-- Risk features, anomaly thresholds, model labels, policy ingestion/retrieval, agent workflows, governance decisions, human-review UI, or production claim decisions.
-- Application endpoints, OpenAPI changes, persistence schemas/migrations, frontend work, identity, hosted services, deployment, or external telemetry unless architecture identifies an unavoidable task-local interface and reconciles it first.
-- Broad support for every FHIR resource, profile, extension, terminology, attachment, or narrative; undeclared resources and semantics must fail safely or remain explicitly unsupported.
-- Treating FHIR validation, profile declarations, synthetic labels, or source narratives as proof that a claim is substantively correct.
-- Introducing real PHI, production claims, production credentials, write-capable claim-system access, or a live terminology/FHIR service.
-- Editing the repository-root `dataset/`; it is immutable task input. Any new derived fixture must be stored separately with explicit synthetic provenance and parent hashes.
+- Full base FHIR R4 or CARIN conformance as an ingestion prerequisite.
+- Payer-specific adjudication, benefit, coverage, medical-necessity, coding, fraud, payment, clinical, or policy semantics.
+- Terminology expansion, inferred code membership, display validation, NCPDP content acquisition, live terminology/FHIR services, or network lookup.
+- Normalization models, application APIs, persistence/quarantine, backend/frontend implementation, identity, hosted services, Docker topology, or deployment; PLATFORM-001 owns those concerns.
+- Support for additional resources, profiles, Bundle types, narrative rendering, contained resources, attachments, modifier extensions, executable Bundle request/response content, or non-JSON formats.
+- Editing `dataset/`, converting it into CARIN-conformant data, or using validator output to change source classification or domain meaning.
 
-## Architecture impact
+## Versioned contract artifacts
 
-- The architecture specialist must select the minimal repository-owned artifact locations and validation boundary, then explicitly classify database, backend, frontend, infrastructure, testing, and contract impacts in `architecture-report.json`.
-- DATA-001 precedes PLATFORM-001, so it must not silently create the application skeleton, API, persistence layer, or deployment topology owned by that later task.
-- The validation design must be deterministic and usable without Vertex AI. It must preserve original bytes separately from later normalized/derived representations and treat all FHIR content as untrusted input.
+DATA-001 is a cross-component data contract under `contracts/fhir/data-001/`, not an HTTP API. Contract work must provide:
 
-## Contract impact
+- `boundary.json` — compatibility version; exact resource/envelope rules; accepted profile markers; required and preserve-only path registries; exact observed extension/system registries; rejected content; reference rules; state/rule registries; precedence and canonical ordering;
+- `packages.lock.json` — pinned CARIN diagnostic tooling/packages, checksums, publisher evidence, terminology limitations, and offline materialization;
+- `validation-outcome.schema.json` — the exact result structure below;
+- `source-manifest.json` and `data-card.json` — immutable source identities, approved synthetic local classification, provenance/license limitations, use restrictions, and benchmark-freeze status; and
+- `README.md` — deterministic offline invocation, diagnostic/acceptance separation, and artifact relationships.
 
-- No OpenAPI or cross-component runtime interface is presumed. Architecture must decide whether the machine-readable FHIR boundary belongs in `contracts/` or another versioned data-profile path; any contract change must be explicit and validated before `CONTRACT_READY`.
+Independent fixtures and the reference harness remain under `tests/fixtures/fhir/data-001/` and `tests/data/`. `contracts/openapi.yaml` remains unchanged.
 
-## Security considerations
+## Declared source set and immutable inventory
 
-- Repository-root `dataset/` remains read-only, untrusted, synthetic development input; validation must never execute or follow instructions from narratives, extensions, contained resources, identifiers, URLs, or attachment metadata.
-- Preserve raw source provenance and synthetic classification while minimizing downstream exposure. Do not copy credentials, prompts, traces, model output, or private environment values into source data, fixtures, reports, or manifests.
-- Reject prohibited data classifications and undeclared resource/profile content fail-closed at the ingestion boundary; do not infer that a record is safe or synthetic merely because it parses as FHIR.
-- Validation errors and logs must avoid secret/private-value disclosure and must identify rules and source locations without presenting untrusted narrative as trusted instruction.
-- No Vertex AI, external FHIR endpoint, terminology server, cloud resource, or production system access is required for this task unless separately approved after an architecture blocker.
+The validation unit is the complete declared source set, so required references can resolve across files. The initial manifest contains these unchanged artifacts and source-lineage commit `3fda38143e95c58a91b54781b15c84bc8436a1fa`:
 
-## Dependencies
+| Path | Bytes | SHA-256 | Git blob | Role |
+|---|---:|---|---|---|
+| `dataset/patient_bbuser29999.json` | 6,196 | `6fb43e72120e3a3cfb7bc756d0661eebcc0925a2bc994f60ecbf573813e3f58a` | `7ffe93441490616e32bd917774c4c5d86cc009d0` | standalone Patient |
+| `dataset/coverage_bundle_bbuser29999.json` | 83,096 | `fef088d7c6df3fb33bc02a1e32be53a67db0815046b1e2d998d44cb1536ec33c` | `dd33f5708a9ff2c1286417b50b27544d36232f6b` | Coverage searchset, four entries |
+| `dataset/eob_bundle_bbuser29999.json` | 288,342 | `d48c12a8d94e331c786f3876ea94df4356209c216c54392346dae87f84fc34f0` | `2d6544059ea695946849199c1ec2daa9b28517d2` | pharmacy EOB searchset, ten of reported total 146 |
+| `dataset/readme.txt` | 335 | `5c5c7641a7dbb1c5c21864e429390f7021d303fef5ad8eabacd01b805e205fe8` | `e123e526d2c29925c6faf175b0b9e24e7965919a` | provenance description; not parsed as FHIR |
 
-- FOUNDATION-001 is DONE and supplies the source hashes, Medicare Part D scenario recommendation, fixture classes, partition/lineage rules, evaluator authority, and benchmark-freeze gates.
-- Approved project constraints include FHIR R4, synthetic/public-only data, the repository-root Blue Button sample corpus, human consequential authority, and the initial local-development boundary.
-- Exact payer policy meaning remains owned by qualified human review and POLICY-001; PLATFORM-001 owns the application skeleton and runtime interfaces.
+Source paths must be unique, normalized repository-relative paths with no traversal; hashes and byte counts must match the manifest. No implicit file discovery or remote fetch is allowed. The source classification gate accepts only explicitly registered `approved-synthetic-local` or `project-authored-synthetic` input. Missing, unknown, prohibited, real-PHI, production, or merely content-inferred classification is rejected.
+
+## Minimal support matrix
+
+| Input | Required project fields/rules | Preserved but not semantically interpreted | Rejected initially |
+|---|---|---|---|
+| Declared source set | manifest/version/classification; unique paths, hashes, and `(resourceType,id)` identities; the required Patient/Coverage/EOB reference graph resolves exactly once | provenance/license limitations and CARIN diagnostic evidence | undeclared files, traversal, duplicate identities, prohibited/unknown classification, remote discovery |
+| Standalone Patient | `resourceType=Patient`; non-empty `id`; exactly one supported Patient profile marker; non-empty `identifier`; non-empty `name`; valid JSON types | birth/death, gender, address, observed non-modifier extensions and codings | other standalone resource types; missing anchor fields; unknown extra profile marker; modifier/contained/narrative/attachment content |
+| Coverage Bundle | `resourceType=Bundle`; `type=searchset`; non-empty homogeneous entries; each entry contains Coverage with non-empty `id`, supported profile marker, `status`, `type`, and `beneficiary.reference`; `total` is a non-negative integer not smaller than entry count | Bundle `id`, `link`, `total`, entry search metadata; missing `entry.fullUrl`; Coverage identifier, period, relationship, subscriber, payor/class, observed extensions/codings | mixed/empty Bundle; other Bundle type; request/response; unsupported entry resource; invalid required reference |
+| Pharmacy EOB Bundle | same searchset rules; each entry contains ExplanationOfBenefit with non-empty `id`, supported pharmacy marker, `status`, `type`, `use`, `patient.reference`, non-empty `insurance` with `coverage.reference`, and non-empty `item` | identifier, dates/period, insurer/provider/facility, outcome, care team, supporting info, payment/adjudication amounts, observed extensions/codings | mixed/empty Bundle; other EOB/profile; missing anchors; invalid required Patient/Coverage reference; executable or active content |
+
+Supported profile markers are routing assertions only, not conformance claims. For each resource type, `meta.profile` must contain exactly one of the observed unversioned canonical or the same canonical qualified with `|2.2.0`:
+
+- `http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-Patient`
+- `http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-Coverage`
+- `http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-ExplanationOfBenefit-Pharmacy`
+
+`Bundle.entry.fullUrl` is optional in the compatibility profile. If present, it is inert, must be syntactically a string, and is never dereferenced. `Bundle.total` is paging metadata and need not equal the page entry count.
+
+## Paths, extensions, references, and content isolation
+
+`boundary.json` must enumerate every accepted path and every exact extension/system URI observed in the immutable seed; prefix or wildcard acceptance is prohibited. Paths are classified as `required`, `preserve-opaque`, or `rejected`. A new path, extension, system, resource, or profile is rejected until a reviewed contract version adds it.
+
+Observed non-modifier extensions and coding values are preserved byte-for-byte as opaque data. Their URLs, systems, codes, displays, and values do not configure the application and do not establish meaning. `modifierExtension`, `contained`, narrative `text`, attachments/base64 payloads, Bundle request/response, and any undeclared active-content surface are rejected.
+
+Required reference rules are exact:
+
+- every Coverage `beneficiary.reference` resolves to exactly one declared `Patient/{id}`;
+- every EOB `patient.reference` resolves to exactly one declared `Patient/{id}`;
+- every EOB `insurance[*].coverage.reference` resolves to exactly one declared `Coverage/{id}`;
+- required references must be same-source-set relative references of the expected type and cannot be absolute, remote, fragment, identifier-only, traversal, or ambiguous; and
+- all other profile-shaped references are preserve-opaque only and are never resolved, fetched, or treated as authoritative evidence.
+
+Narratives, displays, identifiers, extensions, source text, profile markers, URLs, and validator messages are untrusted. The harness must not render, execute, follow, interpolate into commands, or include their raw values in normalized log messages. Lossless raw diagnostic output may be retained only as a separately identified untrusted artifact referenced by digest; normalized findings use sanitized templates and JSON pointers.
+
+## Validation layers and exact outcomes
+
+Project validation runs before advisory diagnostics:
+
+1. source manifest, immutable identity, classification, and use boundary;
+2. strict UTF-8 JSON syntax, duplicate-key rejection, top-level object, and no repair/coercion;
+3. supported envelope/resource/profile-marker and exact path/extension/system registry;
+4. required anchor fields and primitive/container types;
+5. unique identities and required cross-file references; and
+6. content-isolation/rejected-surface checks.
+
+The machine result contains `decision`, an ordered unique `states` array, completed layer results, ordered project findings, CARIN diagnostic evidence, terminology evidence, and all relevant contract/source/tool digests.
+
+Allowed states and semantics are exact:
+
+- `minimal-profile-valid` — all six project layers passed. This is the only state that authorizes `decision=accepted`.
+- `carin-no-errors-reported` — additive diagnostic state: the pinned CARIN run completed with no `error`/`fatal`. The wording deliberately does not claim conformance.
+- `carin-nonconformant` — additive diagnostic state: the pinned CARIN run completed with at least one `error`/`fatal`. It never changes an accepted minimal decision.
+- `carin-diagnostic-unavailable` — additive diagnostic state: pinned diagnostic evidence could not run or its digest/control failed. It does not change an input decision, but it fails the DATA-001 verification procedure until restored.
+- `terminology-unverified` — additive diagnostic state: at least one accepted opaque code/extension system lacks approved offline membership/meaning evidence. It never changes minimal acceptance and must carry the affected JSON pointers and system identifiers without asserting meaning.
+- `rejected` — one or more project layers failed. It is mutually exclusive with every other state; CARIN diagnostics are not run for rejected input.
+
+Canonical ordering is `minimal-profile-valid`, then exactly one CARIN diagnostic state, then optional `terminology-unverified`. Accepted results have `decision=accepted`, begin with `minimal-profile-valid`, and never contain `rejected`. Rejected results have `decision=rejected` and `states=["rejected"]` exactly. The unchanged seed is expected to produce:
+
+```json
+{
+  "decision": "accepted",
+  "states": [
+    "minimal-profile-valid",
+    "carin-nonconformant",
+    "terminology-unverified"
+  ]
+}
+```
+
+Each finding includes a stable `rule_id`, layer/source (`project`, `carin`, or `terminology`), original severity when applicable, sanitized machine code/message, source path, and JSON pointer. Required project rule families include `SOURCE-MANIFEST-001`, `DATA-CLASS-001`, `JSON-SYNTAX-001`, `FHIR-COMPAT-ENVELOPE-001`, `FHIR-COMPAT-RESOURCE-001`, `FHIR-COMPAT-PROFILE-MARKER-001`, `FHIR-COMPAT-REQUIRED-001`, `FHIR-COMPAT-ID-001`, `FHIR-COMPAT-REF-001`, `FHIR-COMPAT-CONTENT-001`, `CARIN-DIAGNOSTIC-001`, and `TERM-UNVERIFIED-001`. Rule identifiers are never reused with changed meanings.
+
+## CARIN and terminology diagnostic policy
+
+CARIN diagnostics use the exact checksum-pinned 2.2.0 package, dependency closure, Validator CLI 6.10.2, `-no-http-access`, and `-tx n/a`. Validator/package availability remains required verification evidence even though its findings are advisory for ingestion. The result records the tool/package-lock digest, raw OperationOutcome digest, counts by original severity, and normalized lossless finding references.
+
+CARIN diagnostics may identify missing version-qualified profiles, member-id slices, unknown CMS extensions, missing Bundle fullUrls, EOB slices, or terminology issues. Those findings are never hidden, rewritten, or converted into project semantics. UI/API wording in later tasks must call them diagnostics and must not label a minimal-profile-valid resource CARIN-conformant.
+
+NCPDP and other unavailable terminology remains opaque/unverified. No live terminology call, substitute package, guessed code list, display-text inference, or publisher-QA severity override is permitted. Even a CARIN diagnostic with no errors does not establish project-approved terminology or domain correctness.
+
+## Provenance, testing, and trust gates
+
+- Re-hash all four seed artifacts before and after every test run and require zero byte changes.
+- Keep original, diagnostic, normalized, derived, and human-authored artifacts distinguishable by source/digest/version.
+- Retain the seed's approved synthetic local-development classification, while acquisition, generator, upstream release, chain of custody, license/redistribution, and benchmark fitness remain explicitly limited/unverified as already recorded.
+- Store every project-authored fixture outside `dataset/` with `project-authored-synthetic` classification, parent hashes, deterministic recipe/version, expected states/rule IDs, author/reviewer state, intended use, and limitations.
+- Test accepted seed behavior; every rejected layer; broken/cross-type/remote/ambiguous references; duplicate keys/IDs; wrong resources/profiles/Bundle types; unknown paths/extensions; modifier/narrative/attachment/instruction content; terminology-unverified behavior; CARIN error preservation; diagnostic unavailability; outcome ordering/exclusivity; sanitized logging; and dataset byte identity.
+- Run without network, cloud/model credentials, production access, a FHIR server, or a live terminology service.
+
+No validation outcome establishes coverage, payment, coding, fraud, clinical, policy, provider, beneficiary, amount, or real-world correctness. Human authority and downstream governance remain unchanged.
 
 ## Acceptance criteria
 
-- A versioned support matrix names every initially accepted resource and envelope, the exact base/profile canonical and version expectations, allowed bundle forms, reference rules, required/optional/preserved/unsupported content, terminology policy, and explicit decisions for additional resource types.
-- Machine-readable profile/validation artifacts express the approved boundary without inventing payer semantics and are consistent with the human-readable specification.
-- Deterministic validation returns stable, structured outcomes for JSON/base structure, profile compatibility, bundle/reference integrity, project invariants, unsupported content, and provenance/data-classification gates.
-- The unchanged four-file seed corpus is inventoried by repository path, byte length, SHA-256, Git identity/lineage, observed profile/resource facts, synthetic classification, and provenance/license evidence status; it is nonconformant/unsupported as an accepted CARIN 2.2.0 source and is used only as deterministic negative rejection evidence. Missing acquisition or license evidence remains an explicit benchmark-freeze blocker rather than an invented approval.
-- Candidate resource fixtures are byte-identical publication examples from the checksum-pinned official `hl7.fhir.us.carin-bb#2.2.0` archive and retain package path, package/resource digest, publication-example classification, exact package-manifest license evidence, and an explicit `UNVERIFIED_AS_SYNTHETIC` classification until authoritative generation/no-real-person provenance is supplied. Project-authored derived-envelope, negative, boundary, and adversarial fixtures are clearly distinguished outside `dataset/`, retain parent/recipe/version provenance, contain no real PHI or secrets, and cover malformed input, unsupported resources/profiles, broken references, narrative/instruction content, and declared project invariants.
-- A runnable, pinned validation/test procedure passes for approved inputs, rejects or marks unsupported inputs as specified, proves `dataset/` remains byte-identical, and requires no network, cloud, model, production, or live terminology-service access.
-- Documentation clearly distinguishes FHIR/profile conformance from coverage, payment, coding, fraud, clinical, or policy correctness and leaves undeclared semantics unsupported.
-- The final handoff identifies what PLATFORM-001 and later tasks may rely on, what remains deferred, and which changes would require a new profile version or upstream architecture/contract review.
+- `boundary.json` and the human-readable matrix consistently define the project compatibility profile, exact registries, required references, rejected surfaces, stable rules, and ordered state model.
+- The unchanged seed passes the project layers and produces `minimal-profile-valid`, `carin-nonconformant`, and `terminology-unverified` while preserving all CARIN findings and opaque terminology evidence.
+- Project-rule failure always produces only `decision=rejected` and `states=["rejected"]`; no CARIN diagnostic can override it.
+- CARIN diagnostics never decide project acceptance and never produce a CARIN-conformance claim; unavailable diagnostic tooling fails verification rather than silently disappearing.
+- Synthetic classification and prohibited-data gates remain fail-closed. Provenance/license gaps remain benchmark-freeze/distribution limitations without rewriting the approved local synthetic classification.
+- The independent offline harness covers all positive/negative/adversarial behavior and proves the four root artifacts remain byte-identical.
+- No application API, persistence schema, backend/frontend feature, deployment resource, live service, invented terminology, or domain semantics are introduced.
 
-## Approved architecture decision package
+## Change control and downstream handoff
 
-### 1. Boundary and artifact ownership
+The compatibility boundary uses semantic versioning. Adding a resource/profile/envelope, weakening a rejection/classification/reference/content rule, changing required fields, changing state semantics, or treating a diagnostic as acceptance requires a major version plus architecture/contract/security review. Backward-compatible preserve-only registry additions require a minor version. Documentation-only clarification with identical machine behavior may be a patch.
 
-DATA-001 defines a versioned ingestion-data contract, not an application API. Its validation unit is a **declared source set**: one or more JSON documents whose manifest, byte identities, classification, resources, and permitted cross-document references are evaluated together. The machine boundary remains under `contracts/fhir/data-001/`: `boundary.json`, `packages.lock.json`, `validation-outcome.schema.json`, `source-manifest.json`, `data-card.json`, and `README.md`. Conformance fixtures and the independent reference harness remain under `tests/fixtures/fhir/data-001/` and `tests/data/`.
+Any source byte, manifest/classification, boundary, package/tool, diagnostic normalization, fixture, or recipe change updates its digest and reruns the full suite. PLATFORM-001 may later consume only the completed contract and must choose runtime parsing, normalized models, API behavior, size limits, quarantine persistence, authorization, and storage without collapsing minimal acceptance, CARIN diagnostics, terminology uncertainty, or raw provenance.
 
-These are contract and test artifacts only. DATA-001 does not add an OpenAPI endpoint, persistence schema, runtime ingestion service, normalization implementation, application dependency, or deployment resource. `contracts/openapi.yaml` remains unchanged.
-
-### 2. Pinned strict baseline and corpus authority
-
-The selected baseline is FHIR R4 `4.0.1`, `hl7.fhir.us.carin-bb#2.2.0`, and HL7 FHIR Validator CLI `6.10.2`, using the checksum-pinned dependency closure in `packages.lock.json` with `-no-http-access` and `-tx n/a`. No latest-version lookup, older CARIN release, profile substitution, source rewrite, fabricated StructureDefinition, or invented terminology semantics is permitted.
-
-The repository-root seed is preserved byte-identical but is not an accepted positive. Its unversioned profiles and structural/profile errors make it nonconformant/unsupported under this strict 2.2.0 boundary; its expected contract behavior is fail-closed rejection evidence only.
-
-Positive resources must come byte-identical from publication-labeled examples in the exact official package archive, produce no validator `error` or `fatal` result under the pinned offline invocation, and have authoritative synthetic generation/no-real-person provenance. Warnings and informational findings are retained, not silently discarded. The package manifest supplies package identity, FHIR version, example-directory labeling, and `CC0-1.0` license evidence, but it does not attest a synthetic generation method or no-real-person provenance. Accordingly all three official examples have `synthetic_classification=UNVERIFIED_AS_SYNTHETIC`; the fixture manifest must record that status with each archive path and resource digest.
-
-| Official archive example | SHA-256 | Strict offline result | Positive status |
-|---|---|---|---|
-| `package/example/Patient-Patient2.json` | `5126c680cdcb0ccd1d0c0c032b720f1a92224fff2f5bf3fa30ab7319e437a188` | zero errors; warnings/information retained | structural candidate only; synthetic classification unverified |
-| `package/example/Coverage-Coverage3.json` | `e72295932c41b57291e0013dfb3e81d2ae37fbcf549090fdf14932a6fefc7d83` | zero errors; warnings/information retained | structural candidate only; synthetic classification unverified |
-| `package/example/ExplanationOfBenefit-EOBPharmacy1.json` | `46952eba56089a44272d2707c87accc5f16325ec8d91acdf7eed107a1080fe62` | pinned strict offline validator reports eight terminology errors; publisher QA reports zero errors and five warnings | not an offline strict positive; blocks DATA-001 |
-
-The same official archive contains publisher-generated `package/other/validation-summary.json` (SHA-256 `39dfcb19c9e522e8e812778f327f22766c0405f53a10e6cfc550e1d33a48514e`) and `package/other/validation-oo.json` (SHA-256 `d214c310a03f88cc1384d76945417395a7ae92cee04d906c87c72e9f29d07aaf`). They record zero errors for Patient/Patient2, Coverage/Coverage3, and ExplanationOfBenefit/EOBPharmacy1; the EOB OperationOutcome contains five warnings: four unavailable NCPDP CodeSystems and one inactive NDC concept.
-
-That publisher QA is provenance evidence, not a substitute for the approved strict offline procedure. The pinned local validator produces eight errors for the exact EOB: four report that a CodeSystem definition is not found, and four report that CodeSystem version `null` is not found while available metadata names version `1.0.2`. The four affected CARIN slices use `required` bindings. In the exact package closure their NCPDP ValueSets contain no expansion/concept content and compose CodeSystems whose definitions are `content=not-present`; the package points to restrictively copyrighted NCPDP standards access. No usage-approved authoritative offline terminology corpus is available.
-
-Therefore neither publisher-QA substitution nor `TERM-UNVERIFIED-001` severity normalization is approved. Either would treat unverifiable required bindings as a strict positive. An exact authoritative pharmacy EOB that produces no offline validator error under the approved lock, or a usage-approved authoritative offline terminology corpus that validates the unchanged official example without rewriting it, is required before DATA-001 can proceed.
-
-Independently, publication-example status and CC0 licensing do not prove that any example is synthetic or unrelated to a real person. Patient2 and Coverage3 therefore remain structural candidates rather than approved fixtures despite their zero-error results. An authoritative source attestation or equivalent approved provenance establishing synthetic generation/no-real-person status is required for the candidate corpus. Validator success cannot promote this classification.
-
-### 3. Target resource and envelope boundary after the blocker is resolved
-
-The intended accepted resource surface is exactly one version-qualified CARIN 2.2.0 Patient, Coverage, and pharmacy ExplanationOfBenefit profile. The byte-identical official Patient and Coverage resources are zero-error structural candidates but are not approved positives while their synthetic classification is unverified; an authoritative strict offline pharmacy EOB positive also remains unavailable. Project-authored envelopes may wrap only fully approved positive resource JSON deterministically and may not edit child resources or claim official provenance for the envelope.
-
-The minimal envelope remains a homogeneous FHIR `Bundle` with `type=searchset`, one supported resource type per Bundle, deterministic `total` and `entry.fullUrl`, and no request/response execution content. A declared source set may contain the Patient, Coverage, and EOB searchsets together so relative EOB-to-Coverage and Coverage/EOB-to-Patient references resolve across documents. The generated envelope is labeled `project-authored-synthetic`, records its recipe/version and all parent hashes, and asserts only contract transport/reference behavior—not that an upstream search occurred or that any domain fact is true. No accepted EOB envelope may be generated until its parent is a strict offline positive.
-
-Relative Patient and Coverage references required for this bounded chain must resolve exactly once within the declared source set. Profile-valid Organization references in the official examples are preserved as untrusted, unresolved, unsupported-target references and are never dereferenced or treated as authoritative organization evidence. Every other resource/profile, mixed searchset, other Bundle type, contained resource, attachment, modifier extension, executable request/response content, and non-JSON representation remains unsupported or rejected according to the rule registry.
-
-### 4. Elements, terminology, and outcome policy
-
-The contract allowlist is derived from the locked profile plus official candidates only after they satisfy both strict conformance and classification gates, never from the nonconformant root seed. Required fields and terminology retain the locked profile's cardinalities, constraints, slices, and binding strengths. Profile-valid optional content in an approved example may be supported/preserved only when enumerated. Narratives, displays, identifiers, URLs, and allowed reference strings remain inert, untrusted data and are never rendered, executed, dereferenced, or echoed in findings.
-
-`TERM-UNVERIFIED-001` is permitted only for unavailable terminology on `extensible`, `preferred`, or `example` bindings, or preserved values not governed by a binding. It must never downgrade a validator error on a `required` binding, fixed/pattern conformance, slice discrimination, invariant, or coding-version resolution. Required terminology that is absent, ambiguous, version-mismatched, or unverifiable fails closed with `FHIR-PROFILE-001` or the more specific locked rule.
-
-Validation retains the ordered layers: source/provenance, strict JSON, envelope/support, base FHIR, CARIN profile/terminology, reference/project invariants, and content isolation. The structured overall result remains exactly `accepted`, `rejected`, or `unsupported`; `rejected` takes precedence for malformed, unsafe, or invalid attempted supported content, while structurally recognizable out-of-surface content is `unsupported`. No outcome message may echo names, identifiers, narrative, URLs, or other untrusted values.
-
-FHIR conformance establishes only recorded structural/profile behavior. It does not establish coverage, payment, coding, fraud, clinical, payer-policy, beneficiary, provider, amount, or real-world correctness.
-
-### 5. Provenance and fixtures
-
-The root source manifest must preserve the existing FOUNDATION-001 inventory and source-lineage commit `3fda38143e95c58a91b54781b15c84bc8436a1fa` exactly:
-
-| Path | Bytes | Raw SHA-256 | Git blob |
-|---|---:|---|---|
-| `dataset/patient_bbuser29999.json` | 6,196 | `6fb43e72120e3a3cfb7bc756d0661eebcc0925a2bc994f60ecbf573813e3f58a` | `7ffe93441490616e32bd917774c4c5d86cc009d0` |
-| `dataset/coverage_bundle_bbuser29999.json` | 83,096 | `fef088d7c6df3fb33bc02a1e32be53a67db0815046b1e2d998d44cb1536ec33c` | `dd33f5708a9ff2c1286417b50b27544d36232f6b` |
-| `dataset/eob_bundle_bbuser29999.json` | 288,342 | `d48c12a8d94e331c786f3876ea94df4356209c216c54392346dae87f84fc34f0` | `2d6544059ea695946849199c1ec2daa9b28517d2` |
-| `dataset/readme.txt` | 335 | `5c5c7641a7dbb1c5c21864e429390f7021d303fef5ad8eabacd01b805e205fe8` | `e123e526d2c29925c6faf175b0b9e24e7965919a` |
-
-The seed data card retains synthetic local-development approval but keeps acquisition, generation, upstream release, chain-of-custody, license, and redistribution fields `unverified`. It is never copied, repaired, normalized into a positive, or promoted by validator behavior.
-
-Official resource candidates retain exact package/archive provenance and bytes and remain `UNVERIFIED_AS_SYNTHETIC` until authoritative evidence changes that classification. They must not be copied into an approved positive-fixture partition or used as parents of accepted envelopes before then. Every permitted derived envelope or perturbation is separately labeled `project-authored-synthetic` and records its raw hash, parent hashes, deterministic recipe/version, author/reviewer state, expected structural outcome/rule IDs, intended use, and limitations. Fixture labels describe validator behavior only and are never domain labels.
-
-### 6. Offline verification, change control, and handoff
-
-The independent procedure must start with network disabled, verify validator/package/fixture/publisher-QA digests, validate contract artifacts and classification evidence, re-hash the root dataset before and after, require zero validator errors and approved synthetic classification for every positive, assert stable rejection/unsupported results for the root seed and negative/adversarial fixtures, verify derived-envelope lineage, and finish with a zero-diff dataset check. It must not require Vertex AI, cloud credentials, a FHIR server, a live terminology service, or production access.
-
-Any validator, package, terminology artifact, boundary, official fixture, derived recipe, source byte, classification, or evidence change invalidates the relevant results and reruns the entire offline suite. Profile/package/envelope changes or weakened required-binding/reference/safety behavior require major-version architecture and contract review. Rule identifiers are never reused with different meanings.
-
-Architecture impact remains deliberately limited: `contract_change=true` and `testing=true`; `database=false`, `backend=false`, `frontend=false`, and `infrastructure=false`. Contract and test work must remain paused: Patient/Coverage are unverified-synthetic structural candidates rather than approved positives, the pharmacy EOB is not a strict offline positive, and no publisher-QA adapter or required-binding downgrade may be encoded. PLATFORM-001 and later tasks may rely only on a subsequently completed, passing contract; they must keep raw and derived data distinct and must not treat FHIR conformance, publisher-example status, or fixture status as domain truth.
+Architecture impact is limited to `contract_change=true` and `testing=true`; `database=false`, `backend=false`, `frontend=false`, and `infrastructure=false`. The orchestrator must reconcile stale strict-CARIN/negative-seed wording in task state before advancing, but the newly approved compatibility decision resolves the prior architecture blockers.

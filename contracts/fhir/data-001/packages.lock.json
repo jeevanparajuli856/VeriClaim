@@ -1,8 +1,10 @@
 {
   "schema_version": "1.0",
   "task_id": "DATA-001",
-  "status": "BLOCKED_NO_AUTHORITATIVE_SYNTHETIC_STRICT_CORPUS",
+  "status": "READY_ADVISORY_DIAGNOSTICS",
   "selected_profile_package": "hl7.fhir.us.carin-bb#2.2.0",
+  "purpose": "Pinned offline CARIN compatibility diagnostics only",
+  "acceptance_authority": false,
   "resolution_policy": {
     "allow_latest": false,
     "allow_network_during_validation": false,
@@ -310,7 +312,7 @@
       "dependencies": ["hl7.fhir.r4.core#4.0.1"]
     }
   ],
-  "authoritative_corpus_evidence": {
+  "official_package_example_evidence": {
     "archive": {
       "package": "hl7.fhir.us.carin-bb",
       "version": "2.2.0",
@@ -355,7 +357,7 @@
       "operation_outcome_sha256": "d214c310a03f88cc1384d76945417395a7ae92cee04d906c87c72e9f29d07aaf",
       "limitation": "Publisher QA is authoritative publication evidence but is not a substitute for the required reproducible, network-disabled strict validation gate because its external terminology inputs are not packaged."
     },
-    "blocking_terminology": {
+    "unavailable_terminology": {
       "binding_strength": "required",
       "systems": [
         "http://terminology.hl7.org/CodeSystem/NCPDPDispensedAsWrittenOrProductSelectionCode",
@@ -365,15 +367,50 @@
       ],
       "package_state": "The exact CARIN ValueSets contain compose/include references only; no expansion or CodeSystem concepts are distributed in the pinned closure.",
       "rights_provenance": "The exact ValueSet resources direct users to https://standards.ncpdp.org/Access-to-Standards.aspx and state restrictive NCPDP copyright/usage terms. No NCPDP-authorized offline content or usage approval was supplied for DATA-001.",
-      "decision": "Do not invent concepts, downgrade required-binding errors, use a live terminology service, or substitute another CARIN version. Stop until authoritative, versioned, checksum-pinned, usage-approved offline NCPDP artifacts and an authoritative synthetic classification are available."
+      "project_boundary_decision": "Preserve every system URI and code as opaque source data with terminology status unverified. Do not invent concepts, downgrade diagnostic errors, use a live terminology service, substitute another CARIN version, or assert terminology membership.",
+      "carin_limitation": "Pharmacy-specific CARIN conformance remains outside the initial acceptance boundary unless authoritative, versioned, checksum-pinned, usage-approved offline terminology later becomes available."
     }
   },
   "compatibility_evidence": {
     "validated_at": "2026-08-15",
     "network_control": "Validator -no-http-access, -tx n/a, and loopback-only HTTP/HTTPS proxy properties",
     "dataset_mutated": false,
-    "result": "INCOMPATIBLE",
-    "summary": "The exact official CARIN 2.2.0 closure loads offline and contains the Patient, Coverage, and ExplanationOfBenefit Pharmacy canonicals. The unchanged repository seed is preserved as negative rejection evidence. The official Patient and Coverage examples have zero offline errors, but the official pharmacy EOB example cannot pass the required offline terminology gate because authoritative NCPDP code content is not distributed or usage-approved; the complete positive corpus and downstream gates remain blocked.",
+    "acceptance_authority": false,
+    "result": "PROJECT_ACCEPTED_CARIN_NONCONFORMANT",
+    "summary": "The unchanged approved synthetic seed is eligible for project acceptance when the minimal compatibility rules pass. CARIN 2.2.0 errors and warnings remain preserved advisory evidence, never a project acceptance or rejection criterion, and never a CARIN-conformance claim.",
+    "raw_operation_outcome": {
+      "format": "FHIR R4 Bundle[type=collection] containing three OperationOutcome resources",
+      "sha256": "2eb1271891b41794b665b639aa2f63138ed597cace33fbd2e3ce45673dcf7d15",
+      "bytes": 1556152,
+      "trusted_content": false,
+      "retention": "Task-local ignored artifact at contracts/fhir/data-001/.offline/evidence/seed-carin-operationoutcomes.json; retained by digest, not committed, and never interpolated into instructions or unsanitized logs."
+    },
+    "counts": {
+      "dataset/patient_bbuser29999.json": {
+        "error": 16,
+        "warning": 5,
+        "information": 0,
+        "fatal": 0
+      },
+      "dataset/coverage_bundle_bbuser29999.json": {
+        "error": 216,
+        "warning": 12,
+        "information": 0,
+        "fatal": 0
+      },
+      "dataset/eob_bundle_bbuser29999.json": {
+        "error": 218,
+        "warning": 428,
+        "information": 0,
+        "fatal": 0
+      },
+      "total": {
+        "error": 450,
+        "warning": 445,
+        "information": 0,
+        "fatal": 0
+      }
+    },
     "representative_findings": [
       "Patient meta.profile is unversioned while CARIN 2.2.0 requires version-qualified conformance.",
       "Patient.identifier does not satisfy the required memberid slice.",

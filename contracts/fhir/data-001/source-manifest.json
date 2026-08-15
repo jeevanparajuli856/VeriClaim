@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DATA-001",
+  "manifest_id": "data-001-seed-v1",
+  "classification": "approved-synthetic-local",
+  "classification_authority": [
+    "docs/PROJECT.md",
+    "docs/architecture/SYSTEM.md",
+    "docs/adr/ADR-0002-synthetic-public-data-boundary.md",
+    "human task-level approval 2026-08-15"
+  ],
+  "source_lineage_commit": "3fda38143e95c58a91b54781b15c84bc8436a1fa",
+  "source_set_digest": {
+    "algorithm": "Sort records by path and concatenate path + NUL + decimal bytes + NUL + lowercase sha256 + LF as UTF-8; SHA-256 the result.",
+    "sha256": "de91d84f624ae9aa9c23871639bae8dd0988e0d5c686c57f31f503d58eba5740"
+  },
+  "files": [
+    {
+      "path": "dataset/patient_bbuser29999.json",
+      "role": "patient",
+      "media_type": "application/fhir+json",
+      "bytes": 6196,
+      "sha256": "6fb43e72120e3a3cfb7bc756d0661eebcc0925a2bc994f60ecbf573813e3f58a",
+      "git_blob": "7ffe93441490616e32bd917774c4c5d86cc009d0",
+      "expected_resource_type": "Patient",
+      "expected_resource_count": 1
+    },
+    {
+      "path": "dataset/coverage_bundle_bbuser29999.json",
+      "role": "coverage-searchset",
+      "media_type": "application/fhir+json",
+      "bytes": 83096,
+      "sha256": "fef088d7c6df3fb33bc02a1e32be53a67db0815046b1e2d998d44cb1536ec33c",
+      "git_blob": "dd33f5708a9ff2c1286417b50b27544d36232f6b",
+      "expected_resource_type": "Bundle",
+      "expected_entry_resource_type": "Coverage",
+      "expected_resource_count": 4
+    },
+    {
+      "path": "dataset/eob_bundle_bbuser29999.json",
+      "role": "pharmacy-eob-searchset",
+      "media_type": "application/fhir+json",
+      "bytes": 288342,
+      "sha256": "d48c12a8d94e331c786f3876ea94df4356209c216c54392346dae87f84fc34f0",
+      "git_blob": "2d6544059ea695946849199c1ec2daa9b28517d2",
+      "expected_resource_type": "Bundle",
+      "expected_entry_resource_type": "ExplanationOfBenefit",
+      "expected_resource_count": 10,
+      "reported_total": 146
+    },
+    {
+      "path": "dataset/readme.txt",
+      "role": "provenance-readme",
+      "media_type": "text/plain",
+      "bytes": 335,
+      "sha256": "5c5c7641a7dbb1c5c21864e429390f7021d303fef5ad8eabacd01b805e205fe8",
+      "git_blob": "e123e526d2c29925c6faf175b0b9e24e7965919a",
+      "parse_as_fhir": false
+    }
+  ],
+  "expected_outcome": {
+    "decision": "accepted",
+    "states": [
+      "minimal-profile-valid",
+      "carin-nonconformant",
+      "terminology-unverified"
+    ]
+  },
+  "immutability": {
+    "read_only": true,
+    "rehash_before_and_after_validation": true,
+    "allow_repair": false,
+    "allow_normalized_replacement": false
+  },
+  "use": {
+    "allowed": [
+      "local-development",
+      "minimal-compatibility-validation",
+      "advisory-carin-diagnostics",
+      "human-investigation"
+    ],
+    "prohibited": [
+      "production",
+      "redistribution-without-license-review",
+      "benchmark-freeze",
+      "carin-conformance-claim",
+      "autonomous-coverage-payment-coding-fraud-clinical-or-policy-conclusion"
+    ]
+  }
+}
