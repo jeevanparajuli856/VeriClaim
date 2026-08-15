@@ -16,6 +16,7 @@ GLOBAL_LIMITATIONS = [
     "Signals and Gemini text are investigation aids only; they do not determine fraud or make claim, payment, coverage, coding, medical-necessity, diagnostic, or clinical decisions.",
     "The extractor supports a narrow FHIR-shaped subset and does not claim base FHIR, profile, terminology, or CARIN conformance.",
 ]
+MAX_EVIDENCE_SUMMARY = 500
 
 
 class AnalysisService:
@@ -76,11 +77,19 @@ class AnalysisService:
 
     @staticmethod
     def _evidence_index(facts: list[Any], rules: list[Any]) -> list[EvidenceRecord]:
+        def fact_summary(fact: Any) -> str:
+            prefix = f"{fact.fact_type}: "
+            value = str(fact.value)
+            remaining = MAX_EVIDENCE_SUMMARY - len(prefix)
+            if len(value) > remaining:
+                value = f"{value[: remaining - 1]}…"
+            return f"{prefix}{value}"
+
         records = [
             EvidenceRecord(
                 evidence_id=fact.evidence_id,
                 kind="fact",
-                summary=f"{fact.fact_type}: {fact.value}",
+                summary=fact_summary(fact),
                 source_refs=[fact.evidence_id],
             )
             for fact in facts

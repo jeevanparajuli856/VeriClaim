@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-import hashlib
 import asyncio
+import hashlib
+import json
+from copy import deepcopy
 
 import httpx
 
-from backend.app.gemini import GeminiResult
-from backend.app.loader import SOURCE_PATHS, default_project_root
-from backend.app.loader import PipelineError
+import backend.app.service as service_module
+from backend.app.gemini import GeminiResult, GeminiSummarizer
+from backend.app.loader import PipelineError, SOURCE_PATHS, default_project_root, load_approved_sources
 from backend.app.main import app, get_analysis_service
 from backend.app.models import GeminiFailure, GeminiSuccess, ModelMetadata
 from backend.app.service import AnalysisService
@@ -144,3 +146,73 @@ def test_deterministic_pipeline_failure_is_typed_sanitized_500() -> None:
             "model_called": False,
         }
     }
+
+
+def test_endpoint_preserves_600_character_fact_and_bounds_evidence_summary(monkeypatch) -> None:
+    sources = deepcopy(load_approved_sources())
+    long_code = "x" * 600
+    sources["eob"].document["entry"][0]["resource"]["item"][0]["productOrService"]["coding"][0][
+        "code"
+    ] = long_code
+    monkeypatch.setattr(service_module, "load_approved_sources", lambda: sources)
+
+    async def override_service():
+        return AnalysisService(GeminiSummarizer(None, None))
+
+    app.dependency_overrides[get_analysis_service] = override_service
+    try:
+        response = post_demo()
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    fact = next(
+        fact
+        for fact in body["observed_facts"]
+        if fact["json_pointer"] == "/entry/0/resource/item/0/productOrService/coding/0/code"
+    )
+    record = next(record for record in body["evidence_index"] if record["evidence_id"] == fact["evidence_id"])
+    assert fact["value"] == long_code
+    assert len(record["summary"]) == 500
+    assert record["summary"].endswith("…")
+    assert body["model_metadata"]["call_count"] == 0
+    json.dumps(body, allow_nan=False)
+
+
+def test_endpoint_rejects_extreme_finite_decimal_before_model_call(monkeypatch) -> None:
+    sources = deepcopy(load_approved_sources())
+    sources["eob"].document["entry"][0]["resource"]["item"][0]["adjudication"][7]["amount"][
+        "value"
+    ] = "1e999"
+    monkeypatch.setattr(service_module, "load_approved_sources", lambda: sources)
+
+    class ForbiddenSummarizer:
+        calls = 0
+
+        def summarize(self, payload, allowed_evidence):
+            self.calls += 1
+            raise AssertionError("the summarizer must not run after a deterministic boundary failure")
+
+    forbidden = ForbiddenSummarizer()
+
+    async def override_service():
+        return AnalysisService(forbidden)
+
+    app.dependency_overrides[get_analysis_service] = override_service
+    try:
+        response = post_demo()
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body == {
+        "error": {
+            "code": "EXTRACTION_LIMIT_EXCEEDED",
+            "message": "A supported numeric value exceeds the exact processing boundary.",
+            "model_called": False,
+        }
+    }
+    assert forbidden.calls == 0
+    json.dumps(body, allow_nan=False)

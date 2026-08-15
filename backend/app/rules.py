@@ -5,21 +5,23 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from decimal import Decimal
-from statistics import median
+from decimal import Decimal, localcontext
 
 from .extractor import (
     AmountComponent,
     CoverageRecord,
     ExtractedDataset,
     ItemRecord,
+    MAX_DECIMAL_PLAIN_CHARS,
     ReferenceValue,
 )
+from .loader import PipelineError
 from .models import DeterministicSignal, RuleResult
 
 REFERENCE_RE = re.compile(r"^(Patient|Coverage)/([^/]+)$")
 AMOUNT_TOLERANCE = Decimal("0.01")
 COMMON_LIMITATION = "Signals are informational review aids for this small synthetic sample, not healthcare decisions."
+DECIMAL_CONTEXT_PRECISION = MAX_DECIMAL_PLAIN_CHARS * 2 + 8
 
 
 @dataclass(frozen=True)
@@ -231,10 +233,12 @@ def duplicate_and_repetition(dataset: ExtractedDataset) -> RuleResult:
                 found = _selected(item, system, code)
                 if len(found) == 1:
                     components.append(found[0])
-            usable_references = [reference.value for reference in item.coverage_refs if reference.value]
+            complete_references = bool(item.coverage_refs) and all(
+                reference.value is not None for reference in item.coverage_refs
+            )
             if (
                 not item.patient.value
-                or not usable_references
+                or not complete_references
                 or item.service_date_text is None
                 or len(item.products) != 1
                 or len(components) != 3
@@ -247,7 +251,7 @@ def duplicate_and_repetition(dataset: ExtractedDataset) -> RuleResult:
             )
             signature = (
                 item.patient.value,
-                tuple(sorted(usable_references)),
+                tuple(sorted(reference.value for reference in item.coverage_refs if reference.value is not None)),
                 item.service_date_text,
                 system,
                 code,
@@ -321,14 +325,26 @@ def observed_amount_relationship(dataset: ExtractedDataset) -> RuleResult:
                 missing.append(f"{item.path_key}: selected amount currencies do not match exactly.")
                 continue
             evaluated += 1
-            difference = abs(drugcost[0].value - (benefit[0].value + patient[0].value))
+            with localcontext() as context:
+                context.prec = DECIMAL_CONTEXT_PRECISION
+                difference = abs(drugcost[0].value - (benefit[0].value + patient[0].value))
             if difference > AMOUNT_TOLERANCE:
+                difference_text = _bounded_decimal_text(difference)
+                message = (
+                    f"Observed drugcost differs from benefit + paidbypatient by {difference_text} "
+                    f"{drugcost[0].currency}, exceeding 0.01."
+                )
+                if len(message) > 500:
+                    raise PipelineError(
+                        "EXTRACTION_LIMIT_EXCEEDED",
+                        "Computed rule metadata exceeds the exact response boundary.",
+                    )
                 pending.append(
                     PendingSignal(
                         (item.path_key,),
                         "observed_amount_components_do_not_reconcile",
                         "review",
-                        f"Observed drugcost differs from benefit + paidbypatient by {difference} {drugcost[0].currency}, exceeding 0.01.",
+                        message,
                         tuple(
                             eid
                             for component in components
@@ -351,7 +367,22 @@ def observed_amount_relationship(dataset: ExtractedDataset) -> RuleResult:
 
 
 def _decimal_median(values: list[Decimal]) -> Decimal:
-    return Decimal(str(median(values)))
+    midpoint = len(values) // 2
+    if len(values) % 2:
+        return values[midpoint]
+    with localcontext() as context:
+        context.prec = DECIMAL_CONTEXT_PRECISION
+        return (values[midpoint - 1] + values[midpoint]) / Decimal(2)
+
+
+def _bounded_decimal_text(value: Decimal) -> str:
+    text = str(value)
+    if len(text) > MAX_DECIMAL_PLAIN_CHARS * 2:
+        raise PipelineError(
+            "EXTRACTION_LIMIT_EXCEEDED",
+            "Computed rule metadata exceeds the exact response boundary.",
+        )
+    return text
 
 
 def sample_relative_high_amount(dataset: ExtractedDataset) -> RuleResult:
@@ -381,19 +412,42 @@ def sample_relative_high_amount(dataset: ExtractedDataset) -> RuleResult:
         upper = values[midpoint:] if len(values) % 2 == 0 else values[midpoint + 1 :]
         q1 = _decimal_median(lower)
         q3 = _decimal_median(upper)
-        iqr = q3 - q1
-        threshold = q3 + Decimal("1.5") * iqr
-        group_summaries.append(
-            f"{currency}:n={len(values)},q1={q1},q3={q3},iqr={iqr},threshold={threshold}"
+        with localcontext() as context:
+            context.prec = DECIMAL_CONTEXT_PRECISION
+            iqr = q3 - q1
+            threshold = q3 + Decimal("1.5") * iqr
+        q1_text = _bounded_decimal_text(q1)
+        q3_text = _bounded_decimal_text(q3)
+        iqr_text = _bounded_decimal_text(iqr)
+        threshold_text = _bounded_decimal_text(threshold)
+        group_summary = (
+            f"{currency}:n={len(values)},q1={q1_text},q3={q3_text},"
+            f"iqr={iqr_text},threshold={threshold_text}"
         )
+        group_summaries.append(group_summary)
+        if len("; ".join(group_summaries)) > 160:
+            raise PipelineError(
+                "EXTRACTION_LIMIT_EXCEEDED",
+                "Computed rule metadata exceeds the exact response boundary.",
+            )
         for value, component, item in observations:
             if value > threshold:
+                value_text = _bounded_decimal_text(value)
+                message = (
+                    f"Observed drugcost {value_text} {currency} is strictly above Tukey threshold "
+                    f"{threshold_text} (Q1={q1_text}, Q3={q3_text}, IQR={iqr_text}, n={len(values)})."
+                )
+                if len(message) > 500:
+                    raise PipelineError(
+                        "EXTRACTION_LIMIT_EXCEEDED",
+                        "Computed rule metadata exceeds the exact response boundary.",
+                    )
                 pending.append(
                     PendingSignal(
-                        (currency, str(value), item.path_key),
+                        (currency, value_text, item.path_key),
                         "sample_relative_high_drugcost",
                         "information",
-                        f"Observed drugcost {value} {currency} is strictly above Tukey threshold {threshold} (Q1={q1}, Q3={q3}, IQR={iqr}, n={len(values)}).",
+                        message,
                         (component.value_evidence_id, component.currency_evidence_id),
                         ("This threshold is relative only to the supplied small synthetic sample.",),
                     )

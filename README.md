@@ -65,7 +65,7 @@ Everything is processed in memory. There is no database, separate frontend, uplo
 |---|---|
 | `REF-001` | A required local `Patient/<id>` or `Coverage/<id>` reference must resolve to exactly one supplied supported resource. Missing, malformed, wrong-type, unresolved, and ambiguous references are separate signals. |
 | `DATE-001` | Compares each present `item.servicedDate` inclusively with each present bound of a uniquely resolved Coverage period. It never substitutes `billablePeriod`; absent dates, unresolved Coverage, and absent bounds become missing evidence. |
-| `REPEAT-001` | Signals exact supported-field duplicate item signatures and, separately, exact opaque product/service `(system, code)` values occurring on at least two distinct items across this supplied sample. It performs no near matching or code interpretation. |
+| `REPEAT-001` | Signals exact supported-field duplicate item signatures and, separately, exact opaque product/service `(system, code)` values occurring on at least two distinct items across this supplied sample. An item with any missing signature slot, including any Coverage-reference slot, is excluded and reported as missing evidence. It performs no near matching or code interpretation. |
 | `AMOUNT-001` | When exactly one same-currency `benefit`, `paidbypatient`, and `drugcost` component is present, signals when `abs(drugcost - (benefit + paidbypatient)) > 0.01`. Missing, duplicate, or currency-conflicting components are not treated as zero. |
 | `OUTLIER-001` | Per exact currency, with at least four `drugcost` observations, uses Tukey hinges and signals values strictly above `Q3 + 1.5 × IQR`. For the unchanged ten-value USD sample, `Q1=0`, `Q3=20`, and the threshold is `50`. |
 

@@ -3,7 +3,7 @@
   "task_id": "DEMO-001",
   "agent": "codex-backend",
   "status": "COMPLETE",
-  "summary": "Completed the contract-aligned local FastAPI demo and remediated the authorized Vertex smoke truncation by disabling Gemini thinking so the full 2,048-token structured-output budget remains available while preserving the one-call, no-tools boundary.",
+  "summary": "Completed final-review remediation for REPEAT-001 signature completeness, bounded evidence summaries, exact canonical Decimal response handling with typed range failures, and accurate operator lifecycle and Vertex limit documentation.",
   "files_changed": [
     ".env.example",
     "README.md",
@@ -18,6 +18,8 @@
     "backend/app/rules.py",
     "backend/app/service.py",
     "backend/requirements.txt",
+    "docs/operations/VERTEX_AI_LOCAL.md",
+    "docs/operator/QUICKSTART.md",
     "tests/backend/conftest.py",
     "tests/backend/test_api.py",
     "tests/backend/test_extraction_and_rules.py",
@@ -29,14 +31,19 @@
   "tests": {
     "passed": true,
     "commands": [
-      "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/backend/test_gemini.py",
       "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/backend",
+      "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/validate-contracts.py",
+      "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/agentctl.py task validate DEMO-001",
+      "git diff --check",
       "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/agentctl.py scope check DEMO-001 backend"
     ],
-    "notes": "The remediation assertion requires the exact Google Gen AI SDK thinking configuration include_thoughts=false and thinking_budget=0. The focused Gemini suite passed 7 tests in 4.04 seconds, and the full backend suite passed 34 tests in 5.31 seconds. Tests use injected fakes and no live credentials. The backend scope check passed after the report update."
+    "notes": "The full backend suite passed 38 tests in 6.19 seconds, including new REPEAT-001 no-signal and valid-plus-missing Coverage regressions plus endpoint-level 600-character fact and Decimal('1e999') strict-boundary regressions. Contract validation, task validation, diff hygiene, and the backend scope check all passed after this report update. Tests use injected fakes or configuration-free adapters and no live credentials."
   },
   "blockers": [],
   "notes_for_next_agent": [
+    "REPEAT-001 now excludes an exact-duplicate signature when any Coverage-reference slot is missing, records canonical missing evidence, and retains deterministic signal ordering; the separate opaque-code repetition check remains unchanged.",
+    "Observed adjudication Decimal facts now remain exact canonical strings through the public response and Gemini payload. Fixed-point values beyond the 64-character exact-processing boundary produce sanitized EXTRACTION_LIMIT_EXCEEDED before model invocation; evidence summaries are independently ellipsized to 500 characters without changing facts.",
+    "Operator docs now defer lifecycle truth to task.json and correctly describe the 30-second timeout and 2,048-token output ceiling as fixed DEMO-001 constants rather than environment variables.",
     "An authorized live Vertex smoke previously returned finish_reason=MAX_TOKENS because thinking consumed 1,936 tokens of the 2,048 output-token ceiling. GenerateContentConfig now disables thinking while retaining JSON schema mode, the existing token ceiling, one invocation, and no tools; the orchestrator should rerun exactly one controlled live smoke.",
     "The unchanged fixed sample yields 155 observed facts, no REF-001 signals, DATE-001 insufficient evidence because referenced Part D Coverage has no period bounds, one REPEAT-001 opaque-code repetition, three AMOUNT-001 mismatches under the exact formula, and one OUTLIER-001 100 USD signal above the frozen 50 USD threshold.",
     "Run the approved human-authorized live smoke test separately with external .env/ADC values; automated tests deliberately require no credentials and do not print configuration.",

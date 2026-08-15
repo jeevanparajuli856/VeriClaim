@@ -14,8 +14,9 @@ The one-day demo uses the Google Gen AI SDK configured for Vertex AI. Source-con
 - `GOOGLE_CLOUD_LOCATION`
 - `GOOGLE_GENAI_USE_VERTEXAI`
 - `VERTEX_GEMINI_MODEL`
-- `VERTEX_GEMINI_TIMEOUT_SECONDS`
-- `VERTEX_GEMINI_MAX_OUTPUT_TOKENS`
+
+The request timeout (30 seconds) and maximum model output (2,048 tokens) are fixed source-controlled
+DEMO-001 constants. They are not environment variables.
 
 The application makes at most one model call per analysis and exposes no tools. It sends only minimized structured facts/signals from the approved synthetic dataset, requests structured output, validates it with Pydantic, and verifies every evidence reference. Failures return deterministic results with a typed model status; no second repair call or silent provider fallback is allowed.
 

@@ -16,6 +16,7 @@ MAX_ADJUDICATIONS = 32
 MAX_CODINGS = 16
 MAX_STRING = 2_048
 MAX_OBSERVED_FACTS = 2_000
+MAX_DECIMAL_PLAIN_CHARS = 64
 
 BASE_ADJUDICATION = "http://terminology.hl7.org/CodeSystem/adjudication"
 C4BB_ADJUDICATION = "http://hl7.org/fhir/us/carin-bb/CodeSystem/C4BBAdjudication"
@@ -134,7 +135,27 @@ def _parse_decimal(value: Any, label: str) -> Decimal:
         raise PipelineError("SOURCE_SHAPE_UNSUPPORTED", f"The supported {label} field is not numeric.") from None
     if not number.is_finite():
         raise PipelineError("SOURCE_SHAPE_UNSUPPORTED", f"The supported {label} field is not finite.")
+    if _plain_decimal_length(number) > MAX_DECIMAL_PLAIN_CHARS:
+        raise PipelineError(
+            "EXTRACTION_LIMIT_EXCEEDED",
+            "A supported numeric value exceeds the exact processing boundary.",
+        )
     return number
+
+
+def _plain_decimal_length(number: Decimal) -> int:
+    """Return fixed-point character length without expanding a hostile exponent."""
+
+    if number.is_zero():
+        return 1
+    sign, digits, exponent = number.as_tuple()
+    sign_length = int(sign)
+    if exponent >= 0:
+        return sign_length + len(digits) + exponent
+    decimal_position = len(digits) + exponent
+    if decimal_position > 0:
+        return sign_length + len(digits) + 1
+    return sign_length + 2 + (-decimal_position) + len(digits)
 
 
 def _add_fact(
@@ -143,7 +164,7 @@ def _add_fact(
     if len(facts) >= MAX_OBSERVED_FACTS:
         raise PipelineError("EXTRACTION_LIMIT_EXCEEDED", "The supported observed-fact collection exceeds its limit.")
     evidence_id = _pointer(alias, pointer)
-    public_value: str | float | bool = float(value) if isinstance(value, Decimal) else value
+    public_value: str | bool = str(value) if isinstance(value, Decimal) else value
     facts.append(
         ObservedFact(
             evidence_id=evidence_id,

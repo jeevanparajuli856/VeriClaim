@@ -11,7 +11,9 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-FactValue = str | float | bool
+BoundedFactString = Annotated[str, Field(max_length=2048)]
+FiniteFactNumber = Annotated[float, Field(allow_inf_nan=False)]
+FactValue = BoundedFactString | FiniteFactNumber | bool
 RuleId = Literal["REF-001", "DATE-001", "REPEAT-001", "AMOUNT-001", "OUTLIER-001"]
 GeminiFailureStatus = Literal[
     "configuration_error", "timeout", "provider_error", "invalid_output", "invalid_evidence"

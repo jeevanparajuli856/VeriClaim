@@ -40,6 +40,11 @@ def test_approved_sample_extracts_only_supported_bounded_facts(extracted: Extrac
     serialized = " ".join(str(fact.value) for fact in extracted.facts)
     assert "Gabapentin" not in serialized
     assert "ATORVASTATIN" not in serialized
+    assert all(
+        isinstance(fact.value, str)
+        for fact in extracted.facts
+        if fact.fact_type == "adjudication_value"
+    )
 
 
 def test_reference_rule_no_signal_and_wrong_type_signal(extracted: ExtractedDataset) -> None:
@@ -77,6 +82,34 @@ def test_repeat_rule_sample_signal_and_exact_duplicate(extracted: ExtractedDatas
     changed = replace(extracted, eobs=[replace(eob, items=(*eob.items, duplicate_item)), *extracted.eobs[1:]])
     result = duplicate_and_repetition(changed)
     assert "exact_duplicate_items" in {signal.signal_type for signal in result.signals}
+    assert [signal.evidence_id for signal in result.signals] == [
+        f"sig:REPEAT-001:{index:04d}" for index in range(1, len(result.signals) + 1)
+    ]
+
+
+def test_repeat_rule_no_signal_for_one_complete_unique_item(extracted: ExtractedDataset) -> None:
+    eob = extracted.eobs[0]
+    changed = replace(extracted, eobs=[replace(eob, items=(eob.items[0],))])
+    result = duplicate_and_repetition(changed)
+    assert result.signals == []
+    assert result.missing_evidence == []
+
+
+def test_repeat_rule_excludes_valid_plus_missing_coverage_signature(extracted: ExtractedDataset) -> None:
+    eob = extracted.eobs[0]
+    item = eob.items[0]
+    missing_reference = ReferenceValue(None, None, item.identity_evidence_id)
+    incomplete = replace(
+        item,
+        path_key=f"{item.path_key}-incomplete",
+        coverage_refs=(*item.coverage_refs, missing_reference),
+    )
+    changed = replace(extracted, eobs=[replace(eob, items=(item, incomplete))])
+    result = duplicate_and_repetition(changed)
+    assert "exact_duplicate_items" not in {signal.signal_type for signal in result.signals}
+    assert result.missing_evidence == [
+        f"{incomplete.path_key}: exact-duplicate signature is incomplete or ambiguous."
+    ]
     assert [signal.evidence_id for signal in result.signals] == [
         f"sig:REPEAT-001:{index:04d}" for index in range(1, len(result.signals) + 1)
     ]
