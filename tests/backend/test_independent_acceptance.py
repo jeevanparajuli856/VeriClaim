@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
+from copy import deepcopy
 from dataclasses import replace
 from datetime import timedelta
 from decimal import Decimal
@@ -12,12 +14,21 @@ from types import SimpleNamespace
 
 import pytest
 import yaml
+import httpx
 from jsonschema import Draft202012Validator
 
+import backend.app.service as service_module
 from backend.app.extractor import AmountComponent, ExtractedDataset, ReferenceValue
 from backend.app.gemini import MAX_PROMPT_BYTES, MAX_RESPONSE_BYTES, GeminiSummarizer
 from backend.app.loader import MAX_FILE_BYTES, PipelineError, SOURCE_PATHS, default_project_root, load_approved_sources
-from backend.app.rules import coverage_date_bounds, observed_amount_relationship, reference_integrity, sample_relative_high_amount
+from backend.app.main import app, get_analysis_service
+from backend.app.rules import (
+    coverage_date_bounds,
+    duplicate_and_repetition,
+    observed_amount_relationship,
+    reference_integrity,
+    sample_relative_high_amount,
+)
 from backend.app.service import AnalysisService
 
 
@@ -34,6 +45,22 @@ def _source_hashes() -> dict[str, str]:
         relative: hashlib.sha256((root / relative).read_bytes()).hexdigest()
         for _, relative in SOURCE_PATHS
     }
+
+
+def _post_demo(service: AnalysisService) -> httpx.Response:
+    async def override_service():
+        return service
+
+    async def request() -> httpx.Response:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            return await client.post("/api/v1/analyze-demo")
+
+    app.dependency_overrides[get_analysis_service] = override_service
+    try:
+        return asyncio.run(request())
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -227,6 +254,78 @@ def test_date_rule_is_inclusive_and_uses_only_present_bounds(extracted: Extracte
     ]
 
 
+def test_repeat_rule_has_no_signal_or_missing_evidence_for_one_complete_unique_item(
+    extracted: ExtractedDataset,
+) -> None:
+    eob = extracted.eobs[0]
+    result = duplicate_and_repetition(replace(extracted, eobs=[replace(eob, items=(eob.items[0],))]))
+
+    assert result.status == "completed"
+    assert result.signals == []
+    assert result.missing_evidence == []
+
+
+def test_repeat_rule_excludes_valid_plus_missing_coverage_and_keeps_canonical_ids(
+    extracted: ExtractedDataset,
+) -> None:
+    eob = extracted.eobs[0]
+    complete = eob.items[0]
+    incomplete = replace(
+        complete,
+        path_key=f"{complete.path_key}-incomplete",
+        coverage_refs=(
+            *complete.coverage_refs,
+            ReferenceValue(None, None, complete.identity_evidence_id),
+        ),
+    )
+    result = duplicate_and_repetition(replace(extracted, eobs=[replace(eob, items=(incomplete, complete))]))
+
+    assert [signal.signal_type for signal in result.signals] == ["repeated_opaque_product_service_code"]
+    assert [signal.evidence_id for signal in result.signals] == ["sig:REPEAT-001:0001"]
+    assert result.missing_evidence == [
+        f"{incomplete.path_key}: exact-duplicate signature is incomplete or ambiguous."
+    ]
+
+
+def test_repeat_signal_order_is_canonical_across_unsorted_items(extracted: ExtractedDataset) -> None:
+    eob = extracted.eobs[0]
+    base = eob.items[0]
+
+    def incomplete_item(path: str, system: str, code: str):
+        return replace(
+            base,
+            path_key=path,
+            service_date=None,
+            service_date_text=None,
+            service_date_evidence_id=None,
+            products=(
+                (
+                    system,
+                    code,
+                    f"ev:eob:/canonical/{code}/system",
+                    f"ev:eob:/canonical/{code}/code",
+                ),
+            ),
+        )
+
+    items = (
+        incomplete_item("z-1", "z-system", "z-code"),
+        incomplete_item("a-1", "a-system", "a-code"),
+        incomplete_item("z-2", "z-system", "z-code"),
+        incomplete_item("a-2", "a-system", "a-code"),
+    )
+    result = duplicate_and_repetition(replace(extracted, eobs=[replace(eob, items=items)]))
+
+    assert [signal.evidence_id for signal in result.signals] == [
+        "sig:REPEAT-001:0001",
+        "sig:REPEAT-001:0002",
+    ]
+    assert [signal.evidence_refs for signal in result.signals] == [
+        ["ev:eob:/canonical/a-code/system", "ev:eob:/canonical/a-code/code"],
+        ["ev:eob:/canonical/z-code/system", "ev:eob:/canonical/z-code/code"],
+    ]
+
+
 def _with_drugcost_delta(extracted: ExtractedDataset, delta: Decimal, currency: str = "USD") -> ExtractedDataset:
     eob = extracted.eobs[0]
     item = eob.items[0]
@@ -310,6 +409,77 @@ def test_model_rejects_oversize_or_schema_invalid_output_without_retry() -> None
         assert result.gemini.candidate_findings == []
         assert result.metadata.call_count == 1
         assert len(models.calls) == 1
+
+
+def test_endpoint_preserves_long_fact_and_exact_decimal_under_strict_json(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sources = deepcopy(load_approved_sources())
+    long_code = "x" * 600
+    exact_decimal = "12345678901234567890.123456789012345678901234567890"
+    item = sources["eob"].document["entry"][0]["resource"]["item"][0]
+    item["productOrService"]["coding"][0]["code"] = long_code
+    item["adjudication"][7]["amount"]["value"] = exact_decimal
+    monkeypatch.setattr(service_module, "load_approved_sources", lambda: sources)
+
+    response = _post_demo(AnalysisService(GeminiSummarizer(None, None)))
+
+    assert response.status_code == 200
+    body = response.json()
+    code_fact = next(
+        fact
+        for fact in body["observed_facts"]
+        if fact["json_pointer"] == "/entry/0/resource/item/0/productOrService/coding/0/code"
+    )
+    amount_fact = next(
+        fact
+        for fact in body["observed_facts"]
+        if fact["json_pointer"] == "/entry/0/resource/item/0/adjudication/7/amount/value"
+    )
+    summary = next(
+        record["summary"]
+        for record in body["evidence_index"]
+        if record["evidence_id"] == code_fact["evidence_id"]
+    )
+    assert code_fact["value"] == long_code
+    assert len(summary) == 500 and summary.endswith("…")
+    assert amount_fact["value"] == exact_decimal
+    assert isinstance(amount_fact["value"], str)
+    assert body["model_metadata"]["invoked"] is False
+    assert body["model_metadata"]["call_count"] == 0
+    strict_json = json.dumps(body, allow_nan=False, separators=(",", ":"))
+    assert exact_decimal in strict_json
+
+
+def test_endpoint_rejects_extreme_finite_decimal_before_model_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sources = deepcopy(load_approved_sources())
+    sources["eob"].document["entry"][0]["resource"]["item"][0]["adjudication"][7]["amount"][
+        "value"
+    ] = "1e999"
+    monkeypatch.setattr(service_module, "load_approved_sources", lambda: sources)
+
+    class ForbiddenSummarizer:
+        calls = 0
+
+        def summarize(self, payload, allowed_evidence):
+            self.calls += 1
+            raise AssertionError("model boundary must not run after deterministic failure")
+
+    forbidden = ForbiddenSummarizer()
+    response = _post_demo(AnalysisService(forbidden))  # type: ignore[arg-type]
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "error": {
+            "code": "EXTRACTION_LIMIT_EXCEEDED",
+            "message": "A supported numeric value exceeds the exact processing boundary.",
+            "model_called": False,
+        }
+    }
+    assert forbidden.calls == 0
+    json.dumps(response.json(), allow_nan=False)
 
 
 def test_static_openapi_validates_real_configuration_failure_response(monkeypatch: pytest.MonkeyPatch) -> None:
