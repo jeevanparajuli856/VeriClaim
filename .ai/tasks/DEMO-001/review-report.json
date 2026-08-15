@@ -2,8 +2,49 @@
   "schema_version": "1.0",
   "task_id": "DEMO-001",
   "reviewer": "codex-reviewer",
-  "reviewed_commit": "",
+  "reviewed_commit": "b58af100c2b5c3dacdadcf309df93943fd97858b",
   "status": "CHANGES_REQUIRED",
-  "summary": "",
-  "findings": []
+  "summary": "The exact current commit b58af100c2b5c3dacdadcf309df93943fd97858b is not release-ready. Architecture, contract, implementation, independent test, verification, security, documentation, and Git-history evidence were reviewed; 34 backend tests, 12 agentic tests, project/task/OpenAPI validation, dependency consistency, diff hygiene, secret-path checks, and source SHA-256 checks pass. The fixed sample and configuration-free fallback work, and the one-call/no-tools structured Gemini boundary includes the approved thinking-budget remediation. Three blocking findings remain: REPEAT-001 violates its missing-signature semantics, accepted bounded facts can escape the typed deterministic-failure contract during response assembly/serialization, and the required per-rule no-signal/missing-evidence tests do not cover REPEAT-001. Two documentation inaccuracies are non-blocking. Security's two low defense-in-depth findings remain accepted as non-blocking for this local synthetic-only milestone.",
+  "findings": [
+    {
+      "severity": "high",
+      "category": "rule_semantics",
+      "file": "backend/app/rules.py",
+      "description": "REPEAT-001 removes missing Coverage references before checking signature completeness (`usable_references = ... if reference.value`) and only requires at least one usable reference. Two otherwise equal items that each contain one valid Coverage reference plus one missing Coverage reference therefore produce `exact_duplicate_items` and no missing-evidence entry. This contradicts the approved rule definition that missing signature fields exclude an item and are reported as missing evidence.",
+      "recommendation": "Require every Coverage-reference slot used by the item signature to contain an unambiguous value before grouping the item; otherwise exclude the item and record missing evidence. Add a regression with a valid-plus-missing reference list and preserve canonical signal ordering.",
+      "blocking": true
+    },
+    {
+      "severity": "high",
+      "category": "contract_boundary",
+      "file": "backend/app/extractor.py",
+      "description": "The documented supported input bounds are not closed over the public response models. Extracted strings up to 2,048 characters are accepted, but `AnalysisService._evidence_index` embeds the full value in an `EvidenceRecord.summary` capped at 500 characters; a 600-character supported value raises an uncaught Pydantic ValidationError instead of the contract's typed sanitized pipeline error. Separately, every finite Decimal is accepted and then converted to float; `Decimal('1e999')` becomes `inf`, which is not JSON serializable, while sufficiently precise or small values can be silently rounded. These paths violate the bounded finite-Decimal architecture, exact observed-fact boundary, and deterministic-failure contract.",
+      "recommendation": "Make every accepted extracted value safely representable throughout evidence indexing, Gemini payload construction, Pydantic response validation, and strict JSON serialization. Truncate or separately summarize bounded strings without changing the observed fact, preserve or explicitly constrain numeric precision/range before float conversion, map unsupported values to an approved PipelineError code, and add endpoint-level regression tests for both cases proving no model call and a typed sanitized 500.",
+      "blocking": true
+    },
+    {
+      "severity": "medium",
+      "category": "acceptance_test_coverage",
+      "file": "tests/backend/test_extraction_and_rules.py",
+      "description": "Acceptance criterion 9 requires each rule's signal, no-signal, and missing-evidence behavior to be covered. The REPEAT-001 test checks the unchanged-sample repetition and an added exact duplicate, but never checks a no-signal dataset or an incomplete-signature/missing-evidence path. The independent suite likewise only confirms that REPEAT-001 is present in the real response. This gap allowed the blocking missing-Coverage-reference defect to pass 34 tests, while README.md claims every rule's signal/no-signal/missing-evidence paths are covered.",
+      "recommendation": "Add independent REPEAT-001 no-signal and incomplete/ambiguous-signature cases, including the valid-plus-missing Coverage-reference case, and align README/test-report claims with the evidence. Rerun independent testing and commit-bound verification after remediation.",
+      "blocking": true
+    },
+    {
+      "severity": "low",
+      "category": "documentation_accuracy",
+      "file": "docs/operator/QUICKSTART.md",
+      "description": "The section labeled 'Current next action' still says DEMO-001 has not been authorized or created, while task.json and repository history place it at REVIEW.",
+      "recommendation": "Replace the obsolete inception instruction with the current lifecycle state or make the section explicitly historical so operator guidance cannot contradict repository state.",
+      "blocking": false
+    },
+    {
+      "severity": "low",
+      "category": "documentation_accuracy",
+      "file": "docs/operations/VERTEX_AI_LOCAL.md",
+      "description": "The operations guide lists VERTEX_GEMINI_TIMEOUT_SECONDS and VERTEX_GEMINI_MAX_OUTPUT_TOKENS as active source-controlled environment placeholders, but .env.example does not define them and backend/app/gemini.py uses fixed constants without reading either variable.",
+      "recommendation": "Document the limits as fixed DEMO-001 constants, or implement and validate the advertised variables under approved architecture and contract boundaries.",
+      "blocking": false
+    }
+  ]
 }

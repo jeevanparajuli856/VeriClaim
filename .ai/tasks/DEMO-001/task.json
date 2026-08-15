@@ -3,7 +3,7 @@
   "task_id": "DEMO-001",
   "title": "Build the local FHIR anomaly investigation demo",
   "type": "feature",
-  "status": "REVIEW",
+  "status": "IMPLEMENTATION",
   "priority": "high",
   "owners": {
     "orchestrator": "codex",
@@ -28,7 +28,9 @@
     "frontend": [],
     "other": [
       "README.md",
-      ".env.example"
+      ".env.example",
+      "docs/operator/QUICKSTART.md",
+      "docs/operations/VERTEX_AI_LOCAL.md"
     ]
   },
   "permissions": {
@@ -94,11 +96,17 @@
         "tests/backend/**",
         "README.md",
         ".env.example",
+        "docs/operator/QUICKSTART.md",
+        "docs/operations/VERTEX_AI_LOCAL.md",
         ".ai/tasks/DEMO-001/backend-report.json"
       ],
       "read_only_paths": [
         "contracts/**",
-        "docs/**",
+        "docs/PROJECT.md",
+        "docs/features/**",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "docs/standards/**",
         "database/**",
         "supabase/**",
         ".ai/tasks/DEMO-001/task.json",
