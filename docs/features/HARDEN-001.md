@@ -25,12 +25,30 @@ Close the two accepted non-blocking DEMO-001 security findings without changing 
 ## Architecture impact
 
 - Refines the existing Gemini adapter boundary and repository dependency/CI security controls only.
-- Backend and testing are expected to be impacted; CI/tooling impact must be assessed as infrastructure impact by task architecture.
-- Frontend and database remain disabled, and no new runtime component or trust boundary is introduced.
+- Backend, testing, and infrastructure/tooling are impacted. Frontend and database remain disabled.
+- No new runtime component, external service, data flow, or trust boundary is introduced. The dependency audit is a development/CI security gate, not an application runtime dependency or provider.
+
+## Task architecture decisions
+
+### Gemini request boundary
+
+- Keep `SYSTEM_INSTRUCTION` as a fixed project-owned constant with no runtime interpolation. Pass it only as `GenerateContentConfig.system_instruction`.
+- Serialize the minimized payload with the existing canonical JSON settings and construct user `contents` only as the fixed label `SUPPLIED_SYNTHETIC_DATA_JSON:\n` followed by that JSON. Do not duplicate the policy in `contents` or promote any payload value to the system role.
+- Enforce the 128 KiB input ceiling before invocation as the sum of the exact UTF-8 byte lengths of the system instruction and user content. An over-limit request makes zero provider calls and preserves the existing sanitized `configuration_error` fallback behavior.
+- Preserve the current response schema configuration, thinking-disabled setting, timeout, output-token and response-size limits, evidence allowlist, sanitized failures, and zero-or-one-call behavior. Do not configure tools, retries, repair calls, or fallback models.
+- Fake-client tests must inspect the actual `generate_content` arguments. They must prove the system and user roles are distinct, an instruction-like synthetic value remains only inside user JSON, fixed policy is absent from user content, private environment sentinels are absent from both roles, tools are absent, and an over-limit combined request makes no call.
+
+### Dependency and verification boundary
+
+- Keep `requirements-agent.txt` as the reviewed direct-input manifest, retaining its backend include and adding the selected dependency-audit package as an exact `==` pin. Record the Python 3.12 lock-regeneration and audit commands in comments there.
+- Generate one committed `requirements.lock` from `requirements-agent.txt` in a clean Python 3.12 environment using a documented exact lock-compiler version and hash generation. The lock must contain the complete application, test, agentic-control-plane, and audit graph as exact versions with SHA-256 artifact hashes; it is generated evidence and must not be hand-edited.
+- Every CI workflow that installs Python project/tooling dependencies must install only with `python -m pip install --require-hashes -r requirements.lock`. The direct manifest remains the review/regeneration input, not an installation source in CI.
+- Add the pinned audit invocation to `.ai/project.json` as a required security check against `requirements.lock`, using strict error handling, hash enforcement, and no ignored advisory IDs. The same command is therefore run by normal verification and `--security-only`; it may use the public advisory service but must require no application credentials or live Vertex AI access.
+- Dependency validation must prove direct-input/lock consistency, exact transitive pins and hashes, a clean Python 3.12 hash-enforced install, `pip check`, and a passing audit. A finding is resolved by changing the reviewed direct input and regenerating the lock, or by a separately approved time-bounded exception; this task does not add an ignore list.
 
 ## Contract impact
 
-- No public API contract change is expected. `contracts/openapi.yaml` remains authoritative and must validate unchanged.
+- No public API contract change is required. `contracts/openapi.yaml` remains authoritative and must validate unchanged.
 
 ## Security considerations
 

@@ -3,7 +3,7 @@
   "task_id": "HARDEN-001",
   "title": "Harden prompt isolation and dependency reproducibility",
   "type": "security",
-  "status": "PLANNING",
+  "status": "CONTRACT_READY",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",
@@ -98,6 +98,7 @@
         "requirements-agent.txt",
         "requirements.lock",
         ".github/workflows/**",
+        ".ai/project.json",
         ".ai/tasks/HARDEN-001/backend-report.json"
       ],
       "read_only_paths": [
