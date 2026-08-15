@@ -275,6 +275,34 @@
       },
       "then": {
         "properties": {
+          "layers": {
+            "const": [
+              {
+                "name": "source",
+                "status": "passed"
+              },
+              {
+                "name": "json",
+                "status": "passed"
+              },
+              {
+                "name": "support",
+                "status": "passed"
+              },
+              {
+                "name": "required-fields",
+                "status": "passed"
+              },
+              {
+                "name": "references",
+                "status": "passed"
+              },
+              {
+                "name": "content-isolation",
+                "status": "passed"
+              }
+            ]
+          },
           "states": {
             "oneOf": [
               {
@@ -354,6 +382,22 @@
                 "maxItems": 0
               }
             }
+          },
+          "project_findings": {
+            "minItems": 1
+          },
+          "layers": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "failed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            }
           }
         }
       }
@@ -381,6 +425,118 @@
               "opaque_values": {
                 "minItems": 1
               }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "terminology": {
+            "properties": {
+              "status": {
+                "const": "unverified"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "terminology"
+        ]
+      },
+      "then": {
+        "properties": {
+          "states": {
+            "contains": {
+              "const": "terminology-unverified"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "carin": {
+            "properties": {
+              "status": {
+                "const": "no-errors-reported"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "carin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "states": {
+            "contains": {
+              "const": "carin-no-errors-reported"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "carin": {
+            "properties": {
+              "status": {
+                "const": "nonconformant"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "carin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "states": {
+            "contains": {
+              "const": "carin-nonconformant"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "carin": {
+            "properties": {
+              "status": {
+                "const": "diagnostic-unavailable"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "carin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "states": {
+            "contains": {
+              "const": "carin-diagnostic-unavailable"
             }
           }
         }
