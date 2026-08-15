@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted during project inception.
+Accepted during project inception; reaffirmed for the one-day demo on 2026-08-15.
 
 ## Context
 
@@ -21,6 +21,12 @@ Introducing real PHI, production claims, or production system connectivity requi
 The initial local development source is the repository-root `dataset/` directory (`../dataset` from the planned `backend/` working directory). It contains CMS Blue Button sample FHIR R4 Patient, Coverage, and ExplanationOfBenefit examples for a single synthetic beneficiary. This replaces the earlier assumption that Synthea would be evaluated first; Synthea remains an optional future source if additional synthetic scenarios require it.
 
 Selection does not waive provenance or privacy controls. Before the corpus is frozen as a benchmark, its source, license/usage basis, immutable version or content hashes, transformations, limitations, and synthetic classification must be recorded. Application code must treat it as read-only, untrusted input and must never write credentials, prompts, traces, or generated outputs into it.
+
+### Scope-reset refinement — 2026-08-15
+
+The same three JSON files remain the approved one-day demo input. The application may extract only the minimal Patient, Coverage, and ExplanationOfBenefit facts required by the deterministic rules and may send only minimized structured synthetic facts/signals to Vertex AI Gemini. `dataset/` remains read-only and byte-identical.
+
+Benchmark freeze, redistribution, broader provenance research, de-identification review, and production retention controls are future concerns and do not block this local demonstration. DATA-001's source inventory remains useful historical evidence even though its strict compatibility/CARIN work is cancelled and not an active dependency.
 
 ## Alternatives considered
 

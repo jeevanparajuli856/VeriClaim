@@ -1,25 +1,7 @@
-# Database deployment model
+# Database deployment model — superseded/inactive
 
-## Development
+The 2026-08-15 project scope reset disabled the database for the one-day local demo. There is no database deployment, migration, seed, Supabase project, PostgreSQL service, pgvector dependency, or production promotion step in the active milestone.
 
-The approved inception platform uses local PostgreSQL with pgvector. Schema changes must be represented by reviewed, Git-tracked migrations under `database/migrations/`; the exact migration tool and file format are selected during PLATFORM-001.
+The prior PostgreSQL/pgvector migration plan is retained in Git history and ADR-0003's historical record; it is not an active requirement. Existing `supabase/` or Docker scaffold must not be treated as approved configuration.
 
-```text
-Database agent
-  ↓
-create migration under database/migrations/
-  ↓
-test against the local PostgreSQL/pgvector development service
-  ↓
-record schema/integrity/authorization verification
-  ↓
-database-report.json
-```
-
-Development contains only approved synthetic/public data. Managed database hosting is not selected, and the pre-existing `supabase/` scaffold is not evidence that Supabase has been approved.
-
-## Production
-
-Production database hosting and deployment are not approved during inception. A later provider decision must define backup/recovery, encryption/key ownership, migration promotion, rollback, access control, residency, monitoring, and protected credentials. Production promotion will apply the same reviewed Git migration history through an approved human/CI gate; it will never copy the development database or development rows into production.
-
-If Supabase is selected later, follow the conditional Supabase lifecycle in `docs/standards/DATABASE.md` and update `.ai/project.json` before implementation relies on it.
+Any future persistence or production database work requires a new approved provider, migration path, data/security model, operational plan, and `.ai/project.json` update before task creation.

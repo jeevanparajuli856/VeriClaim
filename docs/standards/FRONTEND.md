@@ -1,10 +1,7 @@
-# Frontend Standards
+# Frontend standards — inactive for current milestone
 
-- Prefer TypeScript strict mode.
-- Never invent backend endpoints.
-- Prefer generated API clients from the OpenAPI contract.
-- Separate data/state concerns from presentation where practical.
-- Handle loading, error, empty, disabled, and success states.
-- Preserve accessibility and keyboard navigation.
-- Avoid embedding secrets in frontend code.
-- Add tests for meaningful behavior.
+The one-day VeriClaim demo has no separate frontend component. `.ai/project.json` sets `components.frontend.enabled` to `false`, and FastAPI `/docs` is the complete demonstration interface.
+
+The former TypeScript/Next.js direction was superseded on 2026-08-15. Existing frontend coordination files are historical scaffold and must not become a DEMO-001 dependency.
+
+A custom frontend is a future possibility that requires explicit project, architecture, contract, accessibility, ownership, and verification reconciliation before implementation.

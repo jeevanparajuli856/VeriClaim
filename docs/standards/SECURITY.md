@@ -1,45 +1,23 @@
-# Security Standards
+# Security standards
 
-## Baseline
+## Active local-demo baseline
 
-- least privilege
-- secure defaults
-- explicit authorization
-- input validation
-- output encoding where needed
-- secure secret handling
-- dependency review
-- auditability
+- Use only the approved synthetic files; never introduce real PHI or production claims.
+- Treat local JSON, FHIR strings, and model output as untrusted.
+- Allowlist input paths and bound JSON/model sizes, collection lengths, numeric values, timeouts, and output tokens.
+- Keep Application Default Credentials and real runtime values outside Git, prompts, responses, fixtures, and logs.
+- Send only minimized structured synthetic facts/signals to Vertex AI Gemini.
+- Make at most one model call, expose no tools, and permit no data modification or external side effect.
+- Treat Gemini output as candidate explanation only. Require Pydantic schema validation and resolvable evidence references.
+- Preserve deterministic results on provider/configuration/output failure and redact raw provider errors.
+- Bind local demonstration serving conservatively; unauthenticated `/docs` is not approved for shared or cloud deployment.
+- Scan for committed secrets and review dependencies through the repository verification baseline.
 
-## Forbidden
+## Forbidden claims/actions
 
-- hard-coded credentials
-- production secrets in Git
-- disabled certificate verification without explicit justification
-- authorization based only on frontend state
-- destructive production operations without human approval
+- hard-coded credentials, production secrets, real PHI, or production claims;
+- fraud determination, claim approval/denial, payment/coverage/coding/medical-necessity/diagnostic/clinical decisions;
+- arbitrary file/network access, unrestricted tools, silent provider fallback, or autonomous loops;
+- claims of HIPAA compliance, CARIN conformance, production readiness, or healthcare validity.
 
-## Vertex AI development boundary
-
-- Authenticate local development with Google Cloud Application Default Credentials; keep ADC and all runtime values outside Git.
-- Send only approved, minimized synthetic/public context to Vertex AI Gemini.
-- Treat Gemini output as untrusted candidate findings, never as the sole anomaly signal or a claim decision.
-- Require evidence citations plus deterministic schema, authorization, evidence, and governance validation before human review.
-- Keep prompts, FHIR data, model output, credentials, and private runtime configuration out of external telemetry.
-- Local model connectivity does not approve production credentials/data, Google ADK, Gemini Enterprise Agent Platform Runtime, Cloud Run, GKE, or general Google Cloud hosting.
-
-## Reviews should consider
-
-- authentication
-- authorization
-- IDOR/BOLA
-- injection
-- SSRF
-- XSS
-- CSRF where applicable
-- insecure deserialization
-- file upload risk
-- secret exposure
-- logging/privacy
-- rate limiting
-- dependency/supply-chain risk
+Authentication, RBAC, production logging, rate limiting, cloud IAM, and regulated-data controls are future requirements only if the scope changes to a shared/deployed system.

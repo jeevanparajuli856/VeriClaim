@@ -1,5 +1,13 @@
 # DATA-001 — Define and validate the minimal FHIR R4 compatibility boundary
 
+## Historical disposition — cancelled 2026-08-15
+
+DATA-001 is preserved as completed work-in-progress and review evidence, but it is no longer an active project dependency. The approved one-day project scope reset removed strict CARIN diagnostics, offline terminology packages, and comprehensive FHIR compatibility work from the milestone, so the orchestrator changed the task from `BLOCKED` to `CANCELLED` through `python3 scripts/agentctl.py task status DATA-001 CANCELLED`.
+
+The cancellation does not imply that final review passed. `review-report.json` remains `CHANGES_REQUIRED` and records four unresolved blockers: CARIN evidence was not bound to each validated source set, the validation schema allowed contradictory CARIN states/evidence, a very large JSON integer could escape fail-closed handling, and Bundle `id`/`total` requirements conflicted across the feature/architecture/executable contract. All reports, tests, and `contracts/fhir/data-001/` artifacts remain intact so this history is not hidden or rewritten.
+
+The material below is the historical DATA-001 specification. It is not an active CARIN-conformance requirement for DEMO-001.
+
 ## Goal
 
 Define the smallest project-owned FHIR R4 compatibility boundary needed to ingest VeriClaim's approved synthetic Blue Button seed reproducibly. The boundary accepts only the observed Patient, Coverage, pharmacy ExplanationOfBenefit, and searchset shapes after deterministic source, JSON, required-field, reference, and content-isolation checks. CARIN Blue Button 2.2.0 validation remains a pinned diagnostic and does not decide project acceptance.

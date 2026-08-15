@@ -1,43 +1,23 @@
 # Operator quickstart
 
-The repo should carry the workflow; the human should not paste a giant prompt for every phase.
+The repo carries the tracked lifecycle through `python scripts/agentctl.py ...` (use `python3` only on systems where `python` is not installed as an alias).
 
-## Brand-new project
+## Current next action
 
-Tell Codex:
-
-```text
-This is a brand-new project. Treat my idea as PROJECT INCEPTION.
-Follow AGENTS.md and the project-inception skill.
-Do not implement or create tasks yet.
-Separate confirmed requirements, assumptions, recommendations, and open questions.
-Continue automatically unless a material decision genuinely requires me.
-```
-
-## Approve first task
+After reviewing the approved re-inception artifacts, the human may authorize the single proposed task:
 
 ```text
-Approve <TASK-ID> as the first implementation task.
+Approve DEMO-001 as the implementation task.
 Proceed using AGENTS.md and the task-orchestration skill.
 Continue automatically until human action is genuinely required.
 ```
 
-## Start Gemini
+DEMO-001 does not exist until that authorization is given and `agentctl.py task create` is run. No separate frontend or Gemini frontend worktree is needed because FastAPI `/docs` is the demonstration interface.
 
-Open the frontend worktree prepared by Codex and tell Gemini:
+## Generic lifecycle reminders
 
-```text
-Implement frontend for <TASK-ID>. Follow AGENTS.md and GEMINI.md.
-```
-
-## Return from Gemini
-
-```text
-Gemini finished/stopped <TASK-ID>. Read frontend-report.json and continue orchestration.
-```
-
-## After PR merge
-
-```text
-The PR for <TASK-ID> is approved and merged. Perform post-merge closure.
-```
+- Normal progress uses `python scripts/agentctl.py task advance <TASK-ID>`.
+- Administrative recovery/cancellation uses `task status` only when justified.
+- Implementation must not occur on `main`/`master`.
+- The feature branch is prepared only after task creation.
+- Verification, security review, final review, and human PR/merge remain evidence gates under `AGENTS.md`.
