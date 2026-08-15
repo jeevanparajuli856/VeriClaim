@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "task_id": "FRONTEND-001",
+  "agent": "codex-architect",
+  "status": "COMPLETE",
+  "summary": "Approved the final local Node.js 24/React/TypeScript/Vite dashboard architecture with an unchanged OpenAPI contract, fixed same-origin development proxy, deterministic-first evidence UI, safe accessible rendering, and reproducible unit/browser verification.",
+  "files_changed": [
+    "docs/features/FRONTEND-001.md",
+    "docs/PROJECT.md",
+    "docs/architecture/SYSTEM.md",
+    "docs/adr/ADR-0005-local-react-vite-dashboard.md",
+    "docs/adr/README.md",
+    "docs/standards/FRONTEND.md",
+    ".ai/tasks/FRONTEND-001/architecture-report.json"
+  ],
+  "impacts": {
+    "database": false,
+    "backend": false,
+    "frontend": true,
+    "infrastructure": true,
+    "testing": true,
+    "contract_change": false
+  },
+  "decisions": [
+    "ADR-0005 enables the previously disabled frontend as the final bounded local-prototype component using Node.js 24 LTS, React, strict TypeScript, Vite, and npm with a committed package-lock.json. Database, authentication, persistence, analytics, provider access from the browser, and deployment remain disabled.",
+    "The dashboard is one in-memory page. Its page shell, analysis controller, generated-contract adapter, source/fact views, five-rule results, Gemini status/findings view, evidence explorer, and shared accessible primitives have explicit boundaries; child display components do not fetch and no router/global store/service worker is required.",
+    "The browser invokes only bodyless POST /api/v1/analyze-demo at the relative same-origin path. Vite binds locally and proxies only /api to the exact source-controlled allowlisted target http://127.0.0.1:8000. No API-origin/provider VITE variable, user/query-selected target, backend CORS change, or deployed reverse proxy is introduced.",
+    "contracts/openapi.yaml is sufficient and unchanged, so contract_change=false. The frontend generates and commits frontend/src/api/generated/schema.d.ts from OpenAPI and supplies deterministic generate:api/check:api scripts; freshness verification fails if regeneration changes the committed output.",
+    "Network input begins as unknown and passes bounded HTTP/content/top-level/discriminant guards before generated types are adapted. Generated TypeScript types provide compile-time alignment but do not make browser input trusted or create a competing runtime contract.",
+    "The analysis state is exactly idle, loading, success, pipeline_error, or client_error. One AbortController and duplicate-submit protection prevent concurrent/stale updates; user retry begins a fresh analysis and never merges evidence from different responses.",
+    "Every HTTP 200 renders deterministic content first. Gemini success adds explicitly non-authoritative candidate text; configuration_error, timeout, provider_error, invalid_output, and invalid_evidence retain all deterministic results. Typed HTTP 500 shows only its public pipeline code/message with no fabricated partial result; network/incompatible responses show a generic bounded client error.",
+    "All five rule results remain visible, including completed zero-signal states. Source metadata, observed facts, deterministic signals, Gemini candidates, missing evidence, limitations, and sanitized metadata remain visually and semantically distinct; no state is labeled as fraud, healthcare risk, payment/coverage/coding/clinical correctness, or a clean bill.",
+    "Evidence navigation resolves exact references only within the current response evidence_index. Safe application-generated DOM target indexes avoid using returned evidence strings as selectors/URLs/HTML; activation moves focus to evidence, a return control restores invoking focus, and missing/duplicate targets produce visible inert data-integrity warnings.",
+    "Every API/FHIR/model string is untrusted plain text rendered through React interpolation. dangerouslySetInnerHTML, innerHTML, HTML/Markdown execution, untrusted URLs/selectors/styles/scripts, raw-body/exception display, browser secrets/config, persistent storage, export/download, and mutation actions are prohibited.",
+    "Accessibility requires native semantics, header/main/footer landmarks, skip navigation, logical headings/order, keyboard operation, visible focus, restrained live status, WCAG 2.2 AA contrast, non-color status cues, responsive narrow/desktop layouts, reduced-motion behavior, and deliberate focus movement/return for evidence.",
+    "Vitest and Testing Library cover adapters, states, interaction, focus, and inert rendering. Playwright Chromium covers assembled success/fallback/error flows, keyboard/evidence behavior, an automated accessibility scan, representative responsive widths, reduced motion, and one real Vite-to-FastAPI proxy smoke with Vertex AI explicitly disabled.",
+    "Infrastructure impact is true only because CI must explicitly provision Node.js 24, run npm ci, install the lock-matched Playwright Chromium runtime, and make frontend checks available to agentctl verification. No application hosting, cloud resource, container, domain, TLS, CDN, or deployment infrastructure is selected.",
+    "Required frontend evidence is npm ci; check:api; lint; typecheck; unit tests; production build; Playwright tests; and npm audit at high severity. Required checks fail rather than skip when Node, Chromium, audit service, or tooling is unavailable, while existing backend/OpenAPI/agentic/Python audit/security/source-integrity checks continue.",
+    "The user-approved architecture is bounded to the final local prototype. Any new API behavior, arbitrary input/target, persistent/browser provider state, authentication, shared deployment, real PHI, or consequential healthcare action requires a new feature, contract/architecture reconciliation, and security review."
+  ],
+  "risks": [
+    {
+      "severity": "high",
+      "description": "FHIR-derived or Gemini text could be executed or used in unsafe browser contexts, causing injection, misleading navigation, or disclosure.",
+      "mitigation": "Render returned values only as React text, prohibit HTML/Markdown/URL/style/script evaluation, generate safe DOM indexes, keep navigation response-local, and test adversarial HTML/instruction-like strings as inert text."
+    },
+    {
+      "severity": "high",
+      "description": "The dashboard could visually elevate candidate model output or zero-signal rule results into authoritative fraud, payment, coverage, coding, clinical, or correctness conclusions.",
+      "mitigation": "Render deterministic content first, keep every information class separate, label Gemini as candidate/non-authoritative, preserve limitations/human authority, and prohibit decision/risk-score styling or language."
+    },
+    {
+      "severity": "high",
+      "description": "A generalized dev proxy or configurable browser API origin could expand network access, leak configuration, or prompt an unapproved backend/CORS/deployment change.",
+      "mitigation": "Use only the relative operation and an exact source-controlled /api proxy target at 127.0.0.1:8000; prohibit API/provider browser environment variables and test the fixed path/target."
+    },
+    {
+      "severity": "medium",
+      "description": "Compile-time OpenAPI types or malformed evidence relationships could be treated as runtime proof, leading to crashes, stale data, or incorrect evidence focus.",
+      "mitigation": "Guard unknown transport/discriminants, use one replace-on-retry state, abort stale requests, build an exact response-local evidence map, and visibly degrade missing/duplicate targets."
+    },
+    {
+      "severity": "medium",
+      "description": "Node/npm and Playwright add supply-chain, reproducibility, audit-availability, browser-download, and CI-version drift risk.",
+      "mitigation": "Pin Node major 24, commit package-lock.json/generated types, use npm ci, install lock-matched Chromium explicitly, require clean generation/build/tests and fail-closed high-severity npm audit."
+    },
+    {
+      "severity": "medium",
+      "description": "A polished local unauthenticated dashboard could be mistaken for an approved production/shared deployment or real-healthcare workflow.",
+      "mitigation": "Keep local/synthetic/human-authority notices in the page and documentation, bind locally, select no deployment target, and require new identity/security/architecture work before any shared or real-data use."
+    },
+    {
+      "severity": "medium",
+      "description": "Visual polish could mask keyboard, focus, live-region, contrast, responsive, or reduced-motion failures.",
+      "mitigation": "Make accessibility behavior contractual and cover role/name queries, keyboard/focus return, automated browser scanning, desktop/mobile viewports, contrast review, and reduced-motion emulation."
+    }
+  ],
+  "blockers": [],
+  "notes_for_next_agent": [
+    "Orchestrator: before lifecycle advancement requires operational consistency, enable frontend in .ai/project.json with the approved technology, add required frontend verification/security commands, provision Node.js 24 and Playwright Chromium in CI, and correct only the stale non-interface placeholder sentence in contracts/README.md. Do not change OpenAPI semantics.",
+    "Orchestrator: contract_change=false; validate the unchanged contracts/openapi.yaml and do not start database or backend workers. Infrastructure/tooling reconciliation is orchestrator-owned; frontend and independent testing are required.",
+    "Gemini frontend owner: read AGENTS.md, GEMINI.md, the feature, this report, SYSTEM.md, ADR-0005, FRONTEND.md, and OpenAPI. Work only in the permitted frontend/tests/README/report paths and call only the relative bodyless operation.",
+    "Gemini frontend owner: implement the explicit controller/component/evidence boundaries, generated types, fixed proxy, safe text rendering, accessible focus/navigation, all states, npm scripts, contract-shaped fixtures, Playwright coverage, and local setup; never edit backend, contracts, task.json, project architecture, or workflows.",
+    "Gemini frontend owner: record npm ci, check:api, lint, typecheck, unit, build, e2e, and audit evidence in frontend-report.json, then run scope check FRONTEND-001 frontend. Browser tests must fake responses or explicitly disable Vertex AI and must not need credentials.",
+    "Tester: independently cover every model status and pipeline code, transport incompatibility/network retry, abort/no-concurrent-submit, inert adversarial text, exact evidence focus/return and unresolved targets, semantic/a11y/responsive/reduced-motion behavior, generated-type freshness, fixed proxy smoke, npm lock/audit, and no credential/config/browser persistence.",
+    "Security/reviewer: verify the exact integrated commit preserves the unchanged API/backend one-call boundary, fixed local target, plaintext-only rendering, deterministic/model authority separation, local/synthetic wording, accessibility, dependency evidence, and absence of database/auth/deployment expansion.",
+    "The human manually starts Gemini only after agentctl advances FRONTEND-001 to IMPLEMENTATION and the orchestrator prepares the frontend worktree; Codex must not claim to have started Gemini."
+  ]
+}

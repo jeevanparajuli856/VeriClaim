@@ -10,3 +10,4 @@ Naming: `ADR-0001-short-title.md`.
 - `ADR-0002-synthetic-data-initial-boundary.md` — accepted and reaffirmed for the one-day demo.
 - `ADR-0003-initial-application-platform.md` — historical production-scale direction superseded by the 2026-08-15 one-day platform decision recorded in the same ADR.
 - `ADR-0004-vertex-ai-gemini-development-provider.md` — accepted and amended to select one direct Google Gen AI SDK/Vertex AI call.
+- `ADR-0005-local-react-vite-dashboard.md` — accepted to enable the local Node.js 24/React/TypeScript/Vite dashboard with a fixed same-origin development proxy.
