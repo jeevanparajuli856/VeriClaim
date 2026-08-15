@@ -1,43 +1,18 @@
 # Operator quickstart
 
-The repo should carry the workflow; the human should not paste a giant prompt for every phase.
+The repo carries the tracked lifecycle through `python scripts/agentctl.py ...` (use `python3` only on systems where `python` is not installed as an alias).
 
-## Brand-new project
+## Current next action
 
-Tell Codex:
+DEMO-001 is an active tracked implementation task. Its current lifecycle state is authoritative in
+`.ai/tasks/DEMO-001/task.json`; normal advancement must use `python scripts/agentctl.py task advance DEMO-001`
+so repository evidence gates are enforced. No separate frontend or Gemini frontend worktree is needed because
+FastAPI `/docs` is the demonstration interface.
 
-```text
-This is a brand-new project. Treat my idea as PROJECT INCEPTION.
-Follow AGENTS.md and the project-inception skill.
-Do not implement or create tasks yet.
-Separate confirmed requirements, assumptions, recommendations, and open questions.
-Continue automatically unless a material decision genuinely requires me.
-```
+## Generic lifecycle reminders
 
-## Approve first task
-
-```text
-Approve <TASK-ID> as the first implementation task.
-Proceed using AGENTS.md and the task-orchestration skill.
-Continue automatically until human action is genuinely required.
-```
-
-## Start Gemini
-
-Open the frontend worktree prepared by Codex and tell Gemini:
-
-```text
-Implement frontend for <TASK-ID>. Follow AGENTS.md and GEMINI.md.
-```
-
-## Return from Gemini
-
-```text
-Gemini finished/stopped <TASK-ID>. Read frontend-report.json and continue orchestration.
-```
-
-## After PR merge
-
-```text
-The PR for <TASK-ID> is approved and merged. Perform post-merge closure.
-```
+- Normal progress uses `python scripts/agentctl.py task advance <TASK-ID>`.
+- Administrative recovery/cancellation uses `task status` only when justified.
+- Implementation must not occur on `main`/`master`.
+- The feature branch is prepared only after task creation.
+- Verification, security review, final review, and human PR/merge remain evidence gates under `AGENTS.md`.

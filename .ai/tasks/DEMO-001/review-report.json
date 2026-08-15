@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DEMO-001",
+  "reviewer": "codex-reviewer",
+  "reviewed_commit": "5ab706e2545cd26a603cb5e8859835addf813416",
+  "status": "APPROVED",
+  "summary": "Approved exact current commit 5ab706e2545cd26a603cb5e8859835addf813416 with no unresolved final-review finding. All five prior findings are closed: REPEAT-001 excludes a valid-plus-missing Coverage signature, records canonical missing evidence, preserves rule-key signal ordering, and now has independent no-signal/missing-evidence coverage; a 600-character fact remains unchanged while its evidence summary is bounded to 500 characters; high-precision Decimal facts remain exact canonical strings under strict JSON; Decimal('1e999') returns sanitized EXTRACTION_LIMIT_EXCEEDED with model_called=false and zero model calls; and operator/Vertex documentation now matches repository state and fixed runtime limits. Independent review passed seven focused remediation/Gemini/docs probes, all 43 backend tests, all 12 agentic tests, project/task/OpenAPI validation, dependency consistency, diff hygiene, a strict configuration-free /docs and endpoint flow, exact 64-character Decimal boundary probes, and before/after approved source hashes. One explicitly authorized live Vertex smoke on this revision succeeded with exactly one invocation, validated structured output, five candidate findings, five rule results, and five deterministic signals; no credential or private configuration value was printed. Verification covers integrated commit 5bb79d506f39a16b36e8d7c3105ac34acace385c, and security approved commit 595cf4669b6c4ec38d4ce4d691a6b242f5e64099; only expected verification/security reports and task status changed afterward, so both remain current for this HEAD. The security report's prompt-role-separation and transitive-lock/audit findings remain accepted non-blocking defense-in-depth work for a future hardening task.",
+  "findings": []
+}

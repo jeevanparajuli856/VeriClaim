@@ -1,0 +1,422 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DATA-001",
+  "status": "READY_ADVISORY_DIAGNOSTICS",
+  "selected_profile_package": "hl7.fhir.us.carin-bb#2.2.0",
+  "purpose": "Pinned offline CARIN compatibility diagnostics only",
+  "acceptance_authority": false,
+  "resolution_policy": {
+    "allow_latest": false,
+    "allow_network_during_validation": false,
+    "allow_version_substitution": false,
+    "package_distribution_authority": "HL7 FHIR package server",
+    "package_source_template": "https://packages2.fhir.org/packages/{name}/{version}",
+    "license_provenance": "The license value for each package is copied from package/package.json in the exact checksum-pinned archive. Third-party terminology rights are not expanded by an HL7 package license.",
+    "offline_materialization": "Download each exact source_uri to contracts/fhir/data-001/.offline/packages, verify sha256, expand into an isolated validator package cache, and run with -no-http-access and -tx n/a. The .offline directory is ignored and package contents are not committed."
+  },
+  "tooling": [
+    {
+      "name": "HL7 FHIR Validator CLI",
+      "version": "6.10.2",
+      "source_uri": "https://github.com/hapifhir/org.hl7.fhir.core/releases/download/6.10.2/validator_cli.jar",
+      "sha256": "a3addadfa18dfa23146a0a243b6ede68eaad92157a5407738c468bb3d7e4ccd6",
+      "bytes": 187697077,
+      "license": "Apache-2.0",
+      "license_provenance": "https://github.com/hapifhir/org.hl7.fhir.core/blob/6.10.2/LICENSE.txt"
+    },
+    {
+      "name": "Eclipse Temurin JRE x64 Linux HotSpot",
+      "version": "21.0.12+8",
+      "source_uri": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12%2B8/OpenJDK21U-jre_x64_linux_hotspot_21.0.12_8.tar.gz",
+      "sha256": "8a379a67c91a3ae61ffb33d46e0a40c7ba35e70713c4db31cfca30492f792eff",
+      "bytes": 52069757,
+      "license": "GPL-2.0-with-classpath-exception",
+      "license_provenance": "legal/java.base/LICENSE and legal/java.base/ASSEMBLY_EXCEPTION inside the exact archive",
+      "scope": "Task-local ignored runtime only; no global installation"
+    }
+  ],
+  "packages": [
+    {
+      "name": "hl7.fhir.us.carin-bb",
+      "version": "2.2.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.us.carin-bb/2.2.0",
+      "publication_uri": "https://hl7.org/fhir/us/carin-bb/STU2.2/package.tgz",
+      "sha256": "29b7f427899be281ad242154d2e0d136900a679d839347778191f883420a196a",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1", "hl7.terminology.r4#7.1.0", "hl7.fhir.us.core#7.0.0", "hl7.fhir.us.core.v610#6.1.0", "hl7.fhir.uv.extensions.r4#5.2.0", "us.nlm.vsac#0.24.0"]
+    },
+    {
+      "name": "hl7.fhir.r4.core",
+      "version": "4.0.1",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.r4.core/4.0.1",
+      "sha256": "b090bf929e1f665cf2c91583720849695bc38d2892a7c5037c56cb00817fb091",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": []
+    },
+    {
+      "name": "hl7.fhir.r4.examples",
+      "version": "4.0.1",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.r4.examples/4.0.1",
+      "sha256": "02aa10ea545301b1e14277123dd43a2a3a9297e6345de677801866df8afe7270",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": []
+    },
+    {
+      "name": "hl7.fhir.r5.core",
+      "version": "5.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.r5.core/5.0.0",
+      "sha256": "74b27cd1bfce9e80eaceac431edf230b0945a443564fbf5512f82e5fa50a80d4",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": []
+    },
+    {
+      "name": "hl7.fhir.us.core",
+      "version": "7.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.us.core/7.0.0",
+      "sha256": "f47243e558b0a91104a2f80d4269d974d89862227e62ca2068f5bc4cba625737",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1", "hl7.fhir.uv.extensions#5.1.0-snapshot1", "hl7.fhir.uv.sdc#3.0.0", "hl7.fhir.uv.smart-app-launch#2.0.0", "hl7.terminology.r4#5.5.0", "us.cdc.phinvads#0.12.0", "us.nlm.vsac#0.18.0"]
+    },
+    {
+      "name": "hl7.fhir.us.core.v610",
+      "version": "6.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.us.core.v610/6.1.0",
+      "sha256": "c1f9332cdf7a9c9216dcf1fb626c2e7df4641ba24f9bbb83e1144ed01e145070",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.us.core#6.1.0"]
+    },
+    {
+      "name": "hl7.fhir.us.core",
+      "version": "6.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.us.core/6.1.0",
+      "sha256": "ec096f29bc4ce8f04117dfc4ef82e7289c67a7e2188892e86288c45389d158d9",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1", "hl7.fhir.uv.bulkdata#2.0.0", "hl7.fhir.uv.extensions.r4#1.0.0", "hl7.fhir.uv.sdc#3.0.0", "hl7.fhir.uv.smart-app-launch#2.1.0", "hl7.terminology.r4#5.0.0", "ihe.formatcode.fhir#1.1.0", "us.cdc.phinvads#0.12.0", "us.nlm.vsac#0.11.0"]
+    },
+    {
+      "name": "hl7.fhir.uv.bulkdata",
+      "version": "2.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.bulkdata/2.0.0",
+      "sha256": "2dca9c8aeebad2c3db8e0d8db919cb3a65a24b9fcf6d46f02badbb1ae89b86cb",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "hl7.fhir.uv.extensions",
+      "version": "5.1.0-snapshot1",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.extensions/5.1.0-snapshot1",
+      "sha256": "8a1f92c1e77535cb2ae21b69028de81a21ea27bd24d0a76c43c7224b8f46b35c",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.terminology.r5#5.3.0"]
+    },
+    {
+      "name": "hl7.fhir.uv.extensions",
+      "version": "5.3.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.extensions/5.3.0",
+      "sha256": "6e3a3f9929e05d2b813a3f98fa1ad2f5122fb6b2819fa73e6c5520002fb2c5b0",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.terminology.r5#7.1.0"],
+      "purpose": "Validator 6.10.2 implicit package pinned in the isolated cache"
+    },
+    {
+      "name": "hl7.fhir.uv.extensions.r4",
+      "version": "5.2.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.extensions.r4/5.2.0",
+      "sha256": "b406e75575f05676559d0759770c5939d023ee72fb2ef38e0b3259328487720a",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "hl7.fhir.uv.extensions.r4",
+      "version": "1.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.extensions.r4/1.0.0",
+      "sha256": "b270eb5b0ea3d015398a5af6c86cab2718070cbb850e366ef050ce6d6eb4a9d3",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "hl7.fhir.uv.extensions.r5",
+      "version": "5.2.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.extensions.r5/5.2.0",
+      "sha256": "e02fc6eff0f37c1611a35aa93ef9aaa3b55ab7371a5c96f4d2a5834106a13170",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.fhir.r5.core#5.0.0"]
+    },
+    {
+      "name": "hl7.fhir.uv.extensions.r5",
+      "version": "5.3.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.extensions.r5/5.3.0",
+      "sha256": "f1039cac888d79ebd29878d7debe5e647ffe7ed962a9033da095258a03a06105",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.terminology.r5#7.1.0"]
+    },
+    {
+      "name": "hl7.fhir.uv.sdc",
+      "version": "3.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.sdc/3.0.0",
+      "sha256": "be5c3f0a7f82e072b40739e05fb68f3e58e44c9bd040cd901b1b55c62f23dca2",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1", "hl7.fhir.r4.examples#4.0.1"]
+    },
+    {
+      "name": "hl7.fhir.uv.smart-app-launch",
+      "version": "2.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.smart-app-launch/2.0.0",
+      "sha256": "627e7a64e7abe130201fbae2ee7d2cb85d7d94972458d302c4d06d59e2c7d084",
+      "license": "CC-BY-4.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "hl7.fhir.uv.smart-app-launch",
+      "version": "2.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.uv.smart-app-launch/2.1.0",
+      "sha256": "c1f26d40e5b58fc0c101f7f7e109ddc40b8156015e1632439d2cb34cf67a612c",
+      "license": "CC-BY-4.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1", "hl7.terminology.r4#5.0.0"]
+    },
+    {
+      "name": "hl7.fhir.xver-extensions",
+      "version": "0.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.fhir.xver-extensions/0.1.0",
+      "sha256": "f3bb9fa2083402e88a02b41f433655274e8a1cca563211c8f7ba6fd0badf537a",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"],
+      "purpose": "Validator 6.10.2 implicit package"
+    },
+    {
+      "name": "hl7.terminology",
+      "version": "7.3.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology/7.3.0",
+      "sha256": "8318f87cdcb44a6dfc5c197ca569c9b0499b06f45522324bfc4b4b810d51d4b9",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.fhir.uv.extensions.r5#5.3.0", "hl7.fhir.r5.core#5.0.0"],
+      "purpose": "Validator 6.10.2 implicit package pinned in the isolated cache"
+    },
+    {
+      "name": "hl7.terminology.r4",
+      "version": "7.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology.r4/7.1.0",
+      "sha256": "1cb0cd5601972925fcd04f2c175d9cc63a9ecd9346a91a6e735f1a865dc5fba1",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1", "hl7.fhir.uv.extensions.r4#5.2.0"]
+    },
+    {
+      "name": "hl7.terminology.r4",
+      "version": "6.2.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology.r4/6.2.0",
+      "sha256": "79404c9cc95491fc0155627cd039c401a6eb4748175328131e91b709a41300e2",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"],
+      "purpose": "Validator 6.10.2 implicit terminology package"
+    },
+    {
+      "name": "hl7.terminology.r4",
+      "version": "5.5.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology.r4/5.5.0",
+      "sha256": "0bc96d49e4892a91e2b087e4c8b90c3ba307e1a18dc32dca6967a0f10adb2e28",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "hl7.terminology.r4",
+      "version": "5.0.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology.r4/5.0.0",
+      "sha256": "c863bef14eddb01d2884d8f14826b9b152f9fcef6b99e107025136af69ce2c18",
+      "license": "CC0-1.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "hl7.terminology.r5",
+      "version": "7.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology.r5/7.1.0",
+      "sha256": "473303108b5607aad7b910581739e8bbf3e61a625ed9e739c66e0ca597d4aefe",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.fhir.uv.extensions.r5#5.2.0"]
+    },
+    {
+      "name": "hl7.terminology.r5",
+      "version": "5.3.0",
+      "source_uri": "https://packages2.fhir.org/packages/hl7.terminology.r5/5.3.0",
+      "sha256": "5366fbaf1b8a3d0bb69099a659d0a01377a541df284146d71f3a7dbea889d6c3",
+      "license": "CC0-1.0",
+      "fhir_versions": ["5.0.0"],
+      "dependencies": ["hl7.fhir.r5.core#5.0.0"]
+    },
+    {
+      "name": "ihe.formatcode.fhir",
+      "version": "1.1.0",
+      "source_uri": "https://packages2.fhir.org/packages/ihe.formatcode.fhir/1.1.0",
+      "sha256": "3c9bf67d35d5b090ce5a2215ea7e650c9e826918ebddc95eaa35439a436f7d84",
+      "license": "CC-BY-SA-4.0",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "us.cdc.phinvads",
+      "version": "0.12.0",
+      "source_uri": "https://packages2.fhir.org/packages/us.cdc.phinvads/0.12.0",
+      "sha256": "cf565971a6bcca3193de4d7ff71f5c443fc4e00adaeef8c88416d21c778e3a3f",
+      "license": "HHS/Open",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "us.nlm.vsac",
+      "version": "0.24.0",
+      "source_uri": "https://packages2.fhir.org/packages/us.nlm.vsac/0.24.0",
+      "sha256": "50c5c6f9e9ecbb1bbf5116f8ef7abd7e44659a25d8b045017834c4e3b95433ea",
+      "license": "US Govt",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "us.nlm.vsac",
+      "version": "0.18.0",
+      "source_uri": "https://packages2.fhir.org/packages/us.nlm.vsac/0.18.0",
+      "sha256": "50d8739f2b6d35a61036027655e75bfc37eca3ab48808615324196a633e3bfbd",
+      "license": "US Govt",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    },
+    {
+      "name": "us.nlm.vsac",
+      "version": "0.11.0",
+      "source_uri": "https://packages2.fhir.org/packages/us.nlm.vsac/0.11.0",
+      "sha256": "37aa3f718c68283ec7123bfa77adf8c5fcdd90b35be37e19d76a8b66121bc88d",
+      "license": "US Govt",
+      "fhir_versions": ["4.0.1"],
+      "dependencies": ["hl7.fhir.r4.core#4.0.1"]
+    }
+  ],
+  "official_package_example_evidence": {
+    "archive": {
+      "package": "hl7.fhir.us.carin-bb",
+      "version": "2.2.0",
+      "source_uri": "https://hl7.org/fhir/us/carin-bb/STU2.2/package.tgz",
+      "sha256": "29b7f427899be281ad242154d2e0d136900a679d839347778191f883420a196a",
+      "license": "CC0-1.0",
+      "license_provenance": "package/package.json in the exact checksum-pinned official archive",
+      "classification": "official-hl7-publication-example",
+      "synthetic_classification": "UNVERIFIED_AS_SYNTHETIC",
+      "synthetic_classification_basis": "The official artifacts page labels these resources as example instances showing what conforming data might look like, but neither the package manifest nor the example resources attest a synthetic generation method or no-real-person provenance. They therefore cannot be promoted to the required authoritative-synthetic classification by inference."
+    },
+    "members": [
+      {
+        "archive_path": "package/example/Patient-Patient2.json",
+        "sha256": "5126c680cdcb0ccd1d0c0c032b720f1a92224fff2f5bf3fa30ab7319e437a188",
+        "profile": "http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-Patient|2.2.0",
+        "publisher_expected_result": "CONFORMANT_EXAMPLE",
+        "pinned_offline_validator_result": "0 errors, 3 warnings, 2 information",
+        "eligibility": "STRUCTURAL_POSITIVE_ONLY; synthetic classification remains unverified"
+      },
+      {
+        "archive_path": "package/example/Coverage-Coverage3.json",
+        "sha256": "e72295932c41b57291e0013dfb3e81d2ae37fbcf549090fdf14932a6fefc7d83",
+        "profile": "http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-Coverage|2.2.0",
+        "publisher_expected_result": "CONFORMANT_EXAMPLE",
+        "pinned_offline_validator_result": "0 errors, 3 warnings",
+        "eligibility": "STRUCTURAL_POSITIVE_ONLY; synthetic classification remains unverified"
+      },
+      {
+        "archive_path": "package/example/ExplanationOfBenefit-EOBPharmacy1.json",
+        "sha256": "46952eba56089a44272d2707c87accc5f16325ec8d91acdf7eed107a1080fe62",
+        "profile": "http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-ExplanationOfBenefit-Pharmacy|2.2.0",
+        "publisher_expected_result": "0 errors, 5 warnings",
+        "pinned_offline_validator_result": "8 errors, 5 warnings, 9 information",
+        "eligibility": "NOT_A_STRICT_OFFLINE_POSITIVE"
+      }
+    ],
+    "publisher_validation": {
+      "summary_archive_path": "package/other/validation-summary.json",
+      "summary_sha256": "39dfcb19c9e522e8e812778f327f22766c0405f53a10e6cfc550e1d33a48514e",
+      "operation_outcome_archive_path": "package/other/validation-oo.json",
+      "operation_outcome_sha256": "d214c310a03f88cc1384d76945417395a7ae92cee04d906c87c72e9f29d07aaf",
+      "limitation": "Publisher QA is authoritative publication evidence but is not a substitute for the required reproducible, network-disabled strict validation gate because its external terminology inputs are not packaged."
+    },
+    "unavailable_terminology": {
+      "binding_strength": "required",
+      "systems": [
+        "http://terminology.hl7.org/CodeSystem/NCPDPDispensedAsWrittenOrProductSelectionCode",
+        "http://terminology.hl7.org/CodeSystem/NCPDPBrandGenericIndicator",
+        "http://terminology.hl7.org/CodeSystem/NCPDPPrescriptionOriginCode",
+        "http://terminology.hl7.org/CodeSystem/NCPDPCompoundCode"
+      ],
+      "package_state": "The exact CARIN ValueSets contain compose/include references only; no expansion or CodeSystem concepts are distributed in the pinned closure.",
+      "rights_provenance": "The exact ValueSet resources direct users to https://standards.ncpdp.org/Access-to-Standards.aspx and state restrictive NCPDP copyright/usage terms. No NCPDP-authorized offline content or usage approval was supplied for DATA-001.",
+      "project_boundary_decision": "Preserve every system URI and code as opaque source data with terminology status unverified. Do not invent concepts, downgrade diagnostic errors, use a live terminology service, substitute another CARIN version, or assert terminology membership.",
+      "carin_limitation": "Pharmacy-specific CARIN conformance remains outside the initial acceptance boundary unless authoritative, versioned, checksum-pinned, usage-approved offline terminology later becomes available."
+    }
+  },
+  "compatibility_evidence": {
+    "validated_at": "2026-08-15",
+    "network_control": "Validator -no-http-access, -tx n/a, and loopback-only HTTP/HTTPS proxy properties",
+    "dataset_mutated": false,
+    "acceptance_authority": false,
+    "result": "PROJECT_ACCEPTED_CARIN_NONCONFORMANT",
+    "summary": "The unchanged approved synthetic seed is eligible for project acceptance when the minimal compatibility rules pass. CARIN 2.2.0 errors and warnings remain preserved advisory evidence, never a project acceptance or rejection criterion, and never a CARIN-conformance claim.",
+    "raw_operation_outcome": {
+      "format": "FHIR R4 Bundle[type=collection] containing three OperationOutcome resources",
+      "sha256": "2eb1271891b41794b665b639aa2f63138ed597cace33fbd2e3ce45673dcf7d15",
+      "bytes": 1556152,
+      "trusted_content": false,
+      "retention": "Task-local ignored artifact at contracts/fhir/data-001/.offline/evidence/seed-carin-operationoutcomes.json; retained by digest, not committed, and never interpolated into instructions or unsanitized logs."
+    },
+    "counts": {
+      "dataset/patient_bbuser29999.json": {
+        "error": 16,
+        "warning": 5,
+        "information": 0,
+        "fatal": 0
+      },
+      "dataset/coverage_bundle_bbuser29999.json": {
+        "error": 216,
+        "warning": 12,
+        "information": 0,
+        "fatal": 0
+      },
+      "dataset/eob_bundle_bbuser29999.json": {
+        "error": 218,
+        "warning": 428,
+        "information": 0,
+        "fatal": 0
+      },
+      "total": {
+        "error": 450,
+        "warning": 445,
+        "information": 0,
+        "fatal": 0
+      }
+    },
+    "representative_findings": [
+      "Patient meta.profile is unversioned while CARIN 2.2.0 requires version-qualified conformance.",
+      "Patient.identifier does not satisfy the required memberid slice.",
+      "CMS Blue Button variable and identifier-currency extensions have no definitions in the pinned official closure.",
+      "Coverage and EOB bundles omit entry.fullUrl required by base FHIR for non-batch/transaction Bundles.",
+      "EOB type, careTeam, required adjudication slices, terminology bindings, and profile constraints do not conform to CARIN 2.2.0."
+    ]
+  }
+}

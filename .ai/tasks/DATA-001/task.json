@@ -1,0 +1,242 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DATA-001",
+  "title": "Define and validate the minimal FHIR R4 profile",
+  "type": "feature",
+  "status": "CANCELLED",
+  "priority": "medium",
+  "owners": {
+    "orchestrator": "codex",
+    "architecture": "codex",
+    "database": "codex",
+    "backend": "codex",
+    "frontend": "gemini",
+    "tester": "codex",
+    "security": "codex",
+    "review": "codex"
+  },
+  "spec": "docs/features/DATA-001.md",
+  "contracts": [
+    "contracts/fhir/data-001/boundary.json",
+    "contracts/fhir/data-001/shape-registry.json",
+    "contracts/fhir/data-001/packages.lock.json",
+    "contracts/fhir/data-001/validation-outcome.schema.json",
+    "contracts/fhir/data-001/source-manifest.json",
+    "contracts/fhir/data-001/data-card.json",
+    "contracts/fhir/data-001/README.md"
+  ],
+  "scope": {
+    "database": [],
+    "backend": [],
+    "frontend": [],
+    "other": [
+      "docs/features/DATA-001.md",
+      ".ai/tasks/DATA-001/**",
+      "contracts/fhir/data-001/**",
+      ".ai/project.json",
+      "tests/fixtures/fhir/data-001/**",
+      "tests/data/**"
+    ]
+  },
+  "permissions": {
+    "orchestrator": {
+      "allowed_write_paths": [
+        ".ai/tasks/DATA-001/task.json",
+        "docs/features/DATA-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "contracts/**",
+        ".ai/project.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "tests/**",
+        "docs/standards/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": []
+    },
+    "architecture": {
+      "allowed_write_paths": [
+        "docs/features/DATA-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        ".ai/tasks/DATA-001/architecture-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "docs/standards/**",
+        ".ai/tasks/DATA-001/task.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    },
+    "database": {
+      "allowed_write_paths": [
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/DATA-001/database-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "backend/**",
+        ".ai/tasks/DATA-001/task.json",
+        ".ai/tasks/DATA-001/architecture-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    },
+    "backend": {
+      "allowed_write_paths": [
+        "backend/**",
+        "tests/backend/**",
+        ".ai/tasks/DATA-001/backend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/DATA-001/task.json",
+        ".ai/tasks/DATA-001/architecture-report.json",
+        ".ai/tasks/DATA-001/database-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    },
+    "frontend": {
+      "allowed_write_paths": [
+        "frontend/**",
+        "tests/frontend/**",
+        ".ai/tasks/DATA-001/frontend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/DATA-001/task.json",
+        ".ai/tasks/DATA-001/architecture-report.json",
+        ".ai/tasks/DATA-001/database-report.json",
+        ".ai/tasks/DATA-001/backend-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    },
+    "tester": {
+      "allowed_write_paths": [
+        "tests/**",
+        ".ai/tasks/DATA-001/test-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/DATA-001/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    },
+    "security": {
+      "allowed_write_paths": [
+        ".ai/tasks/DATA-001/security-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/DATA-001/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    },
+    "review": {
+      "allowed_write_paths": [
+        ".ai/tasks/DATA-001/review-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/DATA-001/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/DATA-001/task.json"
+      ]
+    }
+  },
+  "state_write_policy": {
+    "task_file": ".ai/tasks/DATA-001/task.json",
+    "single_writer": "orchestrator",
+    "worker_agents_must_use_reports": true
+  },
+  "dependencies": [
+    "FOUNDATION-001"
+  ],
+  "acceptance_criteria": [
+    "Define a versioned support matrix covering accepted resources/envelopes, exact base/profile expectations, bundle/reference rules, element and extension handling, terminology policy, and explicit additional-resource decisions.",
+    "Provide consistent machine-readable profile and validation artifacts without inventing payer-specific semantics.",
+    "Provide deterministic structured validation for JSON/base structure, profile compatibility, bundle/reference integrity, project invariants, unsupported content, and provenance/data-classification gates.",
+    "Inventory the unchanged four-file seed corpus with immutable identifiers, observed facts, approved synthetic-local classification, and honest provenance/license limitations; accept it only when the project-defined minimal FHIR R4 compatibility rules pass.",
+    "Treat checksum-pinned CARIN 2.2.0 validation as advisory diagnostics: preserve errors and warnings as structured evidence, never claim CARIN conformance when errors exist, and never allow CARIN results to override project acceptance or rejection.",
+    "Preserve unavailable terminology systems and codes as opaque source data with terminology-unverified status; do not substitute terminology, assert membership, or use unverified values independently for coverage, payment, coding, fraud, clinical, or policy conclusions.",
+    "Add only clearly project-authored synthetic negative, boundary, and adversarial fixtures outside dataset/ with lineage and coverage for malformed JSON, prohibited classification, broken references, missing required fields, unsupported resources/profiles/envelopes, active content, and invariant cases.",
+    "Provide a pinned offline validation procedure that distinguishes minimal-profile-valid, carin-nonconformant, terminology-unverified, and rejected; proves failures are fail-closed; and verifies dataset/ remains byte-identical without network, cloud, model, production, or live terminology-service access.",
+    "Distinguish FHIR conformance from coverage, payment, coding, fraud, clinical, and policy correctness, leaving undeclared semantics unsupported.",
+    "Document stable downstream handoffs, deferred decisions, versioning triggers, and required architecture or contract review for later changes."
+  ],
+  "created_by": "human"
+}

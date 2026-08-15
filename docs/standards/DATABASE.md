@@ -1,19 +1,7 @@
-# Database Standards
+# Database standards — inactive for current milestone
 
-- Database changes must be represented by explicit Git-tracked migrations/schema artifacts.
-- Migrations should be deterministic, reviewable, backward-compatible where practical, and reversible where practical.
-- Protect referential/domain integrity with database constraints where appropriate.
-- Review indexes against real query/access patterns; avoid speculative indexing.
-- Treat authorization/RLS as part of the security model, not an application convenience.
-- Avoid destructive schema changes without an explicit migration/data-backfill/rollback plan.
-- Never run destructive production statements without human approval.
+The one-day VeriClaim demo has no database. `.ai/project.json` sets `components.database.enabled` to `false`; all processing and output are in memory, and `dataset/` is read-only input.
 
-## Supabase
+The former PostgreSQL/pgvector/Supabase/migration direction was superseded on 2026-08-15. Existing database/Supabase scaffold does not select a provider and must not be used by DEMO-001.
 
-When Supabase is selected:
-- create migrations with `supabase migration new <description>` so filenames use the CLI timestamp convention
-- test locally with `supabase db reset` when local Supabase is available
-- deploy pending reviewed migrations to the linked DEV project with `supabase db push`
-- use project-scoped DEV MCP primarily for inspection, diagnostics, advisors, verification, and type generation
-- do not use MCP/direct dashboard edits as the only representation of schema change
-- production deployment promotes the reviewed migrations separately after PR approval/merge
+If persistence becomes a future approved component, choose a provider and migration path through project/architecture reconciliation before implementation. Database changes must then be Git-tracked, deterministic, tested, and deployed through an explicit human/CI gate; no live database state may be the only source of truth.

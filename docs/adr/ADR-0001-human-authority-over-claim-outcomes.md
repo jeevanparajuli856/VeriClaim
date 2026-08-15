@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted during project inception.
+Accepted during project inception; reaffirmed and narrowed for the one-day demo on 2026-08-15.
 
 ## Context
 
@@ -10,7 +10,7 @@ VeriClaim will use ML, retrieval, and AI agents to investigate healthcare paymen
 
 ## Decision
 
-VeriClaim is a decision-support and research platform. It may prioritize a synthetic claim for review, assemble evidence, retrieve policy, explain signals, identify uncertainty, and recommend further investigation.
+For the current milestone, VeriClaim is a local synthetic-data demonstration. It may expose deterministic anomaly signals and Gemini-generated candidate explanations, identify uncertainty or missing evidence, and suggest questions for investigation.
 
 It must not autonomously approve, deny, adjudicate, or change payment; make a fraud determination; contact an external party as an official determination; diagnose or prescribe; or make another consequential clinical decision.
 
@@ -32,17 +32,16 @@ An authorized human remains responsible for consequential interpretation and dow
 
 ### Negative
 
-- Requires reviewer workflow, role enforcement, and auditable human disposition.
-- Limits straight-through automation and means model accuracy alone cannot establish system success.
+- Limits automation and means model fluency cannot establish correctness.
+- A formal reviewer workflow, identity system, and recorded disposition are future concerns, not one-day demo components.
 
 ### Security implications
 
 - Agent tools must be deny-by-default and must not expose payment/adjudication side effects.
-- Authorization must distinguish research/recommendation capabilities from human-controlled actions.
-- UI wording and APIs must not misrepresent an AI finding as a completed claim decision.
+- The API wording must not misrepresent a deterministic signal or Gemini candidate explanation as a completed claim decision.
+- The local demo exposes no consequential action or write tool; a future shared/deployed system would require explicit authorization boundaries.
 
 ### Operational implications
 
-- Every analyst-ready case needs an explicit governance status and human-review state.
-- Any future production integration that adds consequential actions requires a new approved decision, threat model, contract, and human-approval design.
-
+- Every demo response must state the candidate-only nature and limitations of model output.
+- Any future production integration or consequential action requires a new approved decision, threat model, contract, authorization, and human-approval design.

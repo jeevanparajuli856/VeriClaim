@@ -5,21 +5,34 @@
     "backend": {
       "enabled": true,
       "path": "backend",
-      "technology": "Python / FastAPI / Pydantic modular monolith"
+      "technology": "Python / FastAPI / Pydantic with Google Gen AI SDK for Vertex AI"
     },
     "frontend": {
-      "enabled": true,
+      "enabled": false,
       "path": "frontend",
-      "technology": "TypeScript / Next.js"
+      "technology": null
     },
     "database": {
-      "enabled": true,
-      "provider": "PostgreSQL with pgvector (local development; managed hosting deferred)",
-      "migration_path": "database/migrations"
+      "enabled": false,
+      "provider": null,
+      "migration_path": null
     }
   },
   "verification": {
-    "checks": []
+    "checks": [
+      {
+        "name": "demo backend tests",
+        "command": [
+          "python3",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/backend"
+        ],
+        "cwd": ".",
+        "required": true
+      }
+    ]
   },
   "security": {
     "checks": []

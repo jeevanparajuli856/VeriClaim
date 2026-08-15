@@ -2,62 +2,50 @@
 
 ## Status
 
-Accepted during project inception on 2026-08-14.
+Accepted on 2026-08-14; **amended on 2026-08-15** for the approved one-day demo.
 
 ## Context
 
-The bounded agent-development workflow requires an initial LLM provider so provider, privacy, credential, failure, cost, and reproducibility boundaries are explicit. Initial development uses synthetic/public healthcare-shaped data only. The sponsor confirms that local Google Cloud Application Default Credentials, required Vertex/model configuration, and timeout/token/tool/workflow/cost limits are present outside Git and that a direct Gemini request through Vertex AI succeeded.
+The demo needs one bounded LLM summarization step after deterministic anomaly analysis. Local Google Cloud Application Default Credentials and external Vertex AI model configuration are already working and smoke-tested. Credentials and real configuration values remain outside Git.
+
+The earlier ADR selected Vertex AI Gemini but deliberately left the integration mechanism open among direct SDK use, a project state machine, Google ADK, and managed Agent Platform options. The scope reset now resolves that choice.
 
 ## Decision
 
-Use Google Cloud Vertex AI Gemini as the initial provider for agent-development LLM calls.
+Use the **Google Gen AI SDK configured for Vertex AI** for at most one model call per `POST /api/v1/analyze-demo` invocation.
 
-The integration must preserve a provider boundary and may send only the minimum approved synthetic/public context required for the current task. Local authentication uses Application Default Credentials. Required runtime names and bounded limits are present and non-empty, but their values remain private and outside Git. Source-controlled documentation, examples, traces, and reports must not record the Google Cloud project ID, credentials, tokens, or private environment values.
+The application sends only minimized structured facts extracted from the approved synthetic Patient/Coverage/EOB input, deterministic signals, stable evidence references, and explicit limitations. It requests structured output owned and validated by Pydantic. Every candidate finding must cite supplied evidence; unknown references invalidate the model portion.
 
-The successful direct request confirms local Vertex AI model connectivity only. Before model-backed work expands beyond connectivity testing, task architecture and verification must define sanitized model/version change control, applicable retention/training/data-use evidence, quota/cost enforcement, timeouts, failure behavior, and reproducibility evidence without committing private configuration.
+Gemini may explain deterministic signals, correlate supplied synthetic facts, identify missing evidence, produce candidate findings, and state limitations. It must not determine fraud; approve or deny claims; make payment, coverage, coding, medical-necessity, diagnostic, or clinical decisions; modify data; use tools; request unrestricted external data; or receive secrets, real PHI, or production claims.
 
-This decision does not approve:
+Provider/configuration/timeout/transport errors, non-JSON output, schema failure, or invalid evidence references do not erase deterministic output and do not trigger a repair or fallback model call. The response records a bounded model status and limitations.
 
-- real PHI, production claims, or production healthcare-system data;
-- general Google Cloud hosting for the application, database, identity, storage, or telemetry;
-- arbitrary model or region substitution during a controlled experiment;
-- an embedding or reranking provider that has not been selected by the relevant task;
-- autonomous external side effects or unrestricted network tools;
-- Gemini Enterprise Agent Platform Runtime deployment, Google ADK selection, direct Google Gen AI SDK selection, Cloud Run, GKE, or general Google Cloud application hosting; or
-- external telemetry containing prompts, FHIR data, model output, credentials, or private runtime configuration.
+## Configuration and metadata
 
-If local authentication or required bounded configuration becomes absent or invalid, model-backed execution must remain disabled or fail closed; foundation, data design, and other provider-independent work may continue.
+- Authenticate locally with Application Default Credentials.
+- Keep project ID, credentials, tokens, and actual environment values outside Git and out of API responses/logs.
+- Source control may document variable names and placeholders only.
+- Return or log only sanitized metadata: provider, configured model name, prompt/schema version, invocation status, output validation status, and latency/token counts when the SDK supplies them.
+- Use explicit timeouts and output-token limits. Cost/tool-loop budgets from the former agent platform are not required because there is one call and no tools.
 
-## Alternatives considered
+## Explicitly not approved
 
-- **Leave the initial LLM provider unknown:** rejected because it would leave a material platform and trust-boundary blocker unresolved.
-- **Store an API key or service-account credential in repository configuration:** rejected because secrets must remain outside Git and least privilege is required.
-- **Treat Vertex AI selection as approval for all Google Cloud services:** rejected because each hosted data, identity, telemetry, and deployment boundary has separate security, privacy, residency, and cost implications.
-- **Allow silent provider fallback:** rejected because it undermines reproducibility and can change data-use and security terms.
+- Google ADK, Gemini Enterprise Agent Platform Runtime, MCP/A2A, agent memory, tool calling, model training, or autonomous loops;
+- Cloud Run, GKE, or general application/cloud deployment;
+- silent provider/model fallback;
+- embeddings, reranking, RAG, external telemetry carrying healthcare-shaped content, or other Google Cloud service selection;
+- real PHI, production claims, production credentials, or consequential claim actions.
 
 ## Consequences
 
 ### Positive
 
-- Gives agent-development tasks a concrete provider boundary while preserving provider isolation.
-- Confirms local connectivity without representing it as application deployment or production readiness.
-- Makes model version, region, quota, cost, and data-use controls explicit verification evidence.
+- A direct integration matches the one-day constraint and is easy to demonstrate and fake in tests.
+- Structured validation and evidence checks make the model boundary explicit.
+- Deterministic fallback keeps the endpoint useful when model access fails.
 
-### Negative
+### Limitations
 
-- Model-backed work depends on maintaining valid local ADC, private configuration, limits, and provider access outside Git.
-- Provider/model changes may affect behavior, availability, latency, cost, and experiment comparability.
-
-### Security and privacy implications
-
-- The application-to-Vertex boundary is external and untrusted; outbound context must be minimized, classified, and auditable.
-- The synthetic/public-only approval does not relax the prohibition on PHI or production claims.
-- Credentials require least privilege, secret isolation, rotation/revocation, and redaction from errors and telemetry.
-- Provider terms/settings evidence must be reviewed before development expands beyond connectivity smoke testing; unsafe configuration, unavailable credentials, or provider errors fail closed.
-
-### Operational implications
-
-- Local runtime configuration and limits are present and connectivity is smoke-tested; values remain outside committed files and must never be copied into task reports or documentation.
-- The orchestration/integration implementation remains task-level; this ADR does not select a project-owned state machine, direct Google Gen AI SDK integration, Google ADK, or managed Agent Platform runtime.
-- Every controlled run records sanitized, non-secret model/version evidence, token use, latency, failures, and estimated cost without copying private environment values.
-- Final per-case and experiment ceilings are set after FOUNDATION-001 measures baselines and before autonomous tool loops are enabled.
+- Output remains variable and non-authoritative even when schema-valid.
+- Local execution depends on working ADC, provider availability, and external configuration.
+- The smoke test proves connectivity only, not model quality, healthcare validity, compliance, or production readiness.

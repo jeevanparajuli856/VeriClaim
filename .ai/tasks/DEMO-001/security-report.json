@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DEMO-001",
+  "reviewer": "codex-security",
+  "reviewed_commit": "595cf4669b6c4ec38d4ce4d691a6b242f5e64099",
+  "status": "APPROVED",
+  "summary": "Approved exact current commit 595cf4669b6c4ec38d4ce4d691a6b242f5e64099 with no unresolved blocking security finding. Verification remains current for remediated integrated source commit 5bb79d506f39a16b36e8d7c3105ac34acace385c because the reviewed HEAD adds only the verification report and task status. The final-review blockers are closed: REPEAT-001 excludes any item with an incomplete Coverage-reference slot from exact-duplicate signatures, records canonical missing evidence, and assigns signals in stable rule-key order; long supported facts remain unchanged while evidence summaries are independently ellipsized within 500 characters; adjudication facts preserve exact canonical Decimal strings; fixed-point numeric representations beyond 64 characters fail with sanitized EXTRACTION_LIMIT_EXCEEDED before model invocation; and bounded high-precision arithmetic prevents non-finite or lossy public values. Credential-free review passed all 43 backend tests, all 12 agentic tests, OpenAPI and task validation, strict JSON serialization, explicit accepted/rejected 64-character Decimal edge probes, dependency consistency, diff hygiene, ignored-secret-path checks, tracked secret-pattern checks, and before/after source hashes. The bodyless endpoint still exposes no upload, URL, request path, database, frontend, persistence, production deployment, real-PHI, or consequential-action surface; documented execution binds to 127.0.0.1 and clearly limits unauthenticated use to the local synthetic demonstration. The loader still accepts only three compile-time repository paths, resolves their dataset parent, applies 1 MiB and structural bounds, reads without writes, and preserves approved hashes. The minimized model payload excludes ADC, project/location configuration, full resources, and unnecessary patient attributes; provider and initialization exceptions are redacted. The adapter still performs zero or one bounded call, supplies no tools or loop, explicitly disables thinking, makes no repair/fallback request, retains deterministic evidence on every model failure, validates strict structured output, and rejects citations outside the generated evidence allowlist. Static wording and response separation keep deterministic signals and model text non-authoritative and avoid fraud, payer, clinical, coding, coverage, payment, medical-necessity, CARIN, HIPAA, healthcare-validity, or production-readiness claims. Corrected operator documentation now defers lifecycle truth to task.json and accurately identifies timeout/output limits as fixed constants. The previously authorized live Vertex smoke remains supplemental connectivity evidence only and was not used as security approval evidence. The two prior low-risk defense-in-depth findings remain non-blocking for this fixed-input local demo.",
+  "findings": [
+    {
+      "severity": "low",
+      "category": "prompt_injection",
+      "file": "backend/app/gemini.py",
+      "description": "The fixed safety instruction and JSON-serialized untrusted synthetic facts are delimited but concatenated into the same SDK user-content string; the SDK's dedicated system_instruction field is not used.",
+      "impact": "A maliciously replaced repository dataset string could compete with the instruction and influence candidate wording. The practical impact is constrained because the endpoint has fixed local inputs, the model has no tools or side effects, output is bounded and candidate-only, citations are allowlisted, and deterministic limitations remain authoritative.",
+      "remediation": "As defense in depth, place the fixed instruction in GenerateContentConfig.system_instruction, send only the labeled serialized data as user content, and add an adversarial test that asserts instruction/data role separation while preserving the no-tools and no-environment-value guarantees.",
+      "blocking": false
+    },
+    {
+      "severity": "low",
+      "category": "dependency_integrity",
+      "file": "backend/requirements.txt",
+      "description": "Direct dependencies are exactly version-pinned and the installed environment passes pip check, but the repository does not lock the full transitive graph with artifact hashes or configure a dedicated vulnerability audit check.",
+      "impact": "A future clean installation can resolve different transitive artifacts within allowed ranges, reducing reproducibility and leaving dependency-advisory detection dependent on manual review. This does not expose a demonstrated vulnerability in the reviewed local environment.",
+      "remediation": "For the next hardening task, generate a reviewed hash-pinned transitive lock and add a required dependency vulnerability audit that fails on unresolved applicable advisories.",
+      "blocking": false
+    }
+  ]
+}
