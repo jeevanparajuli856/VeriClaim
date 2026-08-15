@@ -21,11 +21,16 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
 
   // Build map and detect duplicates
   const { evidenceMap, duplicateIds } = useMemo(() => {
-    const map = new Map<string, { record: EvidenceRecord; index: number }>();
+    const counts = new Map<string, number>();
+    evidenceIndex.forEach((rec) => {
+      counts.set(rec.evidence_id, (counts.get(rec.evidence_id) || 0) + 1);
+    });
+
     const dupes = new Set<string>();
+    const map = new Map<string, { record: EvidenceRecord; index: number }>();
 
     evidenceIndex.forEach((rec, idx) => {
-      if (map.has(rec.evidence_id)) {
+      if ((counts.get(rec.evidence_id) || 0) > 1) {
         dupes.add(rec.evidence_id);
       } else {
         map.set(rec.evidence_id, { record: rec, index: idx });
@@ -35,8 +40,9 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
     return { evidenceMap: map, duplicateIds: Array.from(dupes) };
   }, [evidenceIndex]);
 
-  const selectedItem = selectedEvidenceId ? evidenceMap.get(selectedEvidenceId) : null;
-  const isSelectedMissing = selectedEvidenceId && !selectedItem;
+  const isDuplicateSelected = Boolean(selectedEvidenceId && duplicateIds.includes(selectedEvidenceId));
+  const selectedItem = selectedEvidenceId && !isDuplicateSelected ? evidenceMap.get(selectedEvidenceId) : null;
+  const isSelectedMissing = Boolean(selectedEvidenceId && !isDuplicateSelected && !selectedItem);
 
   // When selectedEvidenceId changes, focus and scroll into view
   useEffect(() => {
@@ -97,7 +103,7 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
           <strong>Data Integrity Warning:</strong> Duplicate evidence IDs detected in response index:
           <ul className="text-xs mt-1">
             {duplicateIds.map((id) => (
-              <li key={id}><code>{id}</code></li>
+              <li key={id}><code>{id}</code> (rendered inert to prevent ambiguous resolution)</li>
             ))}
           </ul>
         </div>
@@ -109,7 +115,20 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
           className="selected-evidence-card"
           id="selected-evidence-focus-target"
         >
-          {isSelectedMissing ? (
+          {isDuplicateSelected ? (
+            <div className="status-alert alert-warning" role="alert">
+              <h3
+                ref={selectedHeadingRef}
+                tabIndex={-1}
+                className="alert-title outline-none"
+              >
+                Duplicate Evidence Target (Inert)
+              </h3>
+              <p className="text-sm">
+                Referenced identifier <code>{selectedEvidenceId}</code> occurs multiple times in the response index and cannot resolve unambiguously. Target navigation is made inert to prevent ambiguous evidence attribution.
+              </p>
+            </div>
+          ) : isSelectedMissing ? (
             <div className="status-alert alert-danger" role="alert">
               <h3
                 ref={selectedHeadingRef}
@@ -218,6 +237,7 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
             ) : (
               filteredList.map((rec, index) => {
                 const isCurrent = selectedEvidenceId === rec.evidence_id;
+                const isDupe = duplicateIds.includes(rec.evidence_id);
                 return (
                   <tr
                     key={`${rec.evidence_id}-${index}`}
@@ -234,6 +254,11 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
                       >
                         {rec.evidence_id}
                       </button>
+                      {isDupe && (
+                        <span className="badge badge-warning text-xs ml-1" title="Duplicate ID in evidence index">
+                          duplicate (inert)
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span

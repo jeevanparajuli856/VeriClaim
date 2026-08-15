@@ -238,6 +238,42 @@ test.describe('VeriClaim Dashboard E2E', () => {
     await expect(chipRef).toBeFocused();
   });
 
+  test('handles duplicate evidence IDs by rendering inert targets and integrity warning', async ({ page }) => {
+    const dataWithDuplicates = {
+      ...mockSuccessData,
+      evidence_index: [
+        ...mockSuccessData.evidence_index,
+        {
+          evidence_id: 'sig:DATE-001:0001', // duplicate
+          kind: 'signal',
+          summary: 'Duplicate signal record',
+          source_refs: [],
+        },
+      ],
+    };
+
+    await page.route('**/api/v1/analyze-demo', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(dataWithDuplicates),
+      });
+    });
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Run analysis' }).click();
+
+    await expect(page.getByText(/Data Integrity Warning: Duplicate evidence IDs detected/i)).toBeVisible();
+
+    // Click duplicate reference chip
+    const chipRef = page.locator('.findings-grid').getByRole('button', { name: 'sig:DATE-001:0001' });
+    await chipRef.click();
+
+    // Verify inert duplicate target alert is displayed and focused
+    await expect(page.getByRole('heading', { name: 'Duplicate Evidence Target (Inert)' })).toBeVisible();
+    await expect(page.getByText(/Target navigation is made inert to prevent ambiguous evidence attribution/i)).toBeVisible();
+  });
+
   test('handles typed fallback state when Gemini fails validation', async ({ page }) => {
     const fallbackData = {
       ...mockSuccessData,

@@ -3,11 +3,11 @@
   "task_id": "FRONTEND-001",
   "agent": "gemini-frontend",
   "status": "COMPLETE",
-  "summary": "Updated @types/node to major 24 (^24.0.0), synchronized package-lock.json, removed unused yaml devDependency, and removed trailing whitespace.",
+  "summary": "Made duplicate evidence targets inert in EvidenceExplorerView with explicit integrity alert boxes and table badges, and added component and Playwright E2E regression test coverage.",
   "files_changed": [
-    "frontend/package.json",
-    "frontend/package-lock.json",
-    "frontend/scripts/generate-api.js",
+    "frontend/src/components/EvidenceExplorerView.tsx",
+    "frontend/src/components/EvidenceExplorerView.test.tsx",
+    "frontend/e2e/dashboard.spec.ts",
     ".ai/tasks/FRONTEND-001/frontend-report.json"
   ],
   "contracts_used": [
@@ -25,13 +25,12 @@
       "npm audit --audit-level=high",
       "npm run verify"
     ],
-    "notes": "Synchronized package-lock.json with @types/node ^24.0.0 and removed unused yaml devDependency; 0 audit vulnerabilities; 27 Vitest tests and 12 Playwright E2E browser tests pass; 51 backend tests and 12 agentic tests pass."
+    "notes": "Added regression tests for duplicate evidence targets: 28 Vitest unit/component tests and 14 Playwright E2E browser tests pass; 0 audit vulnerabilities; 51 backend tests and 12 agentic tests pass."
   },
   "blockers": [],
   "notes_for_next_agent": [
-    "@types/node is updated to major 24 (^24.0.0) matching Node 24 engine requirements.",
-    "Unused yaml devDependency removed and lockfile cleanly synchronized.",
-    "Trailing whitespace eliminated across frontend scripts.",
-    "Ready for feature verification and GitHub PR publication."
+    "Duplicate evidence targets are rendered inert with explicit integrity alerts preventing ambiguous evidence attribution.",
+    "Component and E2E regression suites verify inert duplicate resolution.",
+    "Ready for final feature reverification and GitHub PR publication."
   ]
 }
