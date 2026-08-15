@@ -3,7 +3,7 @@
   "task_id": "DEMO-001",
   "title": "Build the local FHIR anomaly investigation demo",
   "type": "feature",
-  "status": "PR_READY",
+  "status": "INTEGRATION",
   "priority": "high",
   "owners": {
     "orchestrator": "codex",
@@ -27,6 +27,7 @@
     ],
     "frontend": [],
     "other": [
+      "requirements-agent.txt",
       "README.md",
       ".env.example",
       "docs/operator/QUICKSTART.md",
@@ -37,6 +38,7 @@
     "orchestrator": {
       "allowed_write_paths": [
         ".ai/tasks/DEMO-001/task.json",
+        "requirements-agent.txt",
         "docs/features/DEMO-001.md",
         "docs/architecture/**",
         "docs/adr/**",
