@@ -1,0 +1,229 @@
+{
+  "schema_version": "1.0",
+  "task_id": "DEMO-001",
+  "title": "Build the local FHIR anomaly investigation demo",
+  "type": "feature",
+  "status": "PLANNING",
+  "priority": "high",
+  "owners": {
+    "orchestrator": "codex",
+    "architecture": "codex",
+    "database": "codex",
+    "backend": "codex",
+    "frontend": "gemini",
+    "tester": "codex",
+    "security": "codex",
+    "review": "codex"
+  },
+  "spec": "docs/features/DEMO-001.md",
+  "contracts": [
+    "contracts/openapi.yaml"
+  ],
+  "scope": {
+    "database": [],
+    "backend": [
+      "backend/**",
+      "tests/backend/**"
+    ],
+    "frontend": [],
+    "other": [
+      "README.md",
+      ".env.example"
+    ]
+  },
+  "permissions": {
+    "orchestrator": {
+      "allowed_write_paths": [
+        ".ai/tasks/DEMO-001/task.json",
+        "docs/features/DEMO-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "contracts/**"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "tests/**",
+        "docs/standards/**"
+      ],
+      "forbidden_paths": []
+    },
+    "architecture": {
+      "allowed_write_paths": [
+        "docs/features/DEMO-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        ".ai/tasks/DEMO-001/architecture-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "docs/standards/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ],
+      "forbidden_paths": [
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    },
+    "database": {
+      "allowed_write_paths": [
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/DEMO-001/database-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "backend/**",
+        ".ai/tasks/DEMO-001/task.json",
+        ".ai/tasks/DEMO-001/architecture-report.json"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    },
+    "backend": {
+      "allowed_write_paths": [
+        "backend/**",
+        "tests/backend/**",
+        "README.md",
+        ".env.example",
+        ".ai/tasks/DEMO-001/backend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/DEMO-001/task.json",
+        ".ai/tasks/DEMO-001/architecture-report.json",
+        ".ai/tasks/DEMO-001/database-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    },
+    "frontend": {
+      "allowed_write_paths": [
+        "frontend/**",
+        "tests/frontend/**",
+        ".ai/tasks/DEMO-001/frontend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/DEMO-001/task.json",
+        ".ai/tasks/DEMO-001/architecture-report.json",
+        ".ai/tasks/DEMO-001/database-report.json",
+        ".ai/tasks/DEMO-001/backend-report.json"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    },
+    "tester": {
+      "allowed_write_paths": [
+        "tests/**",
+        ".ai/tasks/DEMO-001/test-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/DEMO-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    },
+    "security": {
+      "allowed_write_paths": [
+        ".ai/tasks/DEMO-001/security-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/DEMO-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    },
+    "review": {
+      "allowed_write_paths": [
+        ".ai/tasks/DEMO-001/review-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/DEMO-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/DEMO-001/task.json"
+      ]
+    }
+  },
+  "state_write_policy": {
+    "task_file": ".ai/tasks/DEMO-001/task.json",
+    "single_writer": "orchestrator",
+    "worker_agents_must_use_reports": true
+  },
+  "dependencies": [
+    "FOUNDATION-001"
+  ],
+  "acceptance_criteria": [
+    "Expose POST /api/v1/analyze-demo through FastAPI and make the complete local flow demonstrable from the built-in /docs interface without a separate frontend, database, upload, or arbitrary input path.",
+    "Load only the approved versioned synthetic Patient, Coverage, and ExplanationOfBenefit JSON files from dataset/, perform bounded minimal structural validation, process in memory, and prove the source files remain byte-identical.",
+    "Extract and return only the explicitly supported observed facts with stable evidence identifiers, keeping source facts, derived signals, model synthesis, missing evidence, limitations, and sanitized metadata separate.",
+    "Implement three to five transparent deterministic rules, targeting the five approved checks: reference integrity, coverage-date bounds when present, duplicate/repeated opaque product codes, a narrowly defined observed amount-component relationship, and a sample-relative high-amount signal.",
+    "Document every rule's stable ID, evaluated fields, exact formula/threshold/tolerance, evidence references, no-signal behavior, and limitations without payer-specific, terminology, fraud, coding, clinical, coverage, payment, or medical-necessity semantics.",
+    "Use the Google Gen AI SDK configured for Vertex AI for at most one no-tools model call per analysis, sending only minimized structured synthetic facts, deterministic signals, supplied evidence IDs, and limitations.",
+    "Require Pydantic-validated structured Gemini output whose candidate findings cite supplied evidence; reject unknown citations and preserve the complete deterministic report on configuration, timeout, provider, parsing, schema, or evidence-validation failure without a repair/fallback call.",
+    "Define and validate the OpenAPI contract for success, deterministic-pipeline failure, and typed Gemini success/failure states; keep the backend implementation aligned with it.",
+    "Provide focused unit and integration tests covering extraction, each rule's signal/no-signal/missing-evidence behavior, endpoint success, fake-client model success, provider failure, invalid output, unknown evidence, one-call enforcement, no live credential requirement, and dataset immutability.",
+    "Deliver a resume-quality root README with local setup, environment placeholders, architecture, rule definitions, example request/response, failure behavior, tests, limitations, and a concise resume-ready project summary; make no strict CARIN, HIPAA, production-readiness, fraud, clinical, coding, payment, coverage, or medical-necessity claim."
+  ],
+  "created_by": "human"
+}
