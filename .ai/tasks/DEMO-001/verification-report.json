@@ -1,16 +1,16 @@
 {
   "schema_version": "1.0",
   "task_id": "DEMO-001",
-  "commit": "5bb79d506f39a16b36e8d7c3105ac34acace385c",
+  "commit": "b0eb18382b290987f9f95d791fa26f6b087e79e9",
   "status": "PASSED",
-  "generated_at": "2026-08-15T19:15:47.451464+00:00",
+  "generated_at": "2026-08-15T19:36:56.717564+00:00",
   "checks": [
     {
       "name": "project-schema",
       "status": "PASSED",
       "required": true,
       "command": [
-        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
         "scripts/validate-project.py"
       ],
       "notes": ""
@@ -20,7 +20,7 @@
       "status": "PASSED",
       "required": true,
       "command": [
-        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
         "scripts/validate-task.py",
         "DEMO-001"
       ],
@@ -31,7 +31,7 @@
       "status": "PASSED",
       "required": true,
       "command": [
-        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
         "scripts/validate-contracts.py"
       ],
       "notes": ""
@@ -41,7 +41,7 @@
       "status": "PASSED",
       "required": true,
       "command": [
-        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
         "-m",
         "pytest",
         "-q",
