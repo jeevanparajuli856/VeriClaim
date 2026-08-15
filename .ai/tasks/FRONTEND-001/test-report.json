@@ -2,50 +2,38 @@
   "schema_version": "1.0",
   "task_id": "FRONTEND-001",
   "agent": "codex-tester",
-  "status": "CHANGES_REQUIRED",
-  "summary": "Independent retesting at c4f533d confirms the prior runtime-guard, proxy, accessibility, local-file, and browser-isolation blockers are resolved, but the committed Node 24 toolchain still compiles against direct Node 22 type definitions.",
+  "status": "COMPLETE",
+  "summary": "Independent final testing at 8e230ca passes the aligned Node 24 dependency boundary, clean lock installation, all frontend and browser behaviors, security audits, and full backend/agentic/contract regressions.",
   "files_changed": [
-    "tests/frontend/independent_acceptance.test.ts",
     ".ai/tasks/FRONTEND-001/test-report.json"
   ],
   "contracts_used": [
     "contracts/openapi.yaml"
   ],
   "tests": {
-    "passed": false,
+    "passed": true,
     "commands": [
-      "git archive HEAD | tar -x -C /tmp/frontend001-rerun.rmaL89",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "cmp -s package-lock.json /mnt/c/users/jeeva/desktop/vericlaim/frontend/package-lock.json (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "npm ls --depth=0 && npm explain yaml && npm explain @types/node (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "rg -n \"from ['\\\"]yaml|require\\(['\\\"]yaml|server\\.fs|LD_LIBRARY_PATH|/home/jeevan\" frontend --glob '!package-lock.json' --glob '!node_modules/**'",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root /mnt/c/users/jeeva/desktop/vericlaim tests/frontend/independent_acceptance.test.ts' (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH npm exec --yes --package=node@24 -- sh -c 'node --version && python3 --version && npx playwright install chromium && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run test:e2e' (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm audit --audit-level=high' (cwd: /tmp/frontend001-rerun.rmaL89/frontend)",
+      "git archive HEAD | tar -x -C /tmp/frontend001-final.wNV4dU",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "cmp -s package-lock.json /mnt/c/users/jeeva/desktop/vericlaim/frontend/package-lock.json (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "npm ls @types/node --depth=0 (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "npm ls yaml --depth=0 (cwd: /tmp/frontend001-final.wNV4dU/frontend; expected nonzero/empty result confirms no direct dependency)",
+      "npm ls --depth=0 (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root .. tests/frontend/independent_acceptance.test.ts' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && python3 --version && npx playwright install chromium && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm audit --audit-level=high' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
       "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/backend",
       "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/agentic",
       "/tmp/vericlaim-harden-env/bin/python scripts/validate-contracts.py",
       "/tmp/vericlaim-harden-env/bin/python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r requirements.lock",
-      "npm exec --yes --package=node@24 -- npm run dev (cwd: /tmp/frontend001-rerun.rmaL89/frontend), then curl http://127.0.0.1:5173/@fs//tmp/frontend001-rerun.rmaL89/contracts/openapi.yaml",
-      "nl -ba frontend/scripts/generate-api.js | sed -n '12,28p' && sed -n '20p' frontend/scripts/generate-api.js | od -An -tx1",
       "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py task validate FRONTEND-001",
       "git diff --check",
       "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py scope check FRONTEND-001 tester"
     ],
-    "notes": "Exact integrated HEAD c4f533d6a86f735c4d28612800f4be52be60fcaa was copied to a clean /tmp tree. Isolated Node 24.19.0/npm 11.12.1 npm ci added 291 packages, audited 292 with zero vulnerabilities, and left package-lock.json byte-identical. The final externally provisioned Node 24 frontend verify passed contract freshness, lint, strict typecheck, 27/27 unit/component tests, build, and 12/12 Playwright tests across desktop/mobile. Those browser tests passed the real FastAPI-to-Vite proxy smoke while the parent environment deliberately contained credential sentinels; Playwright started a non-reused backend with provider variables overridden, and the UI rendered deterministic-only fallback. Reduced-motion emulation, page overflow assertions, evidence focus return, pipeline retry, and axe scans passed. The independent suite passed 14/15: all Gemini and pipeline states, exact bodyless relative POST, malformed nested data, malformed model metadata, fixed local proxy configuration, absence of Vite parent allow configuration, and absence of committed LD_LIBRARY_PATH/home mutation passed; only Node type-major alignment failed because package.json declares @types/node ^22.13.5 and npm resolves 22.20.1 while runtime/engine are Node 24. The first full browser invocation without host library provisioning failed all 12 browser cases at launch because this workstation lacks system libnspr4.so; no test was skipped. Supplying the workstation library location externally, rather than restoring a committed loader mutation, produced the final passing browser and verify runs; CI separately installs Chromium system dependencies with playwright install --with-deps. A live Vite request for the parent contracts/openapi.yaml through /@fs returned 403 Restricted and listed only frontend as allowed. Backend regression passed 51/51, agentic regression passed 12/12, OpenAPI validation passed, npm audit reported zero vulnerabilities, and strict hash-locked Python audit found no known vulnerabilities. Task/report validation, git diff --check, and tester scope check passed for exactly 2 tester-owned changed files. No tests were skipped, xfailed, flaky, or retried."
+    "notes": "Exact integrated HEAD 8e230caabcba718f08abc14dd5d0c8d0b6ce4da1 was copied with git archive to a clean /tmp tree. Isolated Node 24.19.0/npm 11.12.1 npm ci installed 290 packages, audited 291 with zero vulnerabilities, and left package-lock.json byte-identical. @types/node resolves to 24.13.3; direct yaml is absent; the former trailing whitespace is removed. All 15 committed independent assertions pass, preserving coverage for every Gemini fallback and deterministic pipeline code, exact bodyless relative POST, malformed nested/model metadata rejection, fixed local proxy, Node 24 engine/types, Vite parent-access boundary, and absence of committed LD_LIBRARY_PATH/home mutation. Full Node 24 frontend verification passed contract freshness, lint, strict typecheck, 27/27 unit/component tests, production build, and 12/12 Playwright desktop/mobile tests. Browser evidence includes axe scans, responsive overflow assertions, reduced-motion emulation, focus return, retry, and the real non-reused credential-free Vite-to-FastAPI proxy; credential sentinels in the parent environment were overridden and deterministic-only fallback rendered. The workstation Chromium libraries were supplied externally through LD_LIBRARY_PATH solely for test execution; no repository mutation was restored, while CI provisions dependencies with playwright install --with-deps. npm audit found zero vulnerabilities, backend regression passed 51/51, agentic regression passed 12/12, OpenAPI validation passed, and strict hash-locked Python audit found no known vulnerabilities. Task/report validation, git diff --check, and tester scope check passed for exactly one tester-owned report change. No tests were skipped, xfailed, flaky, or retried."
   },
-  "blockers": [
-    {
-      "type": "toolchain-source-of-truth-mismatch",
-      "description": "The approved Node 24 frontend toolchain declares engine ^24.0.0 but directly depends on @types/node ^22.13.5, resolving Node 22.20.1 definitions. This leaves compile-time Node APIs on a different major line and fails the independent Node 24 tooling-alignment test.",
-      "suggestion": "Align @types/node to the Node 24 major, synchronize package-lock.json with npm, and rerun the clean Node 24 install, independent suite, frontend verify, audits, and regressions."
-    }
-  ],
+  "blockers": [],
   "notes_for_next_agent": [
-    "yaml ^2.7.0 is an unused direct devDependency: repository search finds no YAML import/config use and npm explain shows it only as the root declaration plus Vite's optional peer. Because clean install, build, tests, lock reproducibility, and audit pass, this is recorded as non-blocking dependency/supply-chain hygiene; remove it and resynchronize the lock when correcting Node typings.",
-    "frontend/scripts/generate-api.js line 20 contains two trailing spaces. This is non-blocking hygiene because generation freshness and build pass, but it should be removed in the same frontend-owned cleanup.",
-    "All three prior report blockers are otherwise resolved: malformed nested/model metadata reject, committed credential-free proxy and reduced-motion/responsive coverage pass, Node engine/docs use 24, Vite parent access returns 403, and no committed LD_LIBRARY_PATH mutation remains."
+    "Orchestrator should commit this current passing test evidence, run commit-bound agentctl verification, and proceed to independent security review of that exact verified revision."
   ]
 }
