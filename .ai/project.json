@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "status": "UNCONFIGURED",
+  "status": "INCEPTION_DRAFT",
   "components": {
     "backend": {
       "enabled": null,
@@ -15,7 +15,7 @@
     "database": {
       "enabled": null,
       "provider": null,
-      "migration_path": "supabase/migrations"
+      "migration_path": null
     }
   },
   "verification": {
