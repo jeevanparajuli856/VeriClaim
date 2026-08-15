@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { EvidenceExplorerView } from './EvidenceExplorerView';
 import { mockSuccessResponse } from '../test/fixtures';
+import type { EvidenceRecord } from '../api/types';
 
 describe('EvidenceExplorerView', () => {
   it('renders all evidence records in index table', () => {
@@ -67,6 +68,41 @@ describe('EvidenceExplorerView', () => {
 
     expect(screen.getByText(/Evidence Target Not Found/i)).toBeInTheDocument();
     expect(screen.getByText(/ev:nonexistent:\/item/i)).toBeInTheDocument();
+  });
+
+  it('makes duplicate evidence targets inert and renders integrity warning', () => {
+    const onSelect = vi.fn();
+    const onClear = vi.fn();
+    const indexWithDuplicates: EvidenceRecord[] = [
+      ...mockSuccessResponse.evidence_index,
+      {
+        evidence_id: 'sig:DATE-001:0001', // duplicate
+        kind: 'signal',
+        summary: 'Duplicate signal record',
+        source_refs: [],
+      },
+    ];
+
+    render(
+      <EvidenceExplorerView
+        evidenceIndex={indexWithDuplicates}
+        selectedEvidenceId="sig:DATE-001:0001"
+        triggerElement={null}
+        onSelectEvidence={onSelect}
+        onClearSelection={onClear}
+      />
+    );
+
+    // Global duplicate banner
+    expect(screen.getByText(/Data Integrity Warning:/i)).toBeInTheDocument();
+
+    // Inert duplicate target alert in detail box
+    expect(screen.getByRole('heading', { name: /Duplicate Evidence Target \(Inert\)/i })).toBeInTheDocument();
+    expect(screen.getByText(/Target navigation is made inert to prevent ambiguous evidence attribution/i)).toBeInTheDocument();
+
+    // Table duplicate badges
+    const duplicateBadges = screen.getAllByText(/duplicate \(inert\)/i);
+    expect(duplicateBadges.length).toBe(2);
   });
 
   it('filters evidence records with search input', () => {
