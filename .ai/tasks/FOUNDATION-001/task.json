@@ -3,7 +3,7 @@
   "task_id": "FOUNDATION-001",
   "title": "Define synthetic benchmark and evaluation protocol",
   "type": "research",
-  "status": "PR_READY",
+  "status": "DONE",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",
