@@ -2,17 +2,43 @@
   "schema_version": "1.0",
   "task_id": "HARDEN-001",
   "agent": "codex-tester",
-  "status": "PARTIAL",
-  "summary": "",
-  "files_changed": [],
+  "status": "COMPLETE",
+  "summary": "Independent Python 3.12 testing proves SDK-native instruction/data role isolation, exact combined-byte enforcement, preserved one-call/no-tools/failure behavior, a byte-reproducible fully hashed dependency graph, and consistent fail-closed local/CI audit gates without contract, dataset, frontend, or database drift.",
+  "files_changed": [
+    "tests/backend/test_harden001_acceptance.py",
+    ".ai/tasks/HARDEN-001/test-report.json"
+  ],
   "contracts_used": [
     "contracts/openapi.yaml"
   ],
   "tests": {
-    "passed": false,
-    "commands": [],
-    "notes": ""
+    "passed": true,
+    "commands": [
+      "sha256sum dataset/patient_bbuser29999.json dataset/coverage_bundle_bbuser29999.json dataset/eob_bundle_bbuser29999.json contracts/openapi.yaml requirements.lock",
+      "python3.12 -m venv /tmp/vericlaim-harden-tester.rOXShh/venv",
+      "/tmp/vericlaim-harden-tester.rOXShh/venv/bin/python -m pip install --disable-pip-version-check --require-hashes -r requirements.lock",
+      "/tmp/vericlaim-harden-tester.rOXShh/venv/bin/python -m pip check",
+      "/tmp/vericlaim-harden-tester.rOXShh/venv/bin/python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r requirements.lock",
+      "/tmp/vericlaim-harden-tester.rOXShh/venv/bin/python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r /tmp/vericlaim-harden-tester.rOXShh/missing.lock",
+      "python3.12 -m venv /tmp/vericlaim-harden-tester.rOXShh/compiler",
+      "/tmp/vericlaim-harden-tester.rOXShh/compiler/bin/python -m pip install --disable-pip-version-check pip-tools==7.5.0",
+      "/tmp/vericlaim-harden-tester.rOXShh/compiler/bin/python -m piptools compile --upgrade --generate-hashes --allow-unsafe --resolver=backtracking --strip-extras --output-file=requirements.lock requirements-agent.txt (cwd: /tmp/vericlaim-harden-tester.rOXShh/regenerate)",
+      "cmp --silent requirements.lock /tmp/vericlaim-harden-tester.rOXShh/regenerate/requirements.lock",
+      "env -u GOOGLE_CLOUD_PROJECT -u GOOGLE_CLOUD_LOCATION -u VERTEX_GEMINI_MODEL -u GOOGLE_GENAI_USE_VERTEXAI PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python -m pytest -q tests/backend",
+      "PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python -m pytest -q tests/agentic",
+      "PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python scripts/agentctl.py project validate",
+      "PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python scripts/agentctl.py task validate HARDEN-001",
+      "PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python scripts/validate-contracts.py",
+      "env -u GOOGLE_CLOUD_PROJECT -u GOOGLE_CLOUD_LOCATION -u VERTEX_GEMINI_MODEL -u GOOGLE_GENAI_USE_VERTEXAI PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python scripts/agentctl.py verify --security-only",
+      "env -u GOOGLE_CLOUD_PROJECT -u GOOGLE_CLOUD_LOCATION -u VERTEX_GEMINI_MODEL -u GOOGLE_GENAI_USE_VERTEXAI PATH=\"/tmp/vericlaim-harden-tester.rOXShh/venv/bin:$PATH\" /tmp/vericlaim-harden-tester.rOXShh/venv/bin/python scripts/agentctl.py verify",
+      "git diff --quiet ada0f12..HEAD -- contracts dataset frontend database",
+      "git diff --check",
+      "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py scope check HARDEN-001 tester"
+    ],
+    "notes": "Integrated commit 743c617 was tested independently in the fresh /tmp/vericlaim-harden-tester.rOXShh Python 3.12.14 environment, not the backend worker environment. Hash-enforced installation of all 70 exact locked packages and 973 SHA-256 artifact hashes succeeded; pip check reported no broken requirements. The strict pip-audit 2.10.1 command contained no ignore option and reported no known vulnerabilities; the same command against a missing input exited 1, confirming audit errors fail closed. A separate clean Python 3.12 environment with exact pip-tools 7.5.0 regenerated the reviewed direct inputs to a byte-identical requirements.lock with SHA-256 c9c96628d193ac836dfde12e51137549da155158c35639cdbb8f111403969420. The final backend suite passed 51 tests, including three new independent tests that inspect actual Google Gen AI SDK arguments, exercise adversarial instruction-like and multibyte user data, prove the system policy and environment sentinel never enter the wrong role, prove no tool configuration, assert structured-output/thinking/output-token controls, make exactly one call at the combined UTF-8 byte ceiling, and zero calls one byte over. All 12 agentic tests passed. Project, HARDEN-001 task/report, OpenAPI, security-only, and full verification gates passed; the full gate reran 12 agentic and 51 backend tests plus the secret baseline and strict audit. No tests were skipped, xfailed, flaky, or retried. During authoring, one focused three-test run had one failure caused solely by an over-escaped regex in the new tester-owned lock parser; it was corrected, after which the focused suite and every final suite passed. Dataset hashes before and after remained patient=6fb43e72120e3a3cfb7bc756d0661eebcc0925a2bc994f60ecbf573813e3f58a, coverage=fef088d7c6df3fb33bc02a1e32be53a67db0815046b1e2d998d44cb1536ec33c, and EOB=d48c12a8d94e331c786f3876ea94df4356209c216c54392346dae87f84fc34f0. OpenAPI remained byte-identical to DEMO-001 at SHA-256 1275db81f6174d40576af0ff000f197e72a3314a02df5d6315a293272234b3c8, and no frontend or database paths changed."
   },
   "blockers": [],
-  "notes_for_next_agent": []
+  "notes_for_next_agent": [
+    "Orchestrator should correct no implementation: commit the tester-owned test and report, run commit-bound verification, and proceed to independent security review of that exact verified commit."
+  ]
 }
