@@ -1,16 +1,16 @@
 {
   "schema_version": "1.0",
   "task_id": "DEMO-001",
-  "commit": "b0eb18382b290987f9f95d791fa26f6b087e79e9",
+  "commit": "4257a8ea5fccb565ab3dce316c4fa7b5c7ee9107",
   "status": "PASSED",
-  "generated_at": "2026-08-15T19:36:56.717564+00:00",
+  "generated_at": "2026-08-15T19:40:49.291893+00:00",
   "checks": [
     {
       "name": "project-schema",
       "status": "PASSED",
       "required": true,
       "command": [
-        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
+        "/tmp/vericlaim-ci.nhodiM/venv/bin/python",
         "scripts/validate-project.py"
       ],
       "notes": ""
@@ -20,7 +20,7 @@
       "status": "PASSED",
       "required": true,
       "command": [
-        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
+        "/tmp/vericlaim-ci.nhodiM/venv/bin/python",
         "scripts/validate-task.py",
         "DEMO-001"
       ],
@@ -31,7 +31,7 @@
       "status": "PASSED",
       "required": true,
       "command": [
-        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
+        "/tmp/vericlaim-ci.nhodiM/venv/bin/python",
         "scripts/validate-contracts.py"
       ],
       "notes": ""
@@ -41,7 +41,7 @@
       "status": "PASSED",
       "required": true,
       "command": [
-        "/tmp/vericlaim-ci.rghBa3/venv/bin/python",
+        "/tmp/vericlaim-ci.nhodiM/venv/bin/python",
         "-m",
         "pytest",
         "-q",
