@@ -2,19 +2,71 @@
   "schema_version": "1.0",
   "task_id": "FOUNDATION-001",
   "agent": "codex-architect",
-  "status": "PARTIAL",
-  "summary": "",
-  "files_changed": [],
+  "status": "COMPLETE",
+  "summary": "Defined a documentation-only, reproducible synthetic benchmark protocol grounded in the read-only Blue Button seed corpus, with a bounded Medicare Part D recommendation, controlled variants A-E, leakage/versioning rules, evaluator authority, metrics, safety boundaries, and downstream release gates.",
+  "files_changed": [
+    "docs/features/FOUNDATION-001.md",
+    ".ai/tasks/FOUNDATION-001/architecture-report.json"
+  ],
   "impacts": {
-    "database": null,
-    "backend": null,
-    "frontend": null,
-    "infrastructure": null,
-    "testing": null,
-    "contract_change": null
+    "database": false,
+    "backend": false,
+    "frontend": false,
+    "infrastructure": false,
+    "testing": false,
+    "contract_change": false
   },
-  "decisions": [],
-  "risks": [],
+  "decisions": [
+    "This task changes only the feature specification and architecture evidence; it requires no database, backend, frontend, infrastructure, implementation-test, or component-contract work. Repository schema/contract/control-plane validation is sufficient for this documentation-only revision, so an independent tester is not required by architecture.",
+    "The repository-root dataset remains read-only, untrusted source input. Its four task-start files are identified by path, byte length, raw-byte SHA-256, Git blob, and source commit; a canonical manifest digest identifies a later release, and any byte change creates a new version.",
+    "The repository confirms CMS Blue Button sample structure and sponsor-approved synthetic local use but does not contain a complete upstream acquisition or license/usage record. That missing evidence is a benchmark-freeze gate assigned to DATA-001 or the source owner, not a blocker to defining this protocol.",
+    "The recommended initial scenario is synthetic Medicare Part D pharmacy/PDE investigation for duplicate-candidate, temporal/frequency, amount-consistency, record-linkage, evidence-grounding, and safe-escalation signals in a United States federal CMS context. Sponsor and qualified-domain/policy approval remain required before gold release.",
+    "Untouched source records are not natural anomaly ground truth. Later project-authored fixtures must live outside dataset/, preserve parent hashes and perturbation provenance, use behavior/candidate-signal labels until qualified review, and include positive, negative, boundary, adversarial, abstention, and failure cases.",
+    "The current one-beneficiary corpus is a source/design seed, not an independently partitionable benchmark. Descendants must be grouped by beneficiary/scenario root and perturbation family; sealed evaluation requires additional independent synthetic roots and must remain isolated from development, tuning, prompts, retrieval, memory, and threshold selection.",
+    "Variants A-E use paired cases, a common deterministic-signal and scoring envelope, frozen evidence/configuration, randomized or counterbalanced order, and repeated model-backed runs. Mandatory authorization, budgets, schema checks, traceability, no-write boundaries, and human authority apply to all variants; variant E adds the separately frozen experimental governance intervention.",
+    "The protocol separates deterministic structure/lineage evaluation, qualified healthcare and policy judgment, independent security evidence, blinded human rubric review, research aggregation, and sponsor approval. Agents and model judges are untrusted assistants and are never the sole authority for safety, groundedness, policy applicability, or claim semantics.",
+    "Failures, abstentions, and escalations remain in denominators. Unsafe actions, leakage, permission violations, and prohibited transmissions cannot be averaged away; material case/configuration/model/prompt/policy/tool/governance changes invalidate affected paired evidence and require a versioned rerun.",
+    "FOUNDATION-001 does not select an API or event contract, persistence schema, orchestration framework, SDK, Google ADK, managed Agent Platform runtime, embedding/reranking provider, cloud hosting, IAM policy, retention period, or production guarantee."
+  ],
+  "risks": [
+    {
+      "severity": "high",
+      "description": "The repository lacks sufficient license/usage and upstream acquisition evidence for freezing or redistributing the selected corpus.",
+      "mitigation": "Require the data-card freeze gate, authoritative license/terms citation and version, chain-of-custody metadata, synthetic-basis evidence, and authorized human review before any benchmark release is declared frozen."
+    },
+    {
+      "severity": "high",
+      "description": "One beneficiary and ten pharmacy PDE/EOB records cannot support independent splits, population estimates, fairness analysis, or general performance claims.",
+      "mitigation": "Treat the corpus as a design seed, group all descendants together, add independently generated synthetic beneficiary/scenario roots, preregister sample-size/precision analysis, and state validity limits with every result."
+    },
+    {
+      "severity": "high",
+      "description": "Project-authored mutations can be mistaken for real fraud, coverage, coding, or payment ground truth.",
+      "mitigation": "Label injected conditions and expected system behavior only, preserve perturbation lineage, require qualified domain/policy review for stronger semantics, and prohibit clinical/payment/fraud validity claims."
+    },
+    {
+      "severity": "high",
+      "description": "Removing mandatory controls from variants A-D could create unsafe experiments or falsely attribute safety differences to agent architecture.",
+      "mitigation": "Keep authorization, deterministic workflow control, bounded budgets, schema checks, tracing, human authority, and no-write restrictions common to every variant; isolate only the frozen experimental governance intervention in E."
+    },
+    {
+      "severity": "medium",
+      "description": "Prompt, policy, fixture-family, evaluator, model-pretraining, or repeated-run leakage could inflate comparative results.",
+      "mitigation": "Group by independent roots, seal evaluation artifacts, blind reviewers, use fresh case contexts, record possible pretraining exposure as unknown, preregister exclusions, and invalidate results after material tuning or source changes."
+    },
+    {
+      "severity": "medium",
+      "description": "Provider/model nondeterminism, drift, outages, and changing prices can undermine reproducibility and cost comparison.",
+      "mitigation": "Record sanitized model/configuration evidence and raw usage, repeat paired runs, prohibit silent fallback, preserve failure outcomes, version price sources, and rerun affected comparisons after material drift."
+    }
+  ],
   "blockers": [],
-  "notes_for_next_agent": []
+  "notes_for_next_agent": [
+    "The orchestrator may advance without a contract gate artifact change: contract_change=false and every implementation impact is false.",
+    "DATA-001 must implement the data card/manifest and raw-hash identity, keep dataset/ immutable, resolve provenance/license/synthetic evidence before freeze, choose exact profiles and fixture paths, and add independent synthetic scenario roots.",
+    "POLICY-001 must select and license/version an exact federal Medicare Part D corpus and establish qualified relevance/applicability gold review; the jurisdiction recommendation is not approval.",
+    "INVESTIGATION-001 must precisely define variants and select orchestration/integration architecture without weakening the common safety envelope; this report intentionally does not choose a state machine, SDK, ADK, runtime, or hosting.",
+    "EVALUATION-001 must implement the manifests/harness, preregister paired runs and exclusion rules, determine sample size/repetitions from pilot precision or power, and obtain approval for baseline-driven thresholds and experiment ceilings.",
+    "All later workers must treat dataset, retrieved content, model/agent/tool output, synthetic labels, evaluator output, and human feedback as untrusted until validated under the recorded authority model."
+  ]
 }
