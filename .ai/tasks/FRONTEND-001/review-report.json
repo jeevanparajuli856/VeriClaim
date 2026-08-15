@@ -2,8 +2,25 @@
   "schema_version": "1.0",
   "task_id": "FRONTEND-001",
   "reviewer": "codex-reviewer",
-  "reviewed_commit": "",
+  "reviewed_commit": "d156c52f8a871c6b5e2b3c84311bfd455f0fbd24",
   "status": "CHANGES_REQUIRED",
-  "summary": "",
-  "findings": []
+  "summary": "Final review of exact current commit d156c52f8a871c6b5e2b3c84311bfd455f0fbd24 found two unresolved accessibility acceptance blockers in the evidence-navigation interaction. The integrated revision otherwise preserves the approved Node.js 24/React/strict TypeScript/Vite/npm local-only architecture; unchanged bodyless POST /api/v1/analyze-demo OpenAPI and backend behavior; generated contract types and freshness check; guarded unknown transport data; deterministic-first separation of all five rules, observed facts, evidence, Gemini candidate/fallback content, missing evidence, limitations, and sanitized metadata; inert duplicate evidence remediation; plaintext-only rendering; fixed loopback proxy; credential-free real-proxy coverage; CI Node/Chromium provisioning; high-severity npm and hash-locked Python audits; local synthetic-only documentation; and current verification/security evidence. Independent reviewer reruns passed project/task/report validation, diff hygiene, generated-type freshness, lint, strict typecheck, and all 28 unit/component tests. Release approval is withheld because evidence destinations suppress their focus indicator and evidence navigation still forces smooth scrolling when reduced motion is requested; the committed browser tests assert return focus and layout only, so they do not detect either failure.",
+  "findings": [
+    {
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "frontend/src/components/EvidenceExplorerView.tsx",
+      "description": "Evidence activation programmatically moves focus to the selected, missing, or duplicate target heading, but every destination heading has the outline-none class. frontend/src/index.css defines .outline-none after the global :focus-visible rule with equal specificity, so outline: none wins and the newly focused destination has no visible focus indicator. This violates the feature and frontend-standard requirements for visible focus during deliberate evidence focus movement. Existing tests verify only that the return control restores focus; the duplicate browser test says the heading is focused but asserts only visibility.",
+      "recommendation": "Remove the outline suppression or add a persistent, AA-visible focus style for each programmatically focused evidence destination, then add browser assertions that the normal, missing, and duplicate headings receive focus and expose a visible focus indicator before Return restores the exact trigger.",
+      "blocking": true
+    },
+    {
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "frontend/src/App.tsx",
+      "description": "Evidence activation always calls scrollIntoView with behavior: smooth. The reduced-motion media rule changes CSS scroll-behavior, but it does not override an explicit smooth behavior passed to the CSSOM API, so users requesting reduced motion still receive animated evidence navigation. The committed reduced-motion browser case checks only rendering and horizontal overflow and never activates evidence navigation.",
+      "recommendation": "Choose auto/no animation when matchMedia('(prefers-reduced-motion: reduce)') matches (or avoid forced smooth scrolling entirely), and add a reduced-motion browser test that activates an evidence reference and verifies the non-animated path.",
+      "blocking": true
+    }
+  ]
 }
