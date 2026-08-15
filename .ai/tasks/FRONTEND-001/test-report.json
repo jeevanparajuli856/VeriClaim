@@ -2,17 +2,61 @@
   "schema_version": "1.0",
   "task_id": "FRONTEND-001",
   "agent": "codex-tester",
-  "status": "PARTIAL",
-  "summary": "",
-  "files_changed": [],
+  "status": "CHANGES_REQUIRED",
+  "summary": "Independent Node 24, browser, proxy, contract, repository, and security testing passed the implemented happy paths, typed statuses, clean build, accessibility scan, and credential-free local integration, but the network guard accepts malformed nested display data and the committed verification coverage/toolchain declarations do not fully satisfy FRONTEND-001.",
+  "files_changed": [
+    "tests/frontend/independent_acceptance.test.ts",
+    "tests/backend/test_harden001_acceptance.py",
+    ".ai/tasks/FRONTEND-001/test-report.json"
+  ],
   "contracts_used": [
     "contracts/openapi.yaml"
   ],
   "tests": {
     "passed": false,
-    "commands": [],
-    "notes": ""
+    "commands": [
+      "node --version && npm --version && python3 --version && /tmp/vericlaim-harden-env/bin/python --version && git status --short && npm ci (cwd: frontend; default Node 22.22.1)",
+      "npm exec --yes --package=node@24 -- node --version",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel verbose' (cwd: frontend)",
+      "git archive HEAD | tar -x -C /tmp/frontend001-integrated.t8pN2n",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm run check:api && npm run lint && npm run typecheck && npm run test:unit && npm run build' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx playwright install chromium && npm run test:e2e' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm audit --audit-level=high' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root /mnt/c/users/jeeva/desktop/vericlaim tests/frontend/independent_acceptance.test.ts' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend)",
+      "env -u GOOGLE_CLOUD_PROJECT -u GOOGLE_CLOUD_LOCATION -u VERTEX_GEMINI_MODEL -u GOOGLE_GENAI_USE_VERTEXAI /tmp/vericlaim-harden-env/bin/python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 (cwd: /tmp/frontend001-integrated.t8pN2n)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx playwright test e2e/real-proxy-smoke.spec.ts' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend; temporary independent smoke file)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm run verify' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend; first run while temporary smoke file remained but backend had been stopped)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm run verify' (cwd: /tmp/frontend001-integrated.t8pN2n/frontend; final clean integrated-tree run)",
+      "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/backend",
+      "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/agentic",
+      "/tmp/vericlaim-harden-env/bin/python scripts/validate-contracts.py",
+      "/tmp/vericlaim-harden-env/bin/python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r requirements.lock",
+      "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py task validate FRONTEND-001",
+      "git diff --check",
+      "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py scope check FRONTEND-001 tester"
+    ],
+    "notes": "Integrated HEAD d68d49fd5a1d4b7cbe9a7d6ba38d5c788fbbd52a was copied with git archive to a clean /tmp tree because npm ci on the Windows-mounted workspace under the default Node 22.22.1 left node_modules incomplete; a subsequent Node 24 workspace reinstall explicitly failed ENOTEMPTY while removing frontend/node_modules/eslint/messages. The authoritative clean-tree run used isolated Node 24.19.0 with npm 11.12.1: npm ci added 291 packages and audited 292 with 0 vulnerabilities; check:api, lint, strict typecheck, 25/25 Vitest tests, production build, 8/8 Playwright Chromium/mobile tests, final npm run verify, and npm audit all passed. The shipped E2E suite's axe scans passed on desktop and Pixel 5, with no skips, xfails, retries, or flakes. An independent credential-stripped FastAPI plus real Vite proxy smoke passed 2/2 desktop/mobile browser cases and proved a same-origin bodyless POST, configuration_error fallback, and all five rendered deterministic rules. The committed independent acceptance suite passed all five Gemini fallback states, all five pipeline codes, and the exact relative bodyless request, but failed 1/12 because validateAnalysisResponse accepted source.files=[null] instead of rejecting it; this malformed response can reach SourceMetadataView property access and crash rather than degrade to client_error/unavailable. The first backend regression run had 50 passes and 1 failure because the completed HARDEN-001 test required the old security-check list exactly; the tester-owned assertion was updated to preserve the hash-locked audit and require the newly approved frontend npm audit, after which 51/51 backend tests passed. Agentic tests passed 12/12, OpenAPI validation passed, pip-audit found no known Python vulnerabilities, task schema validation passed, git diff --check passed, and tester scope check passed for exactly 3 changed files. One npm run verify invocation in the disposable tree failed 2 temporary real-proxy smoke cases after the intentionally separate backend process had already been stopped; removing that temporary-only test restored the exact integrated tree and the final npm run verify passed 25 unit plus 8 E2E tests. No required check was skipped or hidden."
   },
-  "blockers": [],
-  "notes_for_next_agent": []
+  "blockers": [
+    {
+      "type": "acceptance-test-failure",
+      "description": "The transport guard validates only top-level arrays/discriminants and accepts malformed nested records such as source.files=[null]. Presentational components dereference those values, so incompatible network data can crash rendering instead of becoming the required bounded client_error or explicit unavailable state.",
+      "suggestion": "Harden the runtime response guard for every nested value the UI dereferences (or adapt malformed optional values to explicit unavailable data), then make the new independent acceptance test pass and add a render-level incompatible-payload regression."
+    },
+    {
+      "type": "verification-coverage-gap",
+      "description": "The committed Playwright suite mocks every API response and contains no real credential-free Vite-to-FastAPI rendered smoke, despite the feature and frontend report claiming that durable coverage. It also does not explicitly emulate reduced motion or assert page-level responsive overflow.",
+      "suggestion": "Add a committed credential-stripped real-proxy browser smoke and explicit reduced-motion/responsive assertions to the frontend verification path without requiring live credentials."
+    },
+    {
+      "type": "toolchain-source-of-truth-mismatch",
+      "description": "package.json declares node >=22.0.0 and frontend/README.md advertises Node.js 22+ / 24 LTS, while the approved feature, ADR, standards, and acceptance criterion require the Node 24 major line to be pinned.",
+      "suggestion": "Align the frontend engine/tooling and local documentation to the approved Node 24 major line, then repeat npm ci and verification on Node 24."
+    }
+  ],
+  "notes_for_next_agent": [
+    "The hard-coded /home/jeevan/.local/lib prepend in frontend/playwright.config.ts is a non-blocking but concrete portability/security concern: clean-tree E2E passed here and a nonexistent loader path is normally ignored in GitHub's /home/runner environment, but the configuration is host-specific and puts a user-writable directory first in LD_LIBRARY_PATH for Chromium child processes. Remove it or replace it with environment/CI provisioning rather than a developer-home mutation.",
+    "After frontend remediation, rerun the independent acceptance test, the genuine credential-free fixed-proxy smoke, 51 backend tests, 12 agentic tests, Node 24 npm ci/verify/audit, tester scope check, and then repository commit-bound verification."
+  ]
 }

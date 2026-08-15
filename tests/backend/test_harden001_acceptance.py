@@ -38,6 +38,13 @@ AUDIT_COMMAND = [
     "-r",
     "requirements.lock",
 ]
+FRONTEND_AUDIT_COMMAND = [
+    "npm",
+    "--prefix",
+    "frontend",
+    "audit",
+    "--audit-level=high",
+]
 
 
 class RecordingModels:
@@ -190,7 +197,13 @@ def test_ci_installs_only_lock_and_security_workflow_reaches_exact_required_gate
             "command": AUDIT_COMMAND,
             "cwd": ".",
             "required": True,
-        }
+        },
+        {
+            "name": "frontend dependency audit",
+            "command": FRONTEND_AUDIT_COMMAND,
+            "cwd": ".",
+            "required": True,
+        },
     ]
     assert "--ignore-vuln" not in AUDIT_COMMAND
     security_runs = [
