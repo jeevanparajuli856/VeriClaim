@@ -20,14 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
             Local Evidence-Grounded FHIR Anomaly Investigation Dashboard
           </p>
         </div>
-
         <div className="notice-banner" role="note" aria-label="Scope and human authority notice">
-          <p className="notice-text">
-            <strong>Demonstration Prototype:</strong> This dashboard evaluates a fixed, local synthetic dataset.
-            Deterministic checks produce investigation signals; candidate explanations from Gemini are strictly
-            non-authoritative review aids. This application does not make fraud, claim, coverage, payment, coding,
-            clinical, diagnostic, or medical-necessity determinations.
-          </p>
+
         </div>
 
         <div className="header-actions">
