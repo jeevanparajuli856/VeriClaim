@@ -3,7 +3,7 @@
   "task_id": "FRONTEND-001",
   "agent": "codex-tester",
   "status": "COMPLETE",
-  "summary": "Independent post-security-fix testing at 9ec2922 proves duplicate evidence records remain unresolvable and all associated controls lead only to an accessible inert state, while every prior frontend, proxy, audit, contract, backend, and agentic gate remains passing.",
+  "summary": "Independent accessibility-delta testing at ad0a060 confirms visible destination focus for selected, missing, and duplicate evidence states, exact focus return, non-animated reduced-motion navigation, and no core regression.",
   "files_changed": [
     ".ai/tasks/FRONTEND-001/test-report.json"
   ],
@@ -13,28 +13,21 @@
   "tests": {
     "passed": true,
     "commands": [
-      "git archive HEAD | tar -x -C /tmp/frontend001-security-rerun.UlBu4x",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npx playwright test e2e/independent-duplicate-evidence.spec.ts' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend; first temporary harness run)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npx playwright test e2e/independent-duplicate-evidence.spec.ts' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend; corrected all-controls harness)",
-      "cmp -s package-lock.json /mnt/c/users/jeeva/desktop/vericlaim/frontend/package-lock.json (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
-      "npm ls @types/node --depth=0 (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
-      "npm ls yaml --depth=0 (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend; expected nonzero/empty confirms no direct dependency)",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root .. tests/frontend/independent_acceptance.test.ts' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && python3 --version && npx playwright install chromium && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm audit --audit-level=high' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
+      "git archive HEAD | tar -x -C /tmp/frontend001-a11y-rerun.YcmfxS",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-a11y-rerun.YcmfxS/frontend)",
+      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && python3 --version && npx playwright install chromium && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-a11y-rerun.YcmfxS/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root .. tests/frontend/independent_acceptance.test.ts && npm audit --audit-level=high' (cwd: /tmp/frontend001-a11y-rerun.YcmfxS/frontend)",
       "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/backend",
       "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/agentic",
       "/tmp/vericlaim-harden-env/bin/python scripts/validate-contracts.py",
-      "/tmp/vericlaim-harden-env/bin/python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r requirements.lock",
       "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py task validate FRONTEND-001",
       "git diff --check",
       "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py scope check FRONTEND-001 tester"
     ],
-    "notes": "Exact integrated HEAD 9ec2922e6171b5cf322820d06977772e3ab01cd9 was copied to a clean /tmp tree. Node 24.19.0/npm 11.12.1 npm ci installed 290 packages, audited 291 with zero vulnerabilities, and left the committed lockfile byte-identical; @types/node remains 24.13.3 and direct yaml remains absent. A temporary independent Playwright test injected two records with the same real backend evidence ID and exercised every matching table/cross-reference control. All four controls on each desktop/mobile run opened only the programmatically focused Duplicate Evidence Target (Inert) alert, neither duplicate record summary appeared in the selected detail, Return restored focus to the exact invoking control, and axe found no violations. Its first 2-case run failed only because the temporary harness expected two matching controls while the real response correctly exposed four; after changing the harness to exercise all discovered controls, 2/2 passed. The temporary file was removed before exact integrated verification. The committed suite passed 28/28 unit/component and 14/14 Playwright desktop/mobile tests, including duplicate integrity UI, normal evidence focus/return, real non-reused credential-free proxy under parent credential sentinels, axe, responsive overflow, reduced motion, fallback, and pipeline retry. All 15 committed independent acceptance assertions pass. Contract freshness, lint, typecheck, build, npm audit, 51/51 backend tests, 12/12 agentic tests, OpenAPI validation, and strict hash-locked Python audit all pass. Task/report validation, git diff --check, and tester scope check passed for the single tester-owned report change. The workstation Chromium libraries were supplied externally for execution; no repository loader-path mutation exists. No product test was skipped, xfailed, flaky, or retried."
+    "notes": "Exact integrated HEAD ad0a0605d8cab2d0bdd6516257ee1400f6528132 was tested from a clean git-archive tree with Node 24.19.0/npm 11.12.1. npm ci installed 290 packages and audited 291 with zero vulnerabilities. Full frontend verification passed contract freshness, lint, strict typecheck, 28/28 unit/component tests, production build, and 16/16 Playwright tests across desktop/mobile. Browser assertions prove the selected evidence detail heading, missing-target heading, and duplicate-inert heading each receive programmatic focus plus a visible outline of at least 2px (implemented as 3px); Return restores focus to the exact invoking reference control. With prefers-reduced-motion: reduce, evidence navigation calls scrollIntoView with behavior auto rather than smooth, retains destination focus, and has no responsive overflow. Existing axe, real non-reused credential-free proxy under parent credential sentinels, fallback, retry, evidence integrity, and normal navigation flows pass. All 15 independent acceptance tests pass; npm audit reports zero vulnerabilities; backend passes 51/51, agentic passes 12/12, and OpenAPI validation passes. Task/report validation, git diff --check, and tester scope check pass for the single tester-owned report change. The workstation Chromium libraries were supplied externally for execution; no repository loader-path mutation exists. No tests were skipped, xfailed, flaky, or retried."
   },
   "blockers": [],
   "notes_for_next_agent": [
-    "Orchestrator should commit this post-security-fix test evidence, run commit-bound verification on the resulting revision, and request security/review evidence against that same verified commit."
+    "Orchestrator should commit this focused accessibility evidence and rerun commit-bound verification before refreshing final review on the exact verified revision."
   ]
 }
