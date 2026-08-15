@@ -3,7 +3,7 @@
   "task_id": "HARDEN-001",
   "title": "Harden prompt isolation and dependency reproducibility",
   "type": "security",
-  "status": "REVIEW",
+  "status": "PR_READY",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",
