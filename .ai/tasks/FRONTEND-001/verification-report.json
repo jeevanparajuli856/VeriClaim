@@ -1,8 +1,121 @@
 {
   "schema_version": "1.0",
   "task_id": "FRONTEND-001",
-  "commit": "",
-  "status": "FAILED",
-  "generated_at": "",
-  "checks": []
+  "commit": "5025915a0265accb59c10a124bb4963a15ce867c",
+  "status": "PASSED",
+  "generated_at": "2026-08-15T22:48:51.835484+00:00",
+  "checks": [
+    {
+      "name": "project-schema",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/tmp/vericlaim-harden-env/bin/python",
+        "scripts/validate-project.py"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "task-schema-and-reports",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/tmp/vericlaim-harden-env/bin/python",
+        "scripts/validate-task.py",
+        "FRONTEND-001"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "openapi-contract",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/tmp/vericlaim-harden-env/bin/python",
+        "scripts/validate-contracts.py"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "agentic-framework-tests",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/tmp/vericlaim-harden-env/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/agentic"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "demo backend tests",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/backend"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "frontend verification",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "npm",
+        "--prefix",
+        "frontend",
+        "run",
+        "verify"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "tracked-secret-file-baseline",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "git",
+        "ls-files"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "hash-locked dependency audit",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "python3",
+        "-m",
+        "pip_audit",
+        "--strict",
+        "--require-hashes",
+        "--no-deps",
+        "--disable-pip",
+        "--progress-spinner",
+        "off",
+        "-r",
+        "requirements.lock"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "frontend dependency audit",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "npm",
+        "--prefix",
+        "frontend",
+        "audit",
+        "--audit-level=high"
+      ],
+      "notes": ""
+    }
+  ]
 }
