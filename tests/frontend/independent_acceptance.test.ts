@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 import {
   validateAnalysisResponse,
@@ -91,5 +92,52 @@ describe('FRONTEND-001 independent acceptance boundaries', () => {
     };
 
     expect(validateAnalysisResponse(malformed)).toBeNull();
+  });
+
+  it('rejects malformed model metadata at the network boundary', () => {
+    for (const modelMetadata of [
+      null,
+      { ...mockSuccessResponse.model_metadata, provider: 'unexpected-provider' },
+      { ...mockSuccessResponse.model_metadata, call_count: 2 },
+      { ...mockSuccessResponse.model_metadata, invoked: 'yes' },
+      { ...mockSuccessResponse.model_metadata, latency_ms: -1 },
+      { ...mockSuccessResponse.model_metadata, input_tokens: 1.5 },
+    ]) {
+      expect(validateAnalysisResponse({
+        ...mockSuccessResponse,
+        model_metadata: modelMetadata,
+      })).toBeNull();
+    }
+  });
+
+  it('keeps Vite local-only and Playwright free of host-library mutation', () => {
+    const viteConfig = readFileSync(
+      new URL('../../frontend/vite.config.ts', import.meta.url),
+      'utf8',
+    );
+    const playwrightConfig = readFileSync(
+      new URL('../../frontend/playwright.config.ts', import.meta.url),
+      'utf8',
+    );
+
+    expect(viteConfig).toContain("host: '127.0.0.1'");
+    expect(viteConfig).toContain("target: 'http://127.0.0.1:8000'");
+    expect(viteConfig).not.toMatch(/server\s*:\s*\{[\s\S]*?fs\s*:/);
+    expect(playwrightConfig).toContain('reuseExistingServer: false');
+    expect(playwrightConfig).not.toContain('LD_LIBRARY_PATH');
+    expect(playwrightConfig).not.toMatch(/\/home\/[A-Za-z0-9._-]+/);
+  });
+
+  it('aligns the runtime engine and Node type surface to Node 24', () => {
+    const packageJson = JSON.parse(readFileSync(
+      new URL('../../frontend/package.json', import.meta.url),
+      'utf8',
+    )) as {
+      engines?: { node?: string };
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(packageJson.engines?.node).toMatch(/^\^24\./);
+    expect(packageJson.devDependencies?.['@types/node']).toMatch(/^\^24\./);
   });
 });
