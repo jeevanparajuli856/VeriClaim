@@ -1,8 +1,76 @@
 {
   "schema_version": "1.0",
   "task_id": "DEMO-001",
-  "commit": "",
-  "status": "FAILED",
-  "generated_at": "",
-  "checks": []
+  "commit": "4ce67c005a3ab89543c3d5ec99f4fe8b0e601b5a",
+  "status": "PASSED",
+  "generated_at": "2026-08-15T18:43:29.873117+00:00",
+  "checks": [
+    {
+      "name": "project-schema",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "scripts/validate-project.py"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "task-schema-and-reports",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "scripts/validate-task.py",
+        "DEMO-001"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "openapi-contract",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "scripts/validate-contracts.py"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "agentic-framework-tests",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/mnt/c/Users/jeeva/Desktop/VeriClaim/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/agentic"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "demo backend tests",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/backend"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "tracked-secret-file-baseline",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "git",
+        "ls-files"
+      ],
+      "notes": ""
+    }
+  ]
 }
