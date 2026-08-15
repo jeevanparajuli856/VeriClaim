@@ -6,7 +6,7 @@
   "classification_authority": [
     "docs/PROJECT.md",
     "docs/architecture/SYSTEM.md",
-    "docs/adr/ADR-0002-synthetic-public-data-boundary.md",
+    "docs/adr/ADR-0002-synthetic-data-initial-boundary.md",
     "human task-level approval 2026-08-15"
   ],
   "source_lineage_commit": "3fda38143e95c58a91b54781b15c84bc8436a1fa",

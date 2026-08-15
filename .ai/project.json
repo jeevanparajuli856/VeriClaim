@@ -19,7 +19,22 @@
     }
   },
   "verification": {
-    "checks": []
+    "checks": [
+      {
+        "name": "DATA-001 required offline validation suite",
+        "command": [
+          "/usr/bin/env",
+          "DATA001_REQUIRE_OFFLINE=1",
+          "python3",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/data"
+        ],
+        "cwd": ".",
+        "required": true
+      }
+    ]
   },
   "security": {
     "checks": []

@@ -36,7 +36,14 @@
     "encoding": "UTF-8",
     "top_level": "object",
     "reject_duplicate_keys": true,
+    "reject_non_finite_numbers": true,
     "allow_repair_or_coercion": false
+  },
+  "shape_registry": {
+    "path": "contracts/fhir/data-001/shape-registry.json",
+    "enforcement": "Every observed role, normalized JSON pointer, and JSON type tuple must be declared; undeclared nested fields and type mismatches are rejected.",
+    "array_index_normalization": "[]",
+    "limits_are_acceptance_rules": true
   },
   "profile_markers": {
     "semantics": "routing-only; never a conformance claim",
@@ -264,7 +271,12 @@
       "rejected"
     ],
     "carin_affects_decision": false,
-    "terminology_affects_decision": false
+    "terminology_affects_decision": false,
+    "source_identity": {
+      "declared": "Digest of declared path, byte length, and SHA-256 identities.",
+      "observed": "Digest of observed path, byte length, and SHA-256 identities computed from the bytes received by the validator.",
+      "rejected_input_provenance_required": true
+    }
   },
   "carin_diagnostic": {
     "package": "hl7.fhir.us.carin-bb#2.2.0",
@@ -306,6 +318,8 @@
     "FHIR-COMPAT-ID-001",
     "FHIR-COMPAT-REF-001",
     "FHIR-COMPAT-CONTENT-001",
+    "FHIR-COMPAT-SHAPE-001",
+    "FHIR-COMPAT-LIMIT-001",
     "CARIN-DIAGNOSTIC-001",
     "TERM-UNVERIFIED-001"
   ],

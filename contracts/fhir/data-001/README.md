@@ -4,7 +4,7 @@ This directory defines VeriClaim's initial project-owned FHIR R4 compatibility b
 
 ## Acceptance and diagnostics
 
-`boundary.json` is the acceptance authority. The validator checks the declared synthetic source set, strict JSON, supported Patient/Coverage/pharmacy-EOB shapes, required anchor fields, exact source registries, cross-file references, and rejected active-content surfaces.
+`boundary.json` is the acceptance authority. The validator checks the declared synthetic source set, strict finite-number JSON, supported Patient/Coverage/pharmacy-EOB shapes, required anchor fields, exact nested paths and JSON types from `shape-registry.json`, bounded input complexity, exact source registries, cross-file references, and rejected active-content surfaces.
 
 CARIN Blue Button 2.2.0 is a separate advisory diagnostic. Its original errors and warnings are preserved as structured evidence and never override project acceptance or rejection. A minimal-profile-valid source with CARIN errors has these ordered states:
 
@@ -23,6 +23,7 @@ Terminology without usage-approved offline definitions remains opaque. The valid
 ## Artifacts
 
 - `boundary.json` — accepted source-set/resource/envelope rules, registry digests, reference policy, state ordering, stable rule IDs, and security invariants.
+- `shape-registry.json` — exact role/path/type allowlist plus document, collection, string, key, and nesting limits.
 - `packages.lock.json` — exact offline CARIN diagnostic package/tool closure, checksums, sources, licenses, and limitations.
 - `validation-outcome.schema.json` — machine result contract separating the acceptance decision from CARIN and terminology evidence.
 - `source-manifest.json` — exact paths, byte lengths, hashes, Git identities, classification, and expected result for the immutable seed.
@@ -59,7 +60,9 @@ contracts/fhir/data-001/.offline/tooling/jre-21.0.12+8/bin/java \
 
 Before use, materialize every exact archive into the isolated cache and verify every checksum from `packages.lock.json`. The diagnostic must fail visibly as `carin-diagnostic-unavailable` if the validator, package cache, checksum, or network-denial control is unavailable. Never fall back to `latest`, a live terminology service, another CARIN version, or an unapproved terminology package.
 
-Raw OperationOutcome content is untrusted. Retain it by digest outside normalized logs; normalized findings use stable rule IDs, sanitized templates, source paths, and JSON pointers. The task verification gate requires the diagnostic to be available even though its findings do not decide input acceptance.
+Raw OperationOutcome content is untrusted. Retain it by digest outside normalized logs; normalized findings are derived issue-by-issue from the checksum-verified raw evidence and use stable rule IDs, sanitized machine codes, source paths, JSON pointers where safely derivable, and a digest of each complete source issue. Tool, runtime, and every locked package archive must also be checksum-verified. Missing or mismatched evidence is reported as `carin-diagnostic-unavailable`. The task verification gate requires the diagnostic to be available even though its findings do not decide input acceptance.
+
+Every outcome carries both the declared source-set digest and a separately calculated digest of the bytes actually observed. Rejected or tampered input therefore retains distinct observed provenance even when its declared identity is unchanged.
 
 ## Change control
 
