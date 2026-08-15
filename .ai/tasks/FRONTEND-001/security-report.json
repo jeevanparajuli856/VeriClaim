@@ -2,8 +2,18 @@
   "schema_version": "1.0",
   "task_id": "FRONTEND-001",
   "reviewer": "codex-security",
-  "reviewed_commit": "",
+  "reviewed_commit": "ffa32a83b9038182f94a809b383a5ad9e301e00c",
   "status": "CHANGES_REQUIRED",
-  "summary": "",
-  "findings": []
+  "summary": "Security review of exact current commit ffa32a83b9038182f94a809b383a5ad9e301e00c found one release-blocking evidence-integrity issue: duplicate evidence IDs are detected and warned about, but reference navigation still resolves the ambiguous ID to the first record. This violates the approved requirement that duplicate targets remain inert and permits an untrusted response to misattribute a signal or Gemini candidate citation. Other reviewed boundaries remain intact: network data begins as unknown and nested display values/model metadata are guarded before rendering; API/FHIR/model strings use inert React text interpolation with no HTML/Markdown/URL/script/style execution; the browser makes only the fixed relative bodyless POST through the source-controlled loopback proxy; Vite and preview bind to 127.0.0.1 and live probing returned 403 for parent-workspace, environment, Git, and operating-system paths; browser code contains no provider credentials/configuration, persistence, analytics, uploads/downloads, service worker, or secondary network surface; the real-proxy test overrides Vertex configuration so the backend makes zero model calls even when parent credential sentinels exist; no committed LD_LIBRARY_PATH mutation remains; npm uses the committed lockfile with Node/@types major 24 and the independent npm audit reports zero vulnerabilities; tracked-source review found no committed secret or real-PHI addition; and backend, dataset, requirements, OpenAPI, deterministic rules, and the one-call/no-tools model boundary are unchanged from main. Commit-bound verification remains current for 5025915a0265accb59c10a124bb4963a15ce867c because later commits add only verification evidence and task status.",
+  "findings": [
+    {
+      "severity": "medium",
+      "category": "evidence_integrity",
+      "file": "frontend/src/components/EvidenceExplorerView.tsx",
+      "description": "The evidence map records the first record for an evidence_id and only adds later occurrences to duplicateIds. selectedItem is then read directly from that first-record map even when the selected ID is duplicated, so signal, candidate-finding, and source-reference controls still display one ambiguous record while a separate warning is shown. The approved frontend/security boundary requires duplicate targets to remain inert and forbids misnavigation.",
+      "impact": "An untrusted or incompatible API response containing two records with the same evidence ID can control which summary and source references appear as the cited target. That can falsely ground a deterministic signal or non-authoritative Gemini finding in the wrong evidence, undermining the dashboard's core evidence-integrity guarantee even though the strings themselves remain inert.",
+      "remediation": "Treat every duplicated ID as unresolvable: remove duplicated IDs from the resolvable map or explicitly check duplicateIds before selecting, render and focus an ambiguous-evidence integrity state, and prevent duplicate-row/reference controls from resolving either record. Add component and browser/runtime-boundary regressions proving a duplicated ID never displays one record as the citation target and that focus/return behavior remains accessible.",
+      "blocking": true
+    }
+  ]
 }
