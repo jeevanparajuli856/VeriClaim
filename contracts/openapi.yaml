@@ -251,7 +251,6 @@ components:
               - type: string
                 maxLength: 160
               - type: number
-              - type: integer
               - type: boolean
         signals:
           type: array
