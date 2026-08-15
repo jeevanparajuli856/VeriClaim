@@ -3,7 +3,7 @@
   "task_id": "DEMO-001",
   "title": "Build the local FHIR anomaly investigation demo",
   "type": "feature",
-  "status": "INTEGRATION",
+  "status": "IMPLEMENTATION",
   "priority": "high",
   "owners": {
     "orchestrator": "codex",
