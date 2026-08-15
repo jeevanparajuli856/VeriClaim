@@ -68,19 +68,21 @@ No repository, ORM, migration, queue, cache, retrieval layer, agent framework, c
 - UTF-8 JSON object parsing with clear bounded failures.
 - Expected standalone Patient and searchset Bundle/resource shapes for the three approved files.
 - Required identifiers, relevant arrays/objects, date strings, numeric amount values, and reference strings used by the extractor.
-- Unique `(resourceType, id)` keys for supported resources.
+- Required `resourceType` and non-empty `id` values for supported resources. Build a one-to-many identity index rather than overwriting duplicate keys so duplicate identities remain visible to the reference-integrity rule as ambiguous evidence.
+- Parse supported monetary numbers as finite decimals and compare currencies only for exact equality; never convert currencies or infer missing values.
+- Apply named implementation limits: 1 MiB per source file, 100 entries per Bundle, 100 items per EOB, 32 adjudications per item, 16 codings per concept, and 2,048 characters per extracted string. Exceeding a limit is a typed deterministic-pipeline failure.
 
 This boundary intentionally does not perform strict base FHIR, profile, CARIN, NCPDP, or comprehensive terminology validation.
 
 ## 6. Deterministic rule boundary
 
-Each rule returns a stable rule ID, outcome, severity/priority label limited to the demo, plain-language rationale, evaluated facts, evidence references, threshold/formula metadata, and limitations.
+Each rule returns a stable rule ID, execution status, zero or more signals, plain-language rationale, evaluated facts, evidence references, threshold/formula metadata, missing evidence, and limitations. Signal priority is limited to non-consequential demo labels such as `information` and `review`; it is not a fraud, clinical, payment, coverage, or risk score.
 
-1. **Reference integrity:** required Patient and Coverage references resolve exactly once within the loaded supported resource set.
-2. **Coverage-date bound:** a service date is compared only with present start/end boundaries on its referenced Coverage; absent boundaries are missing evidence, not inferred dates.
-3. **Duplicate/repetition:** exact item keys can identify duplicates; repeated opaque product/service codes are counted within a documented window or the entire supplied sample. Repetition is only an investigation signal.
-4. **Observed amount relationship:** for exact supported category fields, compare `drugcost` with available `benefit + paidbypatient` using an explicit tolerance. A mismatch says only that the selected observed components do not reconcile; unmodeled components are a stated limitation.
-5. **Sample-relative high amount:** compare the selected amount with a fixed, documented small-sample statistic/threshold. It never claims the amount is improper outside this sample.
+1. **`REF-001` — reference integrity:** index supported resources by exact `(resourceType, id)`. Check `Coverage.beneficiary.reference`, `ExplanationOfBenefit.patient.reference`, and every `ExplanationOfBenefit.insurance[*].coverage.reference`. A required reference must be a local relative `<expected-resourceType>/<id>` string and resolve to exactly one resource. Missing, malformed, wrong-type, unresolved, and multiply resolved references produce distinct signals; no URL is dereferenced.
+2. **`DATE-001` — coverage-date bound:** for every EOB item with an ISO `item.servicedDate`, compare that date inclusively with each uniquely resolved referenced Coverage's present `period.start` and `period.end`. Compare a single present bound without inventing the other. Missing service dates, unresolved Coverage, or Coverage with no bounds are recorded as missing evidence. `billablePeriod` remains an observed fact and is not substituted for `item.servicedDate`.
+3. **`REPEAT-001` — duplicate/repetition:** an exact duplicate group contains at least two distinct item source paths with the same patient reference, sorted Coverage references, `servicedDate`, product/service `(system, code)`, and selected `benefit`, `paidbypatient`, and `drugcost` value/currency tuples. Independently, an opaque product/service `(system, code)` repeated at least twice across the entire supplied EOB sample produces a repetition signal. Missing signature fields are excluded with missing evidence; no near-match, display, or product semantics are inferred.
+4. **`AMOUNT-001` — observed amount relationship:** select categories only by exact pairs: `benefit` from `http://terminology.hl7.org/CodeSystem/adjudication`, and `paidbypatient`/`drugcost` from `http://hl7.org/fhir/us/carin-bb/CodeSystem/C4BBAdjudication`. When each occurs exactly once on an item and all three finite Decimal values have the same non-empty currency, signal when `abs(drugcost - (benefit + paidbypatient)) > 0.01`. Missing/duplicate categories or currency mismatch are missing evidence, not zero. A signal says only that these three observed components do not reconcile; unmodeled components remain an explicit limitation.
+5. **`OUTLIER-001` — sample-relative high amount:** group usable `drugcost` values by exact currency and require at least four values. Sort each group; calculate Tukey hinges (exclude the overall median from each half for odd counts), `IQR = Q3 - Q1`, and `threshold = Q3 + 1.5 * IQR`; signal values strictly greater than the threshold. Record quartiles, multiplier, threshold, group size, and evidence. Do not convert currencies or generalize beyond this small sample. For the unchanged USD sample, the ten values yield `Q1=0`, `Q3=20`, and `threshold=50`, so the observed `100 USD` value demonstrates the rule.
 
 Rules must not infer drug/procedure meaning, allowed/billed semantics absent from the sample, payer policy, fraud, medical necessity, clinical meaning, or payment correctness.
 
@@ -98,6 +100,10 @@ The DEMO-001 API contract must define a response that keeps these sections separ
 
 Every Gemini finding must cite one or more evidence IDs supplied in its request. Unknown or absent citations invalidate the Gemini portion without discarding deterministic output.
 
+Evidence IDs are application-generated, never copied from untrusted values. Fact IDs use the deterministic form `ev:<fixed-source-alias>:<RFC-6901-JSON-pointer>` (for example, `ev:eob:/entry/0/resource/item/0/servicedDate`); signal IDs use `sig:<rule-id>:<zero-padded-canonical-ordinal>`. Signal groups are sorted by rule-owned canonical keys before ordinals are assigned. The same ordered input therefore produces the same IDs, and both facts and signals appear in the evidence index supplied to Gemini.
+
+The `gemini.status` enum is `success`, `configuration_error`, `timeout`, `provider_error`, `invalid_output`, or `invalid_evidence`. Only `success` may contain candidate findings. The model-owned schema permits one summary of at most 2,000 characters, at most five candidate findings, at most ten missing-evidence statements, and at most ten limitations. A finding has a title of at most 160 characters, an explanation of at most 1,000 characters, and one to ten unique supplied evidence references. Missing-evidence and limitation strings are each at most 500 characters. Any schema or bound violation invalidates the whole Gemini portion.
+
 ## 8. Gemini trust boundary
 
 - Use the Google Gen AI SDK configured for Vertex AI and local Application Default Credentials.
@@ -107,18 +113,21 @@ Every Gemini finding must cite one or more evidence IDs supplied in its request.
 - Treat candidate explanations as untrusted, non-authoritative text.
 - Explicitly prohibit fraud conclusions; approve/deny/payment/coverage/coding/medical-necessity/diagnostic/clinical decisions; data modification; and requests for missing external facts.
 - Keep credentials, project IDs, private environment values, raw unnecessary identifiers, and full raw FHIR payloads out of prompts, responses, and committed fixtures.
+- Use a 30-second total call timeout, a 2,048 output-token ceiling, a 128 KiB serialized prompt ceiling, and a 64 KiB returned structured-content ceiling. Configuration absence results in zero calls and an explicit model status.
 
 ## 9. Failure behavior
 
 | Failure | Required behavior |
 |---|---|
-| Source missing/malformed or unsupported required shape | Fail the deterministic pipeline clearly; no model call |
+| Source missing, too large, malformed, unsupported, or extraction limit exceeded | Return a sanitized typed deterministic-pipeline error; no model call |
 | Individual optional fact missing | Record missing evidence; continue when rules can remain honest |
 | Gemini configuration/provider timeout/error | Return deterministic report with `gemini` unavailable/error status |
 | Gemini non-JSON or schema-invalid output | Return deterministic report with invalid-output status |
 | Gemini cites unknown evidence | Reject Gemini findings and return deterministic report with evidence-validation failure |
 
 No silent provider fallback or second repair call is allowed in the one-day milestone.
+
+The contract returns HTTP 200 whenever deterministic analysis succeeds, including every Gemini partial/failure status. Because the endpoint accepts no user input, an allowlisted source or structural failure is a sanitized HTTP 500 application error rather than a Gemini fallback response. Its public code is one of `SOURCE_UNAVAILABLE`, `SOURCE_TOO_LARGE`, `SOURCE_INVALID_JSON`, `SOURCE_SHAPE_UNSUPPORTED`, or `EXTRACTION_LIMIT_EXCEEDED`; raw exception/provider text is never returned.
 
 ## 10. Data integrity and state
 

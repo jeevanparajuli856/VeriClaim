@@ -2,19 +2,89 @@
   "schema_version": "1.0",
   "task_id": "DEMO-001",
   "agent": "codex-architect",
-  "status": "PARTIAL",
-  "summary": "",
-  "files_changed": [],
+  "status": "COMPLETE",
+  "summary": "Defined the one-day local FastAPI architecture, exact five-rule semantics, stable evidence scheme, bounded one-call Gemini trust boundary, graceful failure contract, component impacts, and independent verification expectations without adding database, frontend, infrastructure, or production scope.",
+  "files_changed": [
+    "docs/features/DEMO-001.md",
+    "docs/architecture/SYSTEM.md",
+    ".ai/tasks/DEMO-001/architecture-report.json"
+  ],
   "impacts": {
-    "database": null,
-    "backend": null,
-    "frontend": null,
-    "infrastructure": null,
-    "testing": null,
-    "contract_change": null
+    "database": false,
+    "backend": true,
+    "frontend": false,
+    "infrastructure": false,
+    "testing": true,
+    "contract_change": true
   },
-  "decisions": [],
-  "risks": [],
+  "decisions": [
+    "DEMO-001 is one local Python/FastAPI/Pydantic backend plus FastAPI /docs. Database, persistence, separate frontend, deployment, container, cloud resource, identity, retrieval, agent framework, and production observability components remain disabled and require no workers for this task.",
+    "The runtime path is a thin POST /api/v1/analyze-demo route over an analysis service, fixed allowlisted read-only loader, minimal supported-subset extractor/evidence index, pure rule engine, injected Gemini summarizer adapter, and response assembler. The injected summarizer boundary lets tests use fakes without live credentials.",
+    "Only dataset/patient_bbuser29999.json, dataset/coverage_bundle_bbuser29999.json, and dataset/eob_bundle_bbuser29999.json are application inputs. The loader resolves fixed project-owned locations, reads without writes, rejects files above 1 MiB, and applies the documented Bundle/item/adjudication/coding/string limits. Parsed monetary values are finite Decimals and currencies are never converted or inferred.",
+    "Minimal validation confirms UTF-8 JSON objects, the standalone Patient and homogeneous searchset Coverage/EOB Bundle shapes, required supported fields, bounded collections, full ISO dates used by rules, finite amounts, and non-empty references/identities. It is deliberately not base FHIR, profile, CARIN, NCPDP, or terminology conformance validation.",
+    "Supported resource identities are indexed one-to-many by exact resourceType/id. Duplicate identities are preserved so REF-001 can signal ambiguous resolution rather than a parser overwriting evidence; references are local relative expected-type strings only and are never dereferenced.",
+    "Fact evidence IDs are application-generated from fixed source aliases and RFC 6901 JSON pointers. Signal evidence IDs use stable rule IDs and zero-padded ordinals after rule-owned canonical sorting. Untrusted identifiers, codes, displays, provider text, and model text cannot mint evidence IDs.",
+    "REF-001 checks Coverage beneficiary, EOB patient, and every EOB insurance Coverage reference for missing, malformed, wrong-type, unresolved, or multiply resolved local references. DATE-001 compares item.servicedDate inclusively only against present bounds of uniquely resolved referenced Coverages and records absent dates/bounds as missing evidence without substituting billablePeriod.",
+    "REPEAT-001 defines an exact duplicate by equal patient reference, sorted Coverage references, servicedDate, product/service system+code, and selected benefit/paidbypatient/drugcost value+currency tuples across distinct source paths. It separately signals exact system+code repetition at count two or more across the whole supplied EOB sample; it performs no near-match or code/display interpretation.",
+    "AMOUNT-001 selects benefit from the exact base adjudication system and paidbypatient/drugcost from the exact observed C4BB adjudication system. It evaluates only one finite same-currency value for each and signals when abs(drugcost - (benefit + paidbypatient)) exceeds Decimal 0.01; missing/duplicate/currency-conflicting components are missing evidence rather than zero and every mismatch carries an unmodeled-components limitation.",
+    "OUTLIER-001 groups usable drugcost values by exact currency, requires at least four observations, uses Tukey hinges, and signals values strictly above Q3 + 1.5*IQR. The unchanged ten-value USD sample produces Q1=0, Q3=20, threshold=50, and one 100 USD signal; this is sample-relative only.",
+    "Every rule exposes execution status, zero or more canonically ordered signals, exact inputs/formula/threshold, evidence, missing evidence, and limitations. Priority labels are informational/review-only and cannot be represented as fraud, healthcare risk, clinical, coding, payment, coverage, or medical-necessity judgments.",
+    "The Gemini adapter uses the Google Gen AI SDK configured for Vertex AI, makes zero calls when configuration is absent and otherwise at most one call, exposes no tools/loops/side effects, and sends only minimized structured synthetic facts, deterministic signals, supplied evidence IDs, and limitations. It uses a 30-second total timeout, 2,048 output-token ceiling, 128 KiB prompt ceiling, and 64 KiB structured-content ceiling.",
+    "Gemini output is untrusted until Pydantic bounds and the evidence allowlist pass. It is limited to a 2,000-character summary, five candidate findings, ten missing-evidence statements, and ten limitations; each finding has bounded text and one to ten unique supplied citations. Unknown/missing citations or any bound/schema failure reject the entire Gemini portion without a repair call.",
+    "The contract uses HTTP 200 whenever deterministic analysis succeeds, including typed Gemini statuses success, configuration_error, timeout, provider_error, invalid_output, and invalid_evidence. Only success may contain candidate findings. Source/shape/limit failure makes no model call and returns a sanitized HTTP 500 code without raw exception or provider text.",
+    "contracts/openapi.yaml must change from its empty placeholder before CONTRACT_READY. It must define the bodyless endpoint, separated fact/evidence/rule/Gemini/limitation/metadata schemas, all model statuses, deterministic error codes, response bounds, and citation requirements; implementation workers must consume rather than edit the approved contract.",
+    "Independent testing is required. Unit and integration evidence must cover every rule's signal/no-signal/missing-evidence paths, stable IDs, bounds and malformed shapes, fake model success/configuration/timeout/provider/parsing/schema/citation failures, zero/one-call enforcement, contract alignment, no live credentials, and source hashes before/after.",
+    "No new ADR is needed because ADR-0001 through ADR-0004 already authorize and constrain human authority, synthetic-only input, the simplified local platform, and direct bounded Vertex AI Gemini use. This task refines those accepted decisions rather than introducing a project-wide platform choice."
+  ],
+  "risks": [
+    {
+      "severity": "high",
+      "description": "Deterministic signals or fluent Gemini explanations could be presented as fraud, coverage, payment, coding, clinical, medical-necessity, CARIN-conformance, or production-validity conclusions.",
+      "mitigation": "Use the exact narrow rule wording, informational/review-only labels, candidate-only model section, mandatory global limitations, and ADR-0001 human-authority boundary in contract, implementation, README, tests, security review, and final review."
+    },
+    {
+      "severity": "high",
+      "description": "Untrusted FHIR strings or model output could cause prompt injection, citation fabrication, secret leakage, active rendering, or unintended external behavior.",
+      "mitigation": "Serialize only minimized bounded data, separate instructions from data, expose no tools or URL/file access, keep secrets/configuration out of payloads and logs, validate Pydantic output and every citation, render JSON only, and reject the complete model portion on failure."
+    },
+    {
+      "severity": "high",
+      "description": "A provider/configuration/timeout/output failure could erase deterministic evidence or trigger multiple costly/uncontrolled calls.",
+      "mitigation": "Assemble deterministic results before the adapter, enforce zero or one invocation, prohibit repair/fallback calls, map all model failures to typed sanitized HTTP 200 partial states, and independently test call counts and retained deterministic sections."
+    },
+    {
+      "severity": "medium",
+      "description": "Floating-point parsing, duplicate adjudication categories, currency mismatch, or an ambiguous quartile method could make amount signals irreproducible or misleading.",
+      "mitigation": "Use finite Decimal parsing, require exactly one same-currency selected component, freeze tolerance at 0.01, define Tukey hinges and strict threshold comparison, expose formula metadata, and test boundary/even/odd/missing cases."
+    },
+    {
+      "severity": "medium",
+      "description": "Fixed local files could be mutated, replaced, oversized, or accidentally accessed through current-working-directory or arbitrary-path behavior.",
+      "mitigation": "Resolve only the three fixed project-owned locations, accept no request path/upload/URL, enforce byte and structure bounds before extraction, never open for write, and prove repository dataset hashes are unchanged before and after tests."
+    },
+    {
+      "severity": "medium",
+      "description": "The one-beneficiary, ten-EOB sample can make repetition and high-amount signals look generalizable when they are only demonstrations.",
+      "mitigation": "Record sample counts/formulas/evidence, state small-sample limitations in every response and README, use project-authored synthetic test variants only outside dataset/, and make no population, payer, healthcare-validity, or benchmark claim."
+    },
+    {
+      "severity": "medium",
+      "description": "Adding authentication, persistence, custom UI, deployment, terminology validation, retries, telemetry, or other production concerns would jeopardize the one-day milestone and change trust boundaries.",
+      "mitigation": "Keep all such components explicitly disabled, reject incidental scaffold as a dependency, run only the backend/contract/test workers selected by impacts, and require a later approved scope and architecture decision for expansion."
+    },
+    {
+      "severity": "low",
+      "description": "Unauthenticated FastAPI /docs could be mistaken for an approved shared or deployed interface.",
+      "mitigation": "Bind conservatively for local development, document synthetic local use, add no deployment artifacts, and state that any networked/shared use requires a new authentication and security architecture."
+    }
+  ],
   "blockers": [],
-  "notes_for_next_agent": []
+  "notes_for_next_agent": [
+    "Orchestrator/contract owner: replace only the DEMO-001 OpenAPI placeholder and validate it before CONTRACT_READY; use the exact endpoint/failure/citation boundaries above and do not import historical DATA-001 CARIN contracts.",
+    "Backend owner: work only in backend/**, tests/backend/**, README.md, .env.example, and backend-report.json; keep dataset/** read-only and do not edit contracts, task.json, database, or frontend paths.",
+    "Backend owner: keep model construction behind an injected adapter, create deterministic results before invocation, and make fake-client tests prove configuration-free, timeout, provider, invalid-output, invalid-evidence, and one-call behavior.",
+    "Do not start database, frontend, or infrastructure work: their impact flags are false and FastAPI /docs is the complete interface.",
+    "Tester: independently own tests/** additions and test-report.json, preserve backend-authored tests, verify exact rule math/statuses/IDs, exercise contract responses, and compare hashes of all three approved dataset files before and after.",
+    "Security and final review should focus on source allowlisting/immutability, prompt minimization, secret/error redaction, output/citation validation, bounded one-call enforcement, safe wording, and absence of production/CARIN/compliance/healthcare-validity claims."
+  ]
 }

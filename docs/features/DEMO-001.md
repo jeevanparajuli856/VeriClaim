@@ -57,6 +57,27 @@ No request upload or arbitrary path is needed. The endpoint analyzes the fixed a
 
 The architecture specialist must confirm every impact flag before the architecture gate.
 
+### Confirmed architecture gate
+
+- `database=false`: no persistence, provider, schema, migration, or database worker is needed.
+- `backend=true`: one FastAPI/Pydantic component owns loading, extraction, rules, Gemini integration, response assembly, setup documentation, and backend implementation tests.
+- `frontend=false`: `/docs` is generated from the OpenAPI contract; no Gemini frontend worktree or custom browser component is needed.
+- `infrastructure=false`: local process execution uses external environment configuration; no container, deployment, CI platform, or cloud resource is added.
+- `testing=true`: a tester must independently exercise the integrated revision and record durable evidence.
+- `contract_change=true`: the empty `contracts/openapi.yaml` placeholder must be replaced with the one-endpoint contract before implementation.
+
+No new ADR is required: ADR-0001 through ADR-0004 already approve the human-authority, synthetic-data, simplified local-platform, and direct Vertex AI Gemini boundaries used here.
+
+## Task architecture decisions
+
+- Keep the route thin and place allowlisted loading, extraction/evidence indexing, pure deterministic rules, the Gemini adapter, and response assembly behind explicit module boundaries. The analysis service accepts an injected summarizer boundary so unit/integration tests use a fake and never require live credentials.
+- Use fixed source aliases plus RFC 6901 JSON locations for fact evidence IDs and canonical rule-owned ordering for signal IDs. Untrusted FHIR identifiers, codes, displays, and model text never define executable paths or model-authorized evidence IDs.
+- Preserve duplicate `(resourceType, id)` entries in a one-to-many index so `REF-001` can report ambiguity instead of silently overwriting evidence.
+- Use the five rule IDs and exact definitions in `docs/architecture/SYSTEM.md`: `REF-001`, `DATE-001`, `REPEAT-001`, `AMOUNT-001`, and `OUTLIER-001`. The amount tolerance is `0.01` in a single exact currency; the high-amount formula is Tukey `Q3 + 1.5 * IQR` per currency with at least four observations.
+- The fixed input is bounded at 1 MiB per file, Bundle/resource collections and extracted strings have the limits recorded in `SYSTEM.md`, monetary input is finite Decimal data, and model exchange is bounded to a 30-second call, 2,048 output tokens, a 128 KiB prompt, and 64 KiB returned structured content.
+- Return HTTP 200 after deterministic success even when Gemini is unconfigured, unavailable, times out, returns invalid structured output, or cites unknown evidence; make findings empty and expose a typed sanitized model status. Deterministic source/shape failure performs no model call and returns a typed sanitized HTTP 500 error.
+- The OpenAPI contract must enumerate full-success and model-failure statuses, require at least one supplied evidence reference per accepted candidate finding, and keep raw provider errors, credentials, private project configuration, full FHIR resources, and unnecessary patient attributes out of every schema.
+
 ## Contract impact
 
 Define `POST /api/v1/analyze-demo` with no application input payload and explicit schemas that separate:
