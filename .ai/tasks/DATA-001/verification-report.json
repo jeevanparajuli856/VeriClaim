@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "task_id": "DATA-001",
-  "commit": "c78d2368c7ce9fe981c0e9cc56e116ba18b0d1c9",
+  "commit": "c1ca263efa79f2ad235ac4df656f51a8deb0dd18",
   "status": "PASSED",
-  "generated_at": "2026-08-15T16:20:48.521916+00:00",
+  "generated_at": "2026-08-15T16:50:27.443028+00:00",
   "checks": [
     {
       "name": "project-schema",
@@ -46,6 +46,21 @@
         "pytest",
         "-q",
         "tests/agentic"
+      ],
+      "notes": ""
+    },
+    {
+      "name": "DATA-001 required offline validation suite",
+      "status": "PASSED",
+      "required": true,
+      "command": [
+        "/usr/bin/env",
+        "DATA001_REQUIRE_OFFLINE=1",
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/data"
       ],
       "notes": ""
     },
