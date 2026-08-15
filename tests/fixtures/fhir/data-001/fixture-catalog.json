@@ -63,6 +63,18 @@
     {"id":"maximum-string-bytes","recipe":"Replace Patient gender with a 4097-byte string.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"FHIR-COMPAT-CONTENT-001"},
     {"id":"maximum-document-bytes","recipe":"Pad the Patient JSON document to 524289 observed bytes.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
     {"id":"maximum-total-input-bytes","recipe":"Pad three individually bounded JSON documents until the observed source set exceeds 1048576 bytes.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
-    {"id":"maximum-source-files","recipe":"Declare a fifth project-authored source file.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"}
+    {"id":"maximum-source-files","recipe":"Declare a fifth project-authored source file.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"prohibited-class-malicious-path","recipe":"Combine a prohibited classification with a traversal path containing a newline-controlled marker.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"invalid-role-malicious-path","recipe":"Combine an unsupported role with a fixture-root traversal path containing a newline-controlled marker.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"other-root-patient","recipe":"Move the Patient declaration to a normalized other/ path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"other-root-coverage-searchset","recipe":"Move the Coverage declaration to a normalized other/ path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"other-root-pharmacy-eob-searchset","recipe":"Move the pharmacy EOB declaration to a normalized other/ path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"other-root-provenance-readme","recipe":"Move the provenance declaration to a normalized other/ path.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"approved-classification-fixture-root","recipe":"Apply approved-synthetic-local classification to fixture-root declarations.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"project-classification-dataset-root","recipe":"Apply project-authored-synthetic classification to dataset-root declarations.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"approved-renamed-patient","recipe":"Rename the approved Patient path while keeping it under dataset/.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"approved-renamed-coverage-searchset","recipe":"Rename the approved Coverage path while keeping it under dataset/.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"approved-renamed-pharmacy-eob-searchset","recipe":"Rename the approved pharmacy EOB path while keeping it under dataset/.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"},
+    {"id":"approved-renamed-provenance-readme","recipe":"Rename the approved provenance path while keeping it under dataset/.","expected_decision":"rejected","expected_states":["rejected"],"expected_rule_id":"SOURCE-MANIFEST-001"}
   ]
 }

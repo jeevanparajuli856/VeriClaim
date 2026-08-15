@@ -6,6 +6,7 @@ CARIN validation.  Source values are never dereferenced or semantically interpre
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 import hashlib
 import json
@@ -28,6 +29,8 @@ LAYER_NAMES = (
 ZERO_COUNTS = {"fatal": 0, "error": 0, "warning": 0, "information": 0}
 FHIR_ID = re.compile(r"^[A-Za-z0-9\-.]{1,64}$")
 RELATIVE_REFERENCE = re.compile(r"^([A-Z][A-Za-z0-9]+)/([A-Za-z0-9\-.]{1,64})$")
+SAFE_REJECTED_SOURCE_PATH = "tests/fixtures/fhir/data-001/rejected-source.json"
+SAFE_PATH_CHARACTERS = re.compile(r"^[A-Za-z0-9._/-]+$")
 
 
 class StrictJsonError(ValueError):
@@ -69,7 +72,7 @@ def sha256_path(path: Path) -> tuple[str, int]:
     size = 0
     with path.open("rb") as stream:
         while True:
-            chunk = stream.read(1024 * 1024)
+            chunk = stream.read(8 * 1024 * 1024)
             if not chunk:
                 break
             size += len(chunk)
@@ -149,7 +152,7 @@ class SourceSet:
 
 def declared_source_set_digest(documents: Iterable[SourceDocument]) -> str:
     records = []
-    for item in sorted(documents, key=lambda document: document.path):
+    for item in sorted(documents, key=lambda document: str(document.path)):
         records.append(
             f"{item.path}\0{item.expected_bytes}\0{item.expected_sha256}\n"
         )
@@ -158,7 +161,7 @@ def declared_source_set_digest(documents: Iterable[SourceDocument]) -> str:
 
 def observed_source_set_digest(documents: Iterable[SourceDocument]) -> str:
     records = []
-    for item in sorted(documents, key=lambda document: document.path):
+    for item in sorted(documents, key=lambda document: str(document.path)):
         records.append(f"{item.path}\0{len(item.raw)}\0{sha256_bytes(item.raw)}\n")
     return sha256_bytes("".join(records).encode("utf-8"))
 
@@ -231,6 +234,12 @@ class ReferenceValidator:
         self.boundary = strict_json_loads(self.boundary_raw)
         self.package_lock = strict_json_loads(self.package_lock_raw)
         self.shape_registry = strict_json_loads(self.shape_registry_raw)
+        self.source_manifest = strict_json_loads(
+            (self.contract_dir / "source-manifest.json").read_bytes()
+        )
+        self.approved_paths_by_role = {
+            item["role"]: item["path"] for item in self.source_manifest["files"]
+        }
         self.shape_entries = {
             (item["role"], item["json_pointer"], item["type"])
             for item in self.shape_registry["entries"]
@@ -312,20 +321,64 @@ class ReferenceValidator:
         return self._accepted(source_set, statuses, resources, carin_available)
 
     def _validate_source(self, source_set: SourceSet) -> dict[str, Any] | None:
+        path_rules = self.boundary["source_set"]["path_rules"]
         limits = self.shape_registry["limits"]
+        paths = [item.path for item in source_set.documents]
+
+        # No finding may contain a supplied path until every supplied path has
+        # passed syntax, normalization, and the contract's global root allowlist.
+        for path in paths:
+            if not self._path_syntax_is_safe(path):
+                return self._source_path_finding("SOURCE_PATH_INVALID")
+        allowed_roots = tuple(
+            root
+            for roots in path_rules["allowed_roots_by_classification"].values()
+            for root in roots
+        )
+        if any(not path.startswith(allowed_roots) for path in paths):
+            return self._source_path_finding("SOURCE_ROOT_NOT_ALLOWED")
+        if len(paths) != len(set(paths)):
+            return self._source_path_finding("SOURCE_PATH_DUPLICATE")
+
+        accepted = self.boundary["source_set"]["accepted_classifications"]
+        if source_set.classification not in accepted:
+            return self._finding(
+                "DATA-CLASS-001",
+                "CLASSIFICATION_NOT_ACCEPTED",
+                "Source classification is not approved for this synthetic-only boundary.",
+                SAFE_REJECTED_SOURCE_PATH,
+            )
+        classification_roots = tuple(
+            path_rules["allowed_roots_by_classification"][source_set.classification]
+        )
+        if any(not path.startswith(classification_roots) for path in paths):
+            return self._source_path_finding("CLASSIFICATION_SOURCE_ROOT_MISMATCH")
+        if (
+            source_set.classification == "approved-synthetic-local"
+            and path_rules["approved_synthetic_local_requires_exact_manifest_paths"]
+            and (
+                len(source_set.documents) != len(self.approved_paths_by_role)
+                or any(
+                    self.approved_paths_by_role.get(item.role) != item.path
+                    for item in source_set.documents
+                )
+            )
+        ):
+            return self._source_path_finding("APPROVED_SOURCE_PATH_MISMATCH")
+
         if len(source_set.documents) > limits["maximum_source_files"]:
             return self._finding(
                 "SOURCE-MANIFEST-001",
                 "SOURCE_FILE_LIMIT_EXCEEDED",
                 "The declared source set exceeds the bounded file count.",
-                "dataset/readme.txt",
+                SAFE_REJECTED_SOURCE_PATH,
             )
         if sum(len(item.raw) for item in source_set.documents) > limits["maximum_total_input_bytes"]:
             return self._finding(
                 "SOURCE-MANIFEST-001",
                 "SOURCE_TOTAL_BYTES_EXCEEDED",
                 "The observed source set exceeds the bounded total byte limit.",
-                "dataset/readme.txt",
+                SAFE_REJECTED_SOURCE_PATH,
             )
         for item in source_set.documents:
             if len(item.raw) > limits["maximum_document_bytes"]:
@@ -333,16 +386,8 @@ class ReferenceValidator:
                     "SOURCE-MANIFEST-001",
                     "SOURCE_DOCUMENT_BYTES_EXCEEDED",
                     "An observed source document exceeds the bounded byte limit.",
-                    item.path if self._safe_source_path(item.path) else "dataset/readme.txt",
+                    SAFE_REJECTED_SOURCE_PATH,
                 )
-        accepted = self.boundary["source_set"]["accepted_classifications"]
-        if source_set.classification not in accepted:
-            return self._finding(
-                "DATA-CLASS-001",
-                "CLASSIFICATION_NOT_ACCEPTED",
-                "Source classification is not approved for this synthetic-only boundary.",
-                source_set.documents[0].path if source_set.documents else "dataset/readme.txt",
-            )
         required_roles = set(self.boundary["source_set"]["required_roles"])
         roles = [item.role for item in source_set.documents]
         if set(roles) != required_roles or len(roles) != len(required_roles):
@@ -350,24 +395,7 @@ class ReferenceValidator:
                 "SOURCE-MANIFEST-001",
                 "SOURCE_ROLE_SET_INVALID",
                 "Declared source roles are missing, duplicated, or unsupported.",
-                source_set.documents[0].path if source_set.documents else "dataset/readme.txt",
-            )
-        paths = [item.path for item in source_set.documents]
-        for path in paths:
-            pure = PurePosixPath(path)
-            if pure.is_absolute() or ".." in pure.parts or str(pure) != path:
-                return self._finding(
-                    "SOURCE-MANIFEST-001",
-                    "SOURCE_PATH_INVALID",
-                    "A source path is not a normalized repository-relative path.",
-                    "dataset/readme.txt",
-                )
-        if len(paths) != len(set(paths)):
-            return self._finding(
-                "SOURCE-MANIFEST-001",
-                "SOURCE_PATH_DUPLICATE",
-                "Declared source paths must be unique.",
-                source_set.documents[0].path,
+                SAFE_REJECTED_SOURCE_PATH,
             )
         for item in source_set.documents:
             if len(item.raw) != item.expected_bytes or sha256_bytes(item.raw) != item.expected_sha256:
@@ -375,14 +403,14 @@ class ReferenceValidator:
                     "SOURCE-MANIFEST-001",
                     "SOURCE_IDENTITY_MISMATCH",
                     "A source byte length or digest does not match its declaration.",
-                    item.path,
+                    SAFE_REJECTED_SOURCE_PATH,
                 )
         if declared_source_set_digest(source_set.documents) != source_set.expected_digest:
             return self._finding(
                 "SOURCE-MANIFEST-001",
                 "SOURCE_SET_DIGEST_MISMATCH",
                 "The declared source-set digest does not match its member identities.",
-                source_set.documents[0].path,
+                SAFE_REJECTED_SOURCE_PATH,
             )
         return None
 
@@ -829,12 +857,21 @@ class ReferenceValidator:
                 self.offline_dir / "packages" / f"{package['name']}#{package['version']}.tgz",
                 package,
             ))
+        try:
+            with ThreadPoolExecutor(max_workers=min(4, len(specifications))) as executor:
+                observations = list(executor.map(
+                    sha256_path,
+                    (path for _, path, _ in specifications),
+                ))
+        except OSError:
+            return None
+
         verified = []
-        for kind, path, specification in specifications:
-            try:
-                observed_sha256, observed_bytes = sha256_path(path)
-            except OSError:
-                return None
+        for (kind, _, specification), (observed_sha256, observed_bytes) in zip(
+            specifications,
+            observations,
+            strict=True,
+        ):
             if observed_sha256 != specification["sha256"]:
                 return None
             if "bytes" in specification and observed_bytes != specification["bytes"]:
@@ -1024,14 +1061,30 @@ class ReferenceValidator:
             pointer,
         )
 
-    @staticmethod
-    def _safe_source_path(value: str) -> bool:
-        pure = PurePosixPath(value)
+    def _path_syntax_is_safe(self, value: Any) -> bool:
+        if not isinstance(value, str):
+            return False
+        if not value or len(value.encode("utf-8")) > self.shape_registry["limits"]["maximum_string_utf8_bytes"]:
+            return False
+        if not SAFE_PATH_CHARACTERS.fullmatch(value) or "\\" in value or value.endswith("/"):
+            return False
+        try:
+            pure = PurePosixPath(value)
+        except (TypeError, ValueError):
+            return False
         return (
             not pure.is_absolute()
+            and "." not in pure.parts
             and ".." not in pure.parts
             and str(pure) == value
-            and (value.startswith("dataset/") or value.startswith("tests/fixtures/fhir/data-001/"))
+        )
+
+    def _source_path_finding(self, machine_code: str) -> dict[str, Any]:
+        return self._finding(
+            "SOURCE-MANIFEST-001",
+            machine_code,
+            "A declared source path violates the normalized source-root policy.",
+            SAFE_REJECTED_SOURCE_PATH,
         )
 
     @staticmethod

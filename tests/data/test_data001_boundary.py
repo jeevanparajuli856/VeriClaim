@@ -12,10 +12,12 @@ import urllib.request
 from jsonschema import Draft202012Validator
 import pytest
 
+import reference_validator as reference_validator_module
 from reference_validator import (
     CONTRACT_DIR,
     REPO_ROOT,
     ReferenceValidator,
+    SAFE_REJECTED_SOURCE_PATH,
     declared_source_set_digest,
     load_seed_source_set,
     mutate_json_document,
@@ -110,6 +112,18 @@ def _deep_array(depth: int) -> list:
     return value
 
 
+def _replace_source_path(source_set, role: str, path: str, *, new_role: str | None = None):
+    documents = tuple(
+        replace(item, path=path, role=new_role or item.role) if item.role == role else item
+        for item in source_set.documents
+    )
+    return replace(
+        source_set,
+        documents=documents,
+        expected_digest=source_set_digest(documents),
+    )
+
+
 def build_case(case_id: str):
     fixture = project_fixture_from_seed(case_id)
     if case_id == "duplicate-key":
@@ -131,6 +145,37 @@ def build_case(case_id: str):
             for item in fixture.documents
         )
         return replace(fixture, documents=documents)
+    if case_id == "prohibited-class-malicious-path":
+        fixture = _replace_source_path(
+            fixture,
+            "patient",
+            "dataset/../../EVIL\nMARKER.json",
+        )
+        return replace(fixture, classification="prohibited-real-phi")
+    if case_id == "invalid-role-malicious-path":
+        return _replace_source_path(
+            fixture,
+            "patient",
+            "tests/fixtures/fhir/data-001/../EVIL\nMARKER.json",
+            new_role="unsupported-role",
+        )
+    if case_id.startswith("other-root-"):
+        role = case_id.removeprefix("other-root-")
+        filenames = {
+            "patient": "patient.json",
+            "coverage-searchset": "coverage.json",
+            "pharmacy-eob-searchset": "eob.json",
+            "provenance-readme": "readme.txt",
+        }
+        return _replace_source_path(fixture, role, f"other/{filenames[role]}")
+    if case_id == "approved-classification-fixture-root":
+        return replace(fixture, classification="approved-synthetic-local")
+    if case_id == "project-classification-dataset-root":
+        return replace(load_seed_source_set(), classification="project-authored-synthetic")
+    if case_id.startswith("approved-renamed-"):
+        role = case_id.removeprefix("approved-renamed-")
+        seed = load_seed_source_set()
+        return _replace_source_path(seed, role, f"dataset/renamed-{role}.json")
     if case_id in {"nonfinite-nan", "nonfinite-infinity", "nonfinite-negative-infinity"}:
         patient = strict_json_loads(fixture.document("patient").raw)
         constants = {
@@ -408,14 +453,22 @@ def test_missing_locked_package_makes_diagnostics_unavailable(
 ):
     first_package = validator.package_lock["packages"][0]
     target = validator.offline_dir / "packages" / f"{first_package['name']}#{first_package['version']}.tgz"
-    original = Path.open
+    expected = {}
+    for tool_path, tool in (
+        (validator.offline_dir / "tooling/validator_cli-6.10.2.jar", validator.package_lock["tooling"][0]),
+        (validator.offline_dir / "tooling/OpenJDK21U-jre_x64_linux_hotspot_21.0.12_8.tar.gz", validator.package_lock["tooling"][1]),
+    ):
+        expected[tool_path] = (tool["sha256"], tool["bytes"])
+    for package in validator.package_lock["packages"]:
+        path = validator.offline_dir / "packages" / f"{package['name']}#{package['version']}.tgz"
+        expected[path] = (package["sha256"], 1)
 
-    def controlled_open(path: Path, *args, **kwargs):
+    def controlled_digest(path: Path):
         if path == target:
             raise FileNotFoundError(path)
-        return original(path, *args, **kwargs)
+        return expected[path]
 
-    monkeypatch.setattr(Path, "open", controlled_open)
+    monkeypatch.setattr(reference_validator_module, "sha256_path", controlled_digest)
     result = validator.validate()
     assert result["decision"] == "accepted"
     assert result["carin"]["status"] == "diagnostic-unavailable"
@@ -553,6 +606,18 @@ def test_required_offline_project_verification_check_is_declared_and_enforced(
         ("maximum-document-bytes", "SOURCE-MANIFEST-001"),
         ("maximum-total-input-bytes", "SOURCE-MANIFEST-001"),
         ("maximum-source-files", "SOURCE-MANIFEST-001"),
+        ("prohibited-class-malicious-path", "SOURCE-MANIFEST-001"),
+        ("invalid-role-malicious-path", "SOURCE-MANIFEST-001"),
+        ("other-root-patient", "SOURCE-MANIFEST-001"),
+        ("other-root-coverage-searchset", "SOURCE-MANIFEST-001"),
+        ("other-root-pharmacy-eob-searchset", "SOURCE-MANIFEST-001"),
+        ("other-root-provenance-readme", "SOURCE-MANIFEST-001"),
+        ("approved-classification-fixture-root", "SOURCE-MANIFEST-001"),
+        ("project-classification-dataset-root", "SOURCE-MANIFEST-001"),
+        ("approved-renamed-patient", "SOURCE-MANIFEST-001"),
+        ("approved-renamed-coverage-searchset", "SOURCE-MANIFEST-001"),
+        ("approved-renamed-pharmacy-eob-searchset", "SOURCE-MANIFEST-001"),
+        ("approved-renamed-provenance-readme", "SOURCE-MANIFEST-001"),
     ],
 )
 def test_project_authored_invalid_and_unsupported_input_fails_closed(
@@ -583,6 +648,65 @@ def test_rejection_messages_are_sanitized_and_do_not_echo_untrusted_values(
         assert "evil.invalid" not in findings
         assert "<script>" not in findings
         assert "\nINJECT" not in findings
+
+
+def test_path_validation_precedes_classification_role_and_identity_with_fixed_safe_evidence(
+    validator: ReferenceValidator,
+    outcome_schema_validator: Draft202012Validator,
+):
+    combined = build_case("prohibited-class-malicious-path")
+    result = validator.validate(combined)
+    assert result["project_findings"] == [
+        {
+            "rule_id": "SOURCE-MANIFEST-001",
+            "source": "project",
+            "severity": "error",
+            "machine_code": "SOURCE_PATH_INVALID",
+            "message": "A declared source path violates the normalized source-root policy.",
+            "source_path": SAFE_REJECTED_SOURCE_PATH,
+            "json_pointer": "",
+        }
+    ]
+    assert result["observed_source_set_sha256"] == observed_source_set_digest(combined.documents)
+    assert "EVIL" not in json.dumps(result)
+    assert "MARKER" not in json.dumps(result)
+    assert_schema_valid(outcome_schema_validator, result)
+
+    invalid_role = validator.validate(build_case("invalid-role-malicious-path"))
+    assert invalid_role["project_findings"][0]["machine_code"] == "SOURCE_PATH_INVALID"
+    assert invalid_role["project_findings"][0]["source_path"] == SAFE_REJECTED_SOURCE_PATH
+    assert_schema_valid(outcome_schema_validator, invalid_role)
+
+
+@pytest.mark.parametrize(
+    "case_id, machine_code",
+    [
+        ("other-root-patient", "SOURCE_ROOT_NOT_ALLOWED"),
+        ("other-root-coverage-searchset", "SOURCE_ROOT_NOT_ALLOWED"),
+        ("other-root-pharmacy-eob-searchset", "SOURCE_ROOT_NOT_ALLOWED"),
+        ("other-root-provenance-readme", "SOURCE_ROOT_NOT_ALLOWED"),
+        ("approved-classification-fixture-root", "CLASSIFICATION_SOURCE_ROOT_MISMATCH"),
+        ("project-classification-dataset-root", "CLASSIFICATION_SOURCE_ROOT_MISMATCH"),
+        ("approved-renamed-patient", "APPROVED_SOURCE_PATH_MISMATCH"),
+        ("approved-renamed-coverage-searchset", "APPROVED_SOURCE_PATH_MISMATCH"),
+        ("approved-renamed-pharmacy-eob-searchset", "APPROVED_SOURCE_PATH_MISMATCH"),
+        ("approved-renamed-provenance-readme", "APPROVED_SOURCE_PATH_MISMATCH"),
+    ],
+)
+def test_source_root_and_exact_approved_manifest_policy_rejects_with_schema_safe_path(
+    case_id: str,
+    machine_code: str,
+    validator: ReferenceValidator,
+    outcome_schema_validator: Draft202012Validator,
+):
+    source_set = build_case(case_id)
+    result = validator.validate(source_set)
+    assert result["decision"] == "rejected"
+    assert result["states"] == ["rejected"]
+    assert result["project_findings"][0]["machine_code"] == machine_code
+    assert result["project_findings"][0]["source_path"] == SAFE_REJECTED_SOURCE_PATH
+    assert result["observed_source_set_sha256"] == observed_source_set_digest(source_set.documents)
+    assert_schema_valid(outcome_schema_validator, result)
 
 
 def test_declared_and_observed_source_digests_distinguish_tampered_payloads(
