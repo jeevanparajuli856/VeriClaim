@@ -14,7 +14,7 @@ VeriClaim is a polished local demonstration that extracts a small supported subs
 
 ### Status
 
-**INCEPTION_READY for a one-day implementation milestone.** This scope reset was approved and validated on 2026-08-15 and supersedes the earlier production-scale healthcare research-platform direction.
+**INCEPTION_READY.** The one-day backend milestone is complete, HARDEN-001 is PR-ready, and a separate local frontend prototype is the approved proposed follow-up. The frontend remains disabled until FRONTEND-001 planning resolves and records its technology and integration decisions.
 
 ## 2. Problem statement
 
@@ -160,6 +160,8 @@ read-only dataset/ -> minimal parser/extractor -> in-memory facts and signals
 
 None block the local synthetic-only milestone. No compliance claim is made.
 
+The proposed local frontend does not change the data classification or authorize shared deployment, real PHI, persistence, or browser-held provider credentials.
+
 ## 11. Security and trust boundaries
 
 ### Confirmed
@@ -214,11 +216,11 @@ The milestone succeeds when:
 
 ## 17. Open questions
 
-No unresolved decision blocks the one-day implementation task. Exact field names, numeric tolerance, repetition window, and sample-relative threshold must be made explicit in DEMO-001 architecture/contracts/tests without adding domain semantics.
+No unresolved decision blocks the completed backend milestone or HARDEN-001. Before FRONTEND-001 implementation, task planning must resolve the frontend technology, package manager/lock strategy, local frontend/backend integration pattern, and project verification commands. No stack is approved merely by creating the proposed task.
 
 ## 18. Proposed backlog
 
-These are project-history/proposal records, not authorization to create a task.
+These records reflect completed work and the user-approved task order. A PROPOSED task still requires the normal architecture, contract, implementation, verification, security, review, and human/Gemini gates.
 
 ### Historical tasks
 
@@ -226,14 +228,16 @@ These are project-history/proposal records, not authorization to create a task.
 |---|---|---|
 | FOUNDATION-001 | DONE | Preserved completed foundation/research history. Its production-scale recommendations are historical context, not active milestone requirements. |
 | DATA-001 | CANCELLED | Preserved reports and contracts document substantial compatibility work and the final review blockers. The task was cancelled on 2026-08-15 because strict CARIN/offline terminology/comprehensive compatibility work was superseded by this approved scope reset. |
+| DEMO-001 | DONE | Delivered and merged the local FastAPI anomaly-investigation demonstration and its CI remediation. |
 
-### Single proposed implementation task
+### Approved task order
 
-| Order | Task ID | Title | Purpose | Depends on |
-|---:|---|---|---|---|
-| 1 | DEMO-001 | Build the local FHIR anomaly investigation demo | Implement the one endpoint, minimal extraction, five deterministic rules, one bounded Gemini summary, fallback behavior, focused tests, and resume-quality README. | FOUNDATION-001 (DONE); approved scope reset |
+| Order | Task ID | Status | Title | Purpose | Depends on |
+|---:|---|---|---|---|---|
+| 1 | HARDEN-001 | PR_READY | Harden prompt isolation and dependency reproducibility | Close the two accepted DEMO-001 defense-in-depth findings without changing the API or product boundary. | DEMO-001 (DONE) |
+| 2 | FRONTEND-001 | PROPOSED | Build the local investigation dashboard prototype | Add an accessible local visual prototype over the existing API after explicitly approving/enabling the frontend technology and integration architecture. | HARDEN-001 (must be DONE) |
 
-**Recommended first task:** DEMO-001. It is dependency-complete and contains the entire one-day milestone. Do not split it unless implementation evidence proves the one-day scope cannot remain coherent.
+**Next task:** FRONTEND-001, only after HARDEN-001 is merged and closed. It is intentionally left PROPOSED; its first work is architecture/source-of-truth reconciliation, not frontend implementation.
 
 ## 19. Approved project-level decisions
 
@@ -251,4 +255,7 @@ These are project-history/proposal records, not authorization to create a task.
 - `.ai/project.json`
 - `.ai/tasks/FOUNDATION-001/`
 - `.ai/tasks/DATA-001/`
+- `.ai/tasks/DEMO-001/`
+- `.ai/tasks/HARDEN-001/`
+- `.ai/tasks/FRONTEND-001/`
 - `contracts/fhir/data-001/` (preserved historical DATA-001 artifacts, not an active DEMO-001 dependency)

@@ -1,0 +1,236 @@
+{
+  "schema_version": "1.0",
+  "task_id": "FRONTEND-001",
+  "title": "Build the local investigation dashboard prototype",
+  "type": "feature",
+  "status": "PROPOSED",
+  "priority": "medium",
+  "owners": {
+    "orchestrator": "codex",
+    "architecture": "codex",
+    "database": "codex",
+    "backend": "codex",
+    "frontend": "gemini",
+    "tester": "codex",
+    "security": "codex",
+    "review": "codex"
+  },
+  "spec": "docs/features/FRONTEND-001.md",
+  "contracts": [
+    "contracts/openapi.yaml"
+  ],
+  "scope": {
+    "database": [],
+    "backend": [],
+    "frontend": [
+      "frontend/**",
+      "tests/frontend/**"
+    ],
+    "other": [
+      "README.md",
+      ".ai/project.json",
+      "docs/PROJECT.md",
+      "docs/architecture/**",
+      "docs/adr/**",
+      "docs/standards/FRONTEND.md"
+    ]
+  },
+  "permissions": {
+    "orchestrator": {
+      "allowed_write_paths": [
+        ".ai/tasks/FRONTEND-001/task.json",
+        "docs/features/FRONTEND-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "docs/standards/FRONTEND.md",
+        "docs/PROJECT.md",
+        "contracts/**",
+        ".ai/project.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "tests/**",
+        "docs/standards/**"
+      ],
+      "forbidden_paths": []
+    },
+    "architecture": {
+      "allowed_write_paths": [
+        "docs/features/FRONTEND-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "docs/standards/FRONTEND.md",
+        "docs/PROJECT.md",
+        ".ai/tasks/FRONTEND-001/architecture-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "docs/standards/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ],
+      "forbidden_paths": [
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    },
+    "database": {
+      "allowed_write_paths": [
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/FRONTEND-001/database-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "backend/**",
+        ".ai/tasks/FRONTEND-001/task.json",
+        ".ai/tasks/FRONTEND-001/architecture-report.json"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    },
+    "backend": {
+      "allowed_write_paths": [
+        "backend/**",
+        "tests/backend/**",
+        ".ai/tasks/FRONTEND-001/backend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/FRONTEND-001/task.json",
+        ".ai/tasks/FRONTEND-001/architecture-report.json",
+        ".ai/tasks/FRONTEND-001/database-report.json"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    },
+    "frontend": {
+      "allowed_write_paths": [
+        "frontend/**",
+        "tests/frontend/**",
+        "README.md",
+        ".ai/tasks/FRONTEND-001/frontend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/FRONTEND-001/task.json",
+        ".ai/tasks/FRONTEND-001/architecture-report.json",
+        ".ai/tasks/FRONTEND-001/database-report.json",
+        ".ai/tasks/FRONTEND-001/backend-report.json"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    },
+    "tester": {
+      "allowed_write_paths": [
+        "tests/**",
+        ".ai/tasks/FRONTEND-001/test-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/FRONTEND-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    },
+    "security": {
+      "allowed_write_paths": [
+        ".ai/tasks/FRONTEND-001/security-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/FRONTEND-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    },
+    "review": {
+      "allowed_write_paths": [
+        ".ai/tasks/FRONTEND-001/review-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/FRONTEND-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/FRONTEND-001/task.json"
+      ]
+    }
+  },
+  "state_write_policy": {
+    "task_file": ".ai/tasks/FRONTEND-001/task.json",
+    "single_writer": "orchestrator",
+    "worker_agents_must_use_reports": true
+  },
+  "dependencies": [
+    "HARDEN-001"
+  ],
+  "acceptance_criteria": [
+    "Before implementation, reconcile project and architecture source of truth to enable the frontend, approve its technology and local integration pattern, and declare required frontend verification while preserving the disabled database and local synthetic-only boundary.",
+    "Consume only the approved bodyless POST /api/v1/analyze-demo OpenAPI operation without inventing endpoints or fields, using contract-derived types where practical.",
+    "Let a reviewer trigger analysis and clearly distinguish source metadata, observed facts, five deterministic rule results and signals, evidence, Gemini candidate findings and status, missing evidence, limitations, and sanitized metadata.",
+    "Handle loading, success, every typed Gemini deterministic-fallback state, typed deterministic-pipeline failure, and retry without losing or mislabeling deterministic content.",
+    "Preserve resolvable evidence references and display Gemini text as non-authoritative without fraud, payment, coverage, coding, clinical, diagnostic, or medical-necessity conclusions.",
+    "Render all API text safely and add no credentials, private configuration, raw provider errors, arbitrary paths or URLs, HTML execution, model tools, persistence, or mutation surface.",
+    "Provide keyboard-accessible semantic structure, visible focus, readable contrast, responsive layout, and reduced-motion support.",
+    "Add deterministic frontend tests for response states, evidence navigation, accessibility-critical behavior, contract alignment, and no-live-credential operation.",
+    "Document local API and frontend startup without database, authentication, shared deployment, production, or compliance claims.",
+    "Begin Gemini implementation only after IMPLEMENTATION state, an orchestrator-created frontend worktree, and explicit human startup of Gemini."
+  ],
+  "created_by": "human"
+}
