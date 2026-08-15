@@ -5,6 +5,9 @@
 *.pem
 *.key
 credentials.json
+application_default_credentials.json
+*service-account*.json
+.gcloud/
 
 # Python
 __pycache__/

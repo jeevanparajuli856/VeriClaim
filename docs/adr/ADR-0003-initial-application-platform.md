@@ -18,11 +18,11 @@ Use the following initial platform:
 - Git-tracked database migrations under `database/migrations/`;
 - local Docker-based development;
 - standards-based OIDC, a local/test identity provider for development, deny-by-default RBAC, and server-side/object-level authorization;
-- a deterministic workflow/state machine with a coordinator and bounded typed specialist tools behind a common experiment interface;
+- a bounded investigation workflow with deterministic application controls, explicit transitions, scoped typed tools, hard budgets, and a common experiment interface;
 - OpenTelemetry-compatible identifiers and local-only telemetry by default; and
 - deterministic/statistical and interpretable scikit-learn risk baselines before more complex models.
 
-Keep the backend, workflow, and frontend in one initial deployment boundary unless a later threat, isolation, or scale requirement justifies separation. Managed database hosting and a hosted application cloud are not selected. Detailed contracts, package choices, migration tooling, identity provider, schemas, and component verification commands belong to later tracked tasks and must not be inferred from this ADR.
+Keep the backend, workflow, and frontend in one initial deployment boundary unless a later threat, isolation, or scale requirement justifies separation. Managed database hosting and a hosted application cloud are not selected. The concrete orchestration/integration implementation is also not selected: a project-owned state-machine implementation, direct Google Gen AI SDK integration, Google ADK, and future managed Agent Platform deployment require task architecture review. Detailed contracts, package choices, migration tooling, identity provider, schemas, and component verification commands belong to later tracked tasks and must not be inferred from this ADR.
 
 ## Alternatives considered
 
@@ -54,4 +54,5 @@ Keep the backend, workflow, and frontend in one initial deployment boundary unle
 
 - `.ai/project.json` enables backend, frontend, and database with the selected technologies and migration path.
 - PLATFORM-001 must create runnable manifests and then add required project-specific verification and security commands to `.ai/project.json`.
+- INVESTIGATION-001 architecture review must select the orchestration/integration approach without weakening deterministic application control or human authority.
 - Any managed database, hosted identity, external telemetry, or hosted application deployment requires a later approved decision.
