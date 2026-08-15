@@ -17,7 +17,7 @@ export async function generateSchema() {
 
   const ast = await openapiTS(new URL(`file://${CONTRACT_PATH}`));
   const output = astToString(ast);
-  
+
   const targetDir = path.dirname(TARGET_PATH);
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
