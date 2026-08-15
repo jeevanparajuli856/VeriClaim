@@ -202,6 +202,10 @@ test.describe('VeriClaim Dashboard E2E', () => {
     await expect(page.locator('#rule-section-AMOUNT-001')).toBeVisible();
     await expect(page.locator('#rule-section-OUTLIER-001')).toBeVisible();
 
+    // Verify responsive layout has no horizontal overflow
+    const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(hasOverflow).toBe(false);
+
     // Run accessibility check on completed results
     const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
@@ -304,5 +308,24 @@ test.describe('VeriClaim Dashboard E2E', () => {
 
     // Now success should be shown
     await expect(page.getByRole('heading', { name: 'Source & Sample Metadata' })).toBeVisible();
+  });
+
+  test('supports reduced-motion preference without layout breakages', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    await page.route('**/api/v1/analyze-demo', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockSuccessData),
+      });
+    });
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Run analysis' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Deterministic Rule Checks' })).toBeVisible();
+    const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(hasOverflow).toBe(false);
   });
 });
