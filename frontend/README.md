@@ -6,7 +6,7 @@ The dashboard connects to the local FastAPI backend via a same-origin developmen
 
 ## Local Development
 
-Prerequisites: Node.js 22+ / 24 LTS and npm.
+Prerequisites: Node.js 24 LTS and npm.
 
 ```bash
 cd frontend
@@ -23,7 +23,7 @@ The Vite dev server will start at `http://127.0.0.1:5173`. Ensure the backend is
 - `npm run lint`: Runs ESLint across all TypeScript and React files.
 - `npm run typecheck`: Runs TypeScript typecheck in strict mode (`tsc --noEmit`).
 - `npm run test:unit`: Executes unit and component tests with Vitest and React Testing Library.
-- `npm run test:e2e`: Runs Chromium and Mobile Chromium browser tests with Playwright (including axe accessibility audits).
+- `npm run test:e2e`: Runs Chromium and Mobile Chromium browser tests with Playwright (including axe accessibility audits and real proxy smoke).
 - `npm run generate:api`: Generates TypeScript types from `contracts/openapi.yaml` into `src/api/generated/schema.d.ts`.
 - `npm run check:api`: Verifies that generated types match the OpenAPI contract.
 - `npm run verify`: Runs the full verification pipeline (`check:api`, `lint`, `typecheck`, `test:unit`, `build`, `test:e2e`).

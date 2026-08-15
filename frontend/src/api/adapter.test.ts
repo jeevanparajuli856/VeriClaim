@@ -48,6 +48,70 @@ describe('adapter', () => {
     expect(validateAnalysisResponse({ ...mockSuccessResponse, gemini: { status: 'unknown_status' } })).toBeNull();
   });
 
+  it('rejects malformed nested display data', () => {
+    // Nested null in source.files
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      source: { ...mockSuccessResponse.source, files: [null as unknown as typeof mockSuccessResponse.source.files[0]] },
+    })).toBeNull();
+
+    // Nested non-primitive in observed_facts value
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      observed_facts: [{ evidence_id: 'ev:eob:/x', source_alias: 'eob', json_pointer: '/x', fact_type: 't', value: {} as unknown as string }],
+    })).toBeNull();
+
+    // Non-string in evidence_refs
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      gemini: {
+        ...mockSuccessResponse.gemini,
+        candidate_findings: [{ title: 't', explanation: 'e', evidence_refs: [123 as unknown as string] }],
+      },
+    })).toBeNull();
+  });
+
+  it('strictly validates model_metadata fields', () => {
+    // Valid null model when unconfigured
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      model_metadata: {
+        ...mockSuccessResponse.model_metadata,
+        model: null,
+        latency_ms: null,
+        input_tokens: null,
+        output_tokens: null,
+      },
+    })).not.toBeNull();
+
+    // Invalid provider
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      model_metadata: {
+        ...mockSuccessResponse.model_metadata,
+        provider: 'openai' as unknown as 'vertex-ai',
+      },
+    })).toBeNull();
+
+    // Invalid call_count (> 1)
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      model_metadata: {
+        ...mockSuccessResponse.model_metadata,
+        call_count: 2,
+      },
+    })).toBeNull();
+
+    // Negative tokens
+    expect(validateAnalysisResponse({
+      ...mockSuccessResponse,
+      model_metadata: {
+        ...mockSuccessResponse.model_metadata,
+        input_tokens: -5,
+      },
+    })).toBeNull();
+  });
+
   it('validates a correct DeterministicPipelineErrorResponse payload', () => {
     const validated = validatePipelineErrorResponse(mockPipelineErrorResponse);
     expect(validated).not.toBeNull();

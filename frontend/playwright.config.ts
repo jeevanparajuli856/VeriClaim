@@ -1,11 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Ensure user library path is included for Chromium shared libraries
-const localLib = '/home/jeevan/.local/lib';
-if (!process.env.LD_LIBRARY_PATH?.includes(localLib)) {
-  process.env.LD_LIBRARY_PATH = `${localLib}:${process.env.LD_LIBRARY_PATH || ''}`;
-}
-
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -27,10 +21,25 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
-  },
+  webServer: [
+    {
+      command: 'python3 -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000',
+      url: 'http://127.0.0.1:8000/docs',
+      cwd: '..',
+      reuseExistingServer: false,
+      env: {
+        GOOGLE_CLOUD_PROJECT: '',
+        GOOGLE_CLOUD_LOCATION: '',
+        VERTEX_GEMINI_MODEL: '',
+        GOOGLE_GENAI_USE_VERTEXAI: '0',
+      },
+      timeout: 30000,
+    },
+    {
+      command: 'npm run dev',
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30000,
+    },
+  ],
 });
