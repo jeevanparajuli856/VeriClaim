@@ -44,6 +44,18 @@ The same operation can be invoked with:
 curl -X POST http://127.0.0.1:8000/api/v1/analyze-demo
 ```
 
+### Frontend dashboard
+
+In a separate terminal, start the local React/Vite dashboard:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://127.0.0.1:5173` to explore the interactive investigation interface. The frontend proxies `/api` directly to `http://127.0.0.1:8000`.
+
 ## Architecture
 
 ```text
@@ -57,7 +69,7 @@ POST /api/v1/analyze-demo
   -> combined JSON response
 ```
 
-Everything is processed in memory. There is no database, separate frontend, upload, arbitrary file access, RAG layer, agent loop, or deployment component. The route stays thin; loading, extraction, rules, model integration, and response assembly live in separate modules under `backend/app/`.
+Everything is processed in memory. The local React single-page frontend communicates with the local FastAPI backend via a same-origin proxy. There is no database, persistence, authentication, arbitrary file upload, RAG layer, agent loop, or cloud deployment component. The route stays thin; loading, extraction, rules, model integration, and response assembly live in separate modules under `backend/app/`.
 
 ## Deterministic checks
 
