@@ -21,7 +21,7 @@
   "canonical_registry": {
     "algorithm": "Sort role, JSON pointer, and type lexicographically; join each tuple as role NUL pointer NUL type LF; SHA-256 the UTF-8 bytes.",
     "entry_count": 261,
-    "sha256": "078201d720a2cf7a347d116f2c7ae4c8e6428da07ea6025488a1214a32f39a91"
+    "sha256": "86c85be6e59ca00276fd2ca0b4f0c7906a615e573324af5b9130db151af8fe82"
   },
   "entries": [
     {
