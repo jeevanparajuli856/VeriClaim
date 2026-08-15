@@ -3,7 +3,7 @@
   "task_id": "DATA-001",
   "title": "Define and validate the minimal FHIR R4 profile",
   "type": "feature",
-  "status": "SECURITY_REVIEW",
+  "status": "CONTRACT_READY",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",

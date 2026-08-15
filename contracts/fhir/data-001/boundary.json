@@ -29,7 +29,17 @@
       "repository_relative": true,
       "unique": true,
       "allow_absolute": false,
-      "allow_traversal": false
+      "allow_traversal": false,
+      "allowed_roots_by_classification": {
+        "approved-synthetic-local": [
+          "dataset/"
+        ],
+        "project-authored-synthetic": [
+          "tests/fixtures/fhir/data-001/"
+        ]
+      },
+      "approved_synthetic_local_requires_exact_manifest_paths": true,
+      "validation_order": "Validate and sanitize every source path before classification, role, identity, or content findings are emitted."
     }
   },
   "json": {

@@ -4,7 +4,7 @@ This directory defines VeriClaim's initial project-owned FHIR R4 compatibility b
 
 ## Acceptance and diagnostics
 
-`boundary.json` is the acceptance authority. The validator checks the declared synthetic source set, strict finite-number JSON, supported Patient/Coverage/pharmacy-EOB shapes, required anchor fields, exact nested paths and JSON types from `shape-registry.json`, bounded input complexity, exact source registries, cross-file references, and rejected active-content surfaces.
+`boundary.json` is the acceptance authority. The validator first validates and sanitizes every source path against classification-specific roots, then checks the declared synthetic source set, strict finite-number JSON, supported Patient/Coverage/pharmacy-EOB shapes, required anchor fields, exact nested paths and JSON types from `shape-registry.json`, bounded input complexity, exact source registries, cross-file references, and rejected active-content surfaces. Approved local seed paths must match the manifest exactly; project-authored fixtures remain confined beneath `tests/fixtures/fhir/data-001/`.
 
 CARIN Blue Button 2.2.0 is a separate advisory diagnostic. Its original errors and warnings are preserved as structured evidence and never override project acceptance or rejection. A minimal-profile-valid source with CARIN errors has these ordered states:
 
