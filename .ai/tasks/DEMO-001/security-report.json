@@ -2,8 +2,27 @@
   "schema_version": "1.0",
   "task_id": "DEMO-001",
   "reviewer": "codex-security",
-  "reviewed_commit": "",
-  "status": "CHANGES_REQUIRED",
-  "summary": "",
-  "findings": []
+  "reviewed_commit": "e10281b187c23404ed41616a56b3f9be6bd2f8c8",
+  "status": "APPROVED",
+  "summary": "Approved exact current commit e10281b187c23404ed41616a56b3f9be6bd2f8c8 with no unresolved blocking security finding. Verification remains current for integrated source commit 4ce67c005a3ab89543c3d5ec99f4fe8b0e601b5a because the reviewed HEAD adds only the verification report and task status. The bodyless endpoint exposes no upload, URL, request path, database, frontend, persistence, production deployment, real-PHI, or consequential-action surface; documented execution binds to 127.0.0.1 and clearly limits unauthenticated use to the local synthetic demonstration. The loader accepts only three compile-time repository paths, resolves their dataset parent, applies 1 MiB and structural bounds, reads without writes, and preserved the approved SHA-256 values before and after review. The minimized model payload excludes ADC, project/location configuration, full resources, and unnecessary patient attributes; provider and initialization exceptions are redacted. The adapter performs zero or one bounded call, supplies no tools or loop, makes no repair/fallback request, retains deterministic evidence on every model failure, validates strict structured output, and rejects citations outside the generated evidence allowlist. Static wording and response separation keep deterministic signals and model text non-authoritative and avoid fraud, payer, clinical, coding, coverage, payment, medical-necessity, CARIN, HIPAA, healthcare-validity, or production-readiness claims. Credential-free review reran 34 backend tests, 12 agentic tests, OpenAPI validation, task validation, dependency consistency, diff hygiene, ignored-secret-path checks, and tracked secret-pattern checks successfully. The previously authorized live Vertex smoke is supplemental connectivity evidence only and was not used as security approval evidence. Two low-risk defense-in-depth findings remain non-blocking for this fixed-input local demo.",
+  "findings": [
+    {
+      "severity": "low",
+      "category": "prompt_injection",
+      "file": "backend/app/gemini.py",
+      "description": "The fixed safety instruction and JSON-serialized untrusted synthetic facts are delimited but concatenated into the same SDK user-content string; the SDK's dedicated system_instruction field is not used.",
+      "impact": "A maliciously replaced repository dataset string could compete with the instruction and influence candidate wording. The practical impact is constrained because the endpoint has fixed local inputs, the model has no tools or side effects, output is bounded and candidate-only, citations are allowlisted, and deterministic limitations remain authoritative.",
+      "remediation": "As defense in depth, place the fixed instruction in GenerateContentConfig.system_instruction, send only the labeled serialized data as user content, and add an adversarial test that asserts instruction/data role separation while preserving the no-tools and no-environment-value guarantees.",
+      "blocking": false
+    },
+    {
+      "severity": "low",
+      "category": "dependency_integrity",
+      "file": "backend/requirements.txt",
+      "description": "Direct dependencies are exactly version-pinned and the installed environment passes pip check, but the repository does not lock the full transitive graph with artifact hashes or configure a dedicated vulnerability audit check.",
+      "impact": "A future clean installation can resolve different transitive artifacts within allowed ranges, reducing reproducibility and leaving dependency-advisory detection dependent on manual review. This does not expose a demonstrated vulnerability in the reviewed local environment.",
+      "remediation": "For the next hardening task, generate a reviewed hash-pinned transitive lock and add a required dependency vulnerability audit that fails on unresolved applicable advisories.",
+      "blocking": false
+    }
+  ]
 }
