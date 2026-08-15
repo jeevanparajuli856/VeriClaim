@@ -3,7 +3,7 @@
   "task_id": "FRONTEND-001",
   "agent": "codex-tester",
   "status": "COMPLETE",
-  "summary": "Independent final testing at 8e230ca passes the aligned Node 24 dependency boundary, clean lock installation, all frontend and browser behaviors, security audits, and full backend/agentic/contract regressions.",
+  "summary": "Independent post-security-fix testing at 9ec2922 proves duplicate evidence records remain unresolvable and all associated controls lead only to an accessible inert state, while every prior frontend, proxy, audit, contract, backend, and agentic gate remains passing.",
   "files_changed": [
     ".ai/tasks/FRONTEND-001/test-report.json"
   ],
@@ -13,15 +13,16 @@
   "tests": {
     "passed": true,
     "commands": [
-      "git archive HEAD | tar -x -C /tmp/frontend001-final.wNV4dU",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
-      "cmp -s package-lock.json /mnt/c/users/jeeva/desktop/vericlaim/frontend/package-lock.json (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
-      "npm ls @types/node --depth=0 (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
-      "npm ls yaml --depth=0 (cwd: /tmp/frontend001-final.wNV4dU/frontend; expected nonzero/empty result confirms no direct dependency)",
-      "npm ls --depth=0 (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root .. tests/frontend/independent_acceptance.test.ts' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
-      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && python3 --version && npx playwright install chromium && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
-      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm audit --audit-level=high' (cwd: /tmp/frontend001-final.wNV4dU/frontend)",
+      "git archive HEAD | tar -x -C /tmp/frontend001-security-rerun.UlBu4x",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm --version && npm ci --loglevel notice' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
+      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npx playwright test e2e/independent-duplicate-evidence.spec.ts' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend; first temporary harness run)",
+      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npx playwright test e2e/independent-duplicate-evidence.spec.ts' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend; corrected all-controls harness)",
+      "cmp -s package-lock.json /mnt/c/users/jeeva/desktop/vericlaim/frontend/package-lock.json (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
+      "npm ls @types/node --depth=0 (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
+      "npm ls yaml --depth=0 (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend; expected nonzero/empty confirms no direct dependency)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npx vitest run --root .. tests/frontend/independent_acceptance.test.ts' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
+      "PATH=/tmp/vericlaim-harden-env/bin:$PATH LD_LIBRARY_PATH=/home/jeevan/.local/lib npm exec --yes --package=node@24 -- sh -c 'node --version && python3 --version && npx playwright install chromium && GOOGLE_CLOUD_PROJECT=credential-sentinel GOOGLE_CLOUD_LOCATION=credential-sentinel VERTEX_GEMINI_MODEL=credential-sentinel GOOGLE_GENAI_USE_VERTEXAI=true npm run verify' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
+      "npm exec --yes --package=node@24 -- sh -c 'node --version && npm audit --audit-level=high' (cwd: /tmp/frontend001-security-rerun.UlBu4x/frontend)",
       "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/backend",
       "/tmp/vericlaim-harden-env/bin/python -m pytest -q tests/agentic",
       "/tmp/vericlaim-harden-env/bin/python scripts/validate-contracts.py",
@@ -30,10 +31,10 @@
       "git diff --check",
       "/tmp/vericlaim-harden-env/bin/python scripts/agentctl.py scope check FRONTEND-001 tester"
     ],
-    "notes": "Exact integrated HEAD 8e230caabcba718f08abc14dd5d0c8d0b6ce4da1 was copied with git archive to a clean /tmp tree. Isolated Node 24.19.0/npm 11.12.1 npm ci installed 290 packages, audited 291 with zero vulnerabilities, and left package-lock.json byte-identical. @types/node resolves to 24.13.3; direct yaml is absent; the former trailing whitespace is removed. All 15 committed independent assertions pass, preserving coverage for every Gemini fallback and deterministic pipeline code, exact bodyless relative POST, malformed nested/model metadata rejection, fixed local proxy, Node 24 engine/types, Vite parent-access boundary, and absence of committed LD_LIBRARY_PATH/home mutation. Full Node 24 frontend verification passed contract freshness, lint, strict typecheck, 27/27 unit/component tests, production build, and 12/12 Playwright desktop/mobile tests. Browser evidence includes axe scans, responsive overflow assertions, reduced-motion emulation, focus return, retry, and the real non-reused credential-free Vite-to-FastAPI proxy; credential sentinels in the parent environment were overridden and deterministic-only fallback rendered. The workstation Chromium libraries were supplied externally through LD_LIBRARY_PATH solely for test execution; no repository mutation was restored, while CI provisions dependencies with playwright install --with-deps. npm audit found zero vulnerabilities, backend regression passed 51/51, agentic regression passed 12/12, OpenAPI validation passed, and strict hash-locked Python audit found no known vulnerabilities. Task/report validation, git diff --check, and tester scope check passed for exactly one tester-owned report change. No tests were skipped, xfailed, flaky, or retried."
+    "notes": "Exact integrated HEAD 9ec2922e6171b5cf322820d06977772e3ab01cd9 was copied to a clean /tmp tree. Node 24.19.0/npm 11.12.1 npm ci installed 290 packages, audited 291 with zero vulnerabilities, and left the committed lockfile byte-identical; @types/node remains 24.13.3 and direct yaml remains absent. A temporary independent Playwright test injected two records with the same real backend evidence ID and exercised every matching table/cross-reference control. All four controls on each desktop/mobile run opened only the programmatically focused Duplicate Evidence Target (Inert) alert, neither duplicate record summary appeared in the selected detail, Return restored focus to the exact invoking control, and axe found no violations. Its first 2-case run failed only because the temporary harness expected two matching controls while the real response correctly exposed four; after changing the harness to exercise all discovered controls, 2/2 passed. The temporary file was removed before exact integrated verification. The committed suite passed 28/28 unit/component and 14/14 Playwright desktop/mobile tests, including duplicate integrity UI, normal evidence focus/return, real non-reused credential-free proxy under parent credential sentinels, axe, responsive overflow, reduced motion, fallback, and pipeline retry. All 15 committed independent acceptance assertions pass. Contract freshness, lint, typecheck, build, npm audit, 51/51 backend tests, 12/12 agentic tests, OpenAPI validation, and strict hash-locked Python audit all pass. Task/report validation, git diff --check, and tester scope check passed for the single tester-owned report change. The workstation Chromium libraries were supplied externally for execution; no repository loader-path mutation exists. No product test was skipped, xfailed, flaky, or retried."
   },
   "blockers": [],
   "notes_for_next_agent": [
-    "Orchestrator should commit this current passing test evidence, run commit-bound agentctl verification, and proceed to independent security review of that exact verified revision."
+    "Orchestrator should commit this post-security-fix test evidence, run commit-bound verification on the resulting revision, and request security/review evidence against that same verified commit."
   ]
 }
