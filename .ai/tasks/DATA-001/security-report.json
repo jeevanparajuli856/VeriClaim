@@ -2,63 +2,18 @@
   "schema_version": "1.0",
   "task_id": "DATA-001",
   "reviewer": "codex-security",
-  "reviewed_commit": "8db2a942d11fa62d34a20b5b3af1839f43c2a348",
+  "reviewed_commit": "4e41eff8f4ef47f395df3866e88305e9f2564375",
   "status": "CHANGES_REQUIRED",
-  "summary": "Security review of exact commit 8db2a942d11fa62d34a20b5b3af1839f43c2a348 requires changes. The synthetic-only, no-production, human-authority, CARIN-advisory, terminology-unverified, reference non-dereference, dataset immutability, checksum pinning, and secret boundaries are explicit, and the current local offline suite passes 47 tests. However, undeclared nested and structurally invalid content can receive minimal-profile-valid, the strict parser accepts non-JSON numeric constants, CARIN findings are synthesized from lockfile counts instead of verified raw evidence, rejected-byte provenance is ambiguous, and the lifecycle verification report omits the required DATA-001 offline gate. Verification commit c78d2368c7ce9fe981c0e9cc56e116ba18b0d1c9 is an ancestor and is current under the follow-up-evidence/status-only rules, but its check set is insufficient for the contract's stated verification requirement.",
+  "summary": "Security review of exact commit 4e41eff8f4ef47f395df3866e88305e9f2564375 requires one further change. The five prior blocking findings are remediated: exact bounded nested shapes reject the original content/type and complexity bypasses; strict parsing rejects NaN, Infinity, -Infinity, and parser recursion; CARIN status/findings are derived issue-by-issue only after verifying raw evidence plus the validator, runtime, and all 30 package archives; the required DATA001_REQUIRE_OFFLINE lifecycle check passed; and outcomes separate declared from observed source-byte digests. The ADR link is corrected, the 75 required-offline data tests and 12 agentic tests pass, verification commit c1ca263efa79f2ad235ac4df656f51a8deb0dd18 is current because later changes are only verification evidence and task status, and synthetic-only, CARIN-advisory, terminology-unverified, reference non-dereference, no-production/upload, evidence-grounding, and human-authority invariants remain intact. A combined malicious source path and early classification/role failure can still escape sanitization, and arbitrary normalized repository paths can reach accepted with schema-invalid evidence.",
   "findings": [
     {
       "severity": "high",
-      "category": "input-validation/content-isolation",
+      "category": "input-validation/path-handling/log-sanitization",
       "file": "tests/data/reference_validator.py",
-      "description": "The executable reference checks only resource and Bundle top-level allowlists plus a short rejected-key list; boundary.json contains no exact nested path/type registry. As a result, an undeclared nested instruction field under Patient.name and an object substituted for the FHIR gender primitive both receive decision=accepted with minimal-profile-valid. This contradicts the approved exact-path, structurally-valid-FHIR, and passive-content boundary.",
-      "impact": "Untrusted instructions, active-looking values, malformed FHIR types, and arbitrarily deep nested content can cross the acceptance gate, contaminate later display/model/evidence flows, and potentially cause unhandled recursive-walk exhaustion instead of safe rejection.",
-      "remediation": "Define every accepted nested JSON pointer, container/primitive type, cardinality, and bounded traversal behavior in the machine contract; enforce those rules before acceptance; and add negative tests for undeclared nested fields, wrong primitive/container types, instruction-shaped values, and excessive nesting/size that must fail with rejected only.",
+      "description": "Source paths are not validated and canonicalized before classification and role-set failures use source_set.documents[0].path in a finding. A prohibited-real-phi source with path dataset/../../EVIL followed by a newline-controlled marker is rejected but echoes that untrusted path and fails validation-outcome.schema.json. Separately, the path gate checks only normalized relative syntax, not the outcome contract's dataset/ or tests/fixtures/fhir/data-001/ roots; a project-authored source set whose four paths are under other/ receives decision=accepted and then produces hundreds of schema-invalid terminology evidence paths. The schema sourcePath pattern itself also permits traversal segments when no control character is present.",
+      "impact": "Invalid or prohibited input can break the promised structured fail-safe outcome and inject misleading/control text into logs or downstream evidence. The missing source-root allowlist also weakens file-origin and synthetic-fixture provenance boundaries by allowing accepted evidence to reference arbitrary repository locations.",
+      "remediation": "Validate path length, allowed root, normalization, traversal, uniqueness, and classification/role-specific path policy before any failure can include a source path. Use a fixed safe placeholder or digest when the supplied path is invalid, strengthen the outcome schema to exclude traversal/dot/control/backslash forms, and add combined prohibited-class plus malicious-path, invalid-role plus malicious-path, and arbitrary-normalized-root tests that always return a schema-valid sanitized rejected outcome.",
       "blocking": true
-    },
-    {
-      "severity": "high",
-      "category": "input-validation/strict-json",
-      "file": "tests/data/reference_validator.py",
-      "description": "strict_json_loads uses Python json.loads without a rejecting parse_constant callback. Python therefore accepts NaN, Infinity, and -Infinity even though they are invalid JSON; a NaN placed in an allowed preserve-only field currently receives minimal-profile-valid.",
-      "impact": "Malformed non-JSON input can bypass the declared strict UTF-8 JSON layer, creating non-portable values and unsafe downstream serialization, comparison, hashing, or schema behavior.",
-      "remediation": "Reject every parse_constant token and require finite JSON numbers, then add negative fixtures for NaN, Infinity, and -Infinity at both anchor and preserve-only paths and prove they return decision=rejected and states=[rejected].",
-      "blocking": true
-    },
-    {
-      "severity": "high",
-      "category": "evidence-integrity/supply-chain",
-      "file": "tests/data/reference_validator.py",
-      "description": "The accepted CARIN result is not derived from the raw OperationOutcome or verified offline artifacts. _carin_evidence reads only pre-recorded counts/digest from packages.lock.json and creates 895 generic ordinal placeholders with empty JSON pointers; validate defaults carin_available to true without checking the raw evidence, validator, JRE, or package closure. Missing or corrupt diagnostic evidence can therefore still be reported as carin-nonconformant rather than carin-diagnostic-unavailable, and original issue codes/details/expressions are not preserved as structured findings.",
-      "impact": "Compatibility diagnostics can be stale, fabricated, or unauditable while appearing complete, undermining the approved separation between trustworthy project acceptance and fully preserved advisory CARIN evidence and weakening incident/review traceability.",
-      "remediation": "Derive availability and status from checksum-verified raw evidence and the full pinned tool/package closure; parse every OperationOutcome issue; retain original severity and a stable sanitized code/source path/pointer or lossless digest-addressed issue reference; never echo raw untrusted text; and emit carin-diagnostic-unavailable on any missing/mismatched prerequisite. Add missing/corrupt/changed-evidence and per-finding preservation tests.",
-      "blocking": true
-    },
-    {
-      "severity": "high",
-      "category": "verification-gate",
-      "file": ".ai/tasks/DATA-001/verification-report.json",
-      "description": "The current verification evidence is lifecycle-current, but its checks cover only project/task schemas, OpenAPI, agentic framework tests, and a tracked-secret filename baseline. It does not execute tests/data with DATA001_REQUIRE_OFFLINE=1 or verify the complete pinned dependency closure, although the feature and contract state that diagnostic unavailability must fail the DATA-001 verification gate.",
-      "impact": "The deterministic lifecycle can advance with the DATA-001 acceptance boundary, negative tests, or required offline evidence unavailable or broken, so the security and release gates do not enforce the approved task boundary.",
-      "remediation": "Add the DATA-001 required-offline suite and complete artifact checksum validation to a deterministic required verification check, then rerun agentctl verification on the corrected integrated commit and ensure the durable report records those passing commands.",
-      "blocking": true
-    },
-    {
-      "severity": "medium",
-      "category": "audit/provenance",
-      "file": "tests/data/reference_validator.py",
-      "description": "source_set_sha256 is computed from declared paths, expected byte counts, and expected hashes rather than the bytes actually received. On SOURCE_IDENTITY_MISMATCH, distinct tampered payloads can therefore produce the same outcome digest and the result does not contain an observed rejected-input digest.",
-      "impact": "Rejected malicious or accidental inputs cannot be uniquely correlated with their validation evidence, impairing forensic reconstruction, deduplication, and evidence grounding at the ingestion boundary.",
-      "remediation": "Represent declared identity and observed byte identity separately, include digest-addressed observed evidence for rejected input without logging raw content, constrain retention/access appropriately, and add tests proving distinct mismatched payloads retain distinct observed provenance.",
-      "blocking": true
-    },
-    {
-      "severity": "low",
-      "category": "provenance/documentation",
-      "file": "contracts/fhir/data-001/source-manifest.json",
-      "description": "classification_authority cites docs/adr/ADR-0002-synthetic-public-data-boundary.md, which does not exist; the accepted ADR is docs/adr/ADR-0002-synthetic-data-initial-boundary.md.",
-      "impact": "One machine-readable provenance link is broken, increasing audit ambiguity even though PROJECT.md, SYSTEM.md, the actual ADR, and the explicit human task decision independently establish the local synthetic classification.",
-      "remediation": "Correct the ADR path and rerun all lifecycle evidence invalidated by the source-manifest change.",
-      "blocking": false
     }
   ]
 }
