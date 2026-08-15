@@ -832,7 +832,18 @@ body {
 .items-center { align-items: center; }
 .gap-2 { gap: 0.5rem; }
 .cursor-pointer { cursor: pointer; }
-.outline-none { outline: none; }
+
+/* Focus indicator for programmatically focused destination headings and elements */
+[tabindex="-1"]:focus,
+[tabindex="-1"]:focus-visible,
+.detail-title:focus,
+.detail-title:focus-visible,
+.alert-title:focus,
+.alert-title:focus-visible {
+  outline: 3px solid var(--color-primary-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {

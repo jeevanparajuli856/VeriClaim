@@ -120,7 +120,7 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
               <h3
                 ref={selectedHeadingRef}
                 tabIndex={-1}
-                className="alert-title outline-none"
+                className="alert-title font-semibold"
               >
                 Duplicate Evidence Target (Inert)
               </h3>
@@ -133,7 +133,7 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
               <h3
                 ref={selectedHeadingRef}
                 tabIndex={-1}
-                className="alert-title outline-none"
+                className="alert-title font-semibold"
               >
                 Evidence Target Not Found
               </h3>
@@ -147,7 +147,7 @@ export const EvidenceExplorerView: React.FC<EvidenceExplorerViewProps> = ({
                 <h3
                   ref={selectedHeadingRef}
                   tabIndex={-1}
-                  className="detail-title font-mono outline-none"
+                  className="detail-title font-mono font-semibold"
                 >
                   {selectedItem.record.evidence_id}
                 </h3>
