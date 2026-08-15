@@ -3,7 +3,7 @@
   "task_id": "FRONTEND-001",
   "title": "Build the local investigation dashboard prototype",
   "type": "feature",
-  "status": "PLANNING",
+  "status": "CONTRACT_READY",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",
@@ -32,7 +32,9 @@
       "docs/PROJECT.md",
       "docs/architecture/**",
       "docs/adr/**",
-      "docs/standards/FRONTEND.md"
+      "docs/standards/FRONTEND.md",
+      ".github/workflows/**",
+      "contracts/README.md"
     ]
   },
   "permissions": {
@@ -45,7 +47,8 @@
         "docs/standards/FRONTEND.md",
         "docs/PROJECT.md",
         "contracts/**",
-        ".ai/project.json"
+        ".ai/project.json",
+        ".github/workflows/**"
       ],
       "read_only_paths": [
         "backend/**",

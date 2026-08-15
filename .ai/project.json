@@ -8,9 +8,9 @@
       "technology": "Python / FastAPI / Pydantic with Google Gen AI SDK for Vertex AI"
     },
     "frontend": {
-      "enabled": false,
+      "enabled": true,
       "path": "frontend",
-      "technology": null
+      "technology": "Node.js 24 LTS / React / strict TypeScript / Vite / npm"
     },
     "database": {
       "enabled": false,
@@ -28,6 +28,18 @@
           "pytest",
           "-q",
           "tests/backend"
+        ],
+        "cwd": ".",
+        "required": true
+      },
+      {
+        "name": "frontend verification",
+        "command": [
+          "npm",
+          "--prefix",
+          "frontend",
+          "run",
+          "verify"
         ],
         "cwd": ".",
         "required": true
@@ -50,6 +62,18 @@
           "off",
           "-r",
           "requirements.lock"
+        ],
+        "cwd": ".",
+        "required": true
+      },
+      {
+        "name": "frontend dependency audit",
+        "command": [
+          "npm",
+          "--prefix",
+          "frontend",
+          "audit",
+          "--audit-level=high"
         ],
         "cwd": ".",
         "required": true
