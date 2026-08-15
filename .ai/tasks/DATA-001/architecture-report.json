@@ -2,19 +2,73 @@
   "schema_version": "1.0",
   "task_id": "DATA-001",
   "agent": "codex-architect",
-  "status": "PARTIAL",
-  "summary": "",
-  "files_changed": [],
+  "status": "COMPLETE",
+  "summary": "Defined the minimal versioned FHIR R4 ingestion-data contract for the immutable Blue Button seed: a declared cross-file source set containing one standalone Patient and homogeneous Coverage or pharmacy-EOB searchset pages, with fail-closed package evidence, offline layered validation, inert untrusted content, structured outcomes, provenance/data-card and fixture rules, and no application implementation before PLATFORM-001.",
+  "files_changed": [
+    "docs/features/DATA-001.md",
+    ".ai/tasks/DATA-001/architecture-report.json"
+  ],
   "impacts": {
-    "database": null,
-    "backend": null,
-    "frontend": null,
-    "infrastructure": null,
-    "testing": null,
-    "contract_change": null
+    "database": false,
+    "backend": false,
+    "frontend": false,
+    "infrastructure": false,
+    "testing": true,
+    "contract_change": true
   },
-  "decisions": [],
-  "risks": [],
+  "decisions": [
+    "DATA-001 defines a cross-component ingestion-data contract under contracts/fhir/data-001, not an HTTP API. It requires boundary.json, packages.lock.json, validation-outcome.schema.json, source-manifest.json, data-card.json, and a pinned offline README; contracts/openapi.yaml remains unchanged unless a later task approves an API.",
+    "The validation unit is one declared source set so the standalone Patient and separate searchset pages can resolve relative Coverage-to-Patient and EOB-to-Patient/Coverage references across files without network lookup.",
+    "The minimal accepted envelope is a standalone Patient with the exact observed Patient canonical, or a homogeneous Bundle[type=searchset] containing only Coverage entries with the exact observed Coverage canonical or only ExplanationOfBenefit entries with the exact observed pharmacy canonical. Standalone Coverage/EOB, mixed bundles, other Bundle types, resources, and profiles are unsupported.",
+    "The repository contains only unversioned CARIN canonicals and no authoritative exact FHIR core/CARIN/terminology package version, validator release, digest, dependency, or redistribution-license evidence. Before CONTRACT_READY, authoritative evidence must populate the lock; missing/ambiguous/unavailable material fails closed and cannot silently degrade to base-only validation.",
+    "Base/profile-required elements plus narrowly enumerated observed paths and exact extension URLs form the machine allowlist. Profile-valid but unlisted content remains unsupported; modifier extensions, contained resources, attachments, executable Bundle request/response content, and non-JSON forms are not accepted initially.",
+    "Narratives, coding displays, extensions, identifiers, Bundle links/fullUrls, and source content are untrusted inert data. Profile-valid narratives may be preserved raw with an explicit warning but are not rendered, executed, treated as instructions, or echoed into logs; URLs and canonicals are never dereferenced.",
+    "Terminology validation uses only locked offline artifacts. Required resolvable bindings reject invalid codes; weaker bindings preserve their defined strength. Enumerated observed CMS codes without locked authoritative definitions are preserved as unverified and cannot support payer or domain semantics.",
+    "Layered validation covers source/classification, strict JSON, support/envelope, base FHIR, profile/terminology, references/project invariants, and content isolation. Overall results are accepted, rejected, or unsupported with stable rule IDs, sanitized pointers/messages, artifact digests, and deterministic precedence.",
+    "The source manifest preserves the four FOUNDATION-001 byte lengths, SHA-256 hashes, Git blobs, and lineage commit exactly. The data card retains synthetic local-development approval but marks upstream acquisition, generation, license, and redistribution evidence unverified; that evidence blocks benchmark freeze, not architecture completion.",
+    "Project-authored positive, negative, boundary, and adversarial fixtures live only under tests/fixtures/fhir/data-001, carry explicit synthetic lineage and expected structural outcomes, and never represent payer, coverage, coding, fraud, clinical, or payment ground truth.",
+    "Independent testing is required to implement/review a network-disabled reference harness that pins validator/package digests, checks expected outcomes and rule IDs, and proves dataset bytes remain unchanged. No database, backend, frontend, application infrastructure, Vertex AI, cloud, FHIR server, or live terminology service work is required before PLATFORM-001.",
+    "Semantic versioning and digest-based invalidation apply to the boundary, package lock, validator, source manifest, and fixtures. Resource/profile/envelope/package changes or weakened safety behavior require major-version architecture/contract review; rule IDs are never reused with different meanings."
+  ],
+  "risks": [
+    {
+      "severity": "high",
+      "description": "Selecting a CARIN or FHIR package/version from sample dates, unversioned canonicals, memory, or a validator default could validate against the wrong historical rules and make results irreproducible.",
+      "mitigation": "Require authoritative package publications, exact versions, dependency graph, immutable digests, validator digest, license/usage evidence, and an approved offline materialization in packages.lock.json before CONTRACT_READY; fail closed otherwise."
+    },
+    {
+      "severity": "high",
+      "description": "FHIR/profile success could be misrepresented as proof of coverage, coding, payment, fraud, clinical, policy, beneficiary, provider, or amount correctness.",
+      "mitigation": "Limit results to structural conformance, preserve explicit non-domain outcome language, keep CMS terminology unverified when definitions are absent, and require later qualified domain/policy authority for substantive claims."
+    },
+    {
+      "severity": "high",
+      "description": "Narratives, extension values, identifiers, displays, and URLs can carry prompt injection, active content, misleading semantics, or exfiltration targets even in synthetic FHIR.",
+      "mitigation": "Keep content inert and raw-hash preserved, never render/execute/dereference it, sanitize findings, reject modifier/attachment/contained surfaces, and test adversarial narrative/URL/identifier fixtures independently."
+    },
+    {
+      "severity": "medium",
+      "description": "The seed's references span separate files and its searchset total may exceed page entry count, so file-local or total-equals-entry validation would reject valid observed structure or miss dangling links.",
+      "mitigation": "Validate one declared source set, build a unique cross-file resource index, resolve only same-set relative Patient/Coverage references, and treat Bundle.total as paging metadata rather than an equality invariant."
+    },
+    {
+      "severity": "medium",
+      "description": "A broad profile-based acceptance rule could silently expand support through optional fields, extensions, resources, or package upgrades.",
+      "mitigation": "Use a versioned exact path/extension/system registry in addition to locked profiles, return explicit unsupported outcomes, pin every artifact digest, and require reviewed semantic-version changes."
+    },
+    {
+      "severity": "medium",
+      "description": "The corpus lacks complete upstream acquisition, generation, and license/redistribution evidence despite approved synthetic local-development use.",
+      "mitigation": "Retain unverified data-card fields, restrict use to the approved local boundary, require authorized source/license review before benchmark freeze/distribution, and never let validator success promote provenance status."
+    }
+  ],
   "blockers": [],
-  "notes_for_next_agent": []
+  "notes_for_next_agent": [
+    "The orchestrator must reconcile the task contract scope and run contract definition/validation because contract_change=true; do not edit OpenAPI merely because a FHIR input contract is added.",
+    "The contract worker must resolve the exact official FHIR R4 core, CARIN Blue Button, transitive terminology package, validator versions, immutable digests, and license/offline-distribution evidence from authoritative sources. If that evidence is unavailable or requires approval, stop before CONTRACT_READY rather than guessing.",
+    "Generate the exact observed element, extension, and terminology registries deterministically from the unchanged source, but review them against the locked profiles; do not use wildcard CMS-prefix acceptance or claim CMS code meaning that the repository does not establish.",
+    "The tester is required. Its independent fixtures/harness belong under tests/fixtures/fhir/data-001 and tests/data, must run with network disabled, and must prove the repository-root dataset hashes are identical before/after validation.",
+    "PLATFORM-001 owns runtime parsing/normalization, APIs, persistence/quarantine, authorization, size limits for an endpoint, Docker/application dependencies, and deployment. DATA-001 must not create those components.",
+    "All downstream consumers must keep raw source separate from normalized/derived data and treat narrative, extension, identifier, URL, display, profile result, source classification claims, and fixture labels as untrusted until their specific authority validates them."
+  ]
 }

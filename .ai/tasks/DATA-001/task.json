@@ -3,7 +3,7 @@
   "task_id": "DATA-001",
   "title": "Define and validate the minimal FHIR R4 profile",
   "type": "feature",
-  "status": "PLANNING",
+  "status": "ARCHITECTURE_READY",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",
@@ -23,7 +23,10 @@
     "frontend": [],
     "other": [
       "docs/features/DATA-001.md",
-      ".ai/tasks/DATA-001/**"
+      ".ai/tasks/DATA-001/**",
+      "contracts/fhir/data-001/**",
+      "tests/fixtures/fhir/data-001/**",
+      "tests/data/**"
     ]
   },
   "permissions": {
