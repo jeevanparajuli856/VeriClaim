@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "task_id": "FOUNDATION-001",
+  "agent": "codex-architect",
+  "status": "PARTIAL",
+  "summary": "",
+  "files_changed": [],
+  "impacts": {
+    "database": null,
+    "backend": null,
+    "frontend": null,
+    "infrastructure": null,
+    "testing": null,
+    "contract_change": null
+  },
+  "decisions": [],
+  "risks": [],
+  "blockers": [],
+  "notes_for_next_agent": []
+}
