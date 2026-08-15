@@ -35,6 +35,25 @@
     ]
   },
   "security": {
-    "checks": []
+    "checks": [
+      {
+        "name": "hash-locked dependency audit",
+        "command": [
+          "python3",
+          "-m",
+          "pip_audit",
+          "--strict",
+          "--require-hashes",
+          "--no-deps",
+          "--disable-pip",
+          "--progress-spinner",
+          "off",
+          "-r",
+          "requirements.lock"
+        ],
+        "cwd": ".",
+        "required": true
+      }
+    ]
   }
 }

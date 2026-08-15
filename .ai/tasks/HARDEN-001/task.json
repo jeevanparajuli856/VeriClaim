@@ -1,0 +1,230 @@
+{
+  "schema_version": "1.0",
+  "task_id": "HARDEN-001",
+  "title": "Harden prompt isolation and dependency reproducibility",
+  "type": "security",
+  "status": "PR_READY",
+  "priority": "medium",
+  "owners": {
+    "orchestrator": "codex",
+    "architecture": "codex",
+    "database": "codex",
+    "backend": "codex",
+    "frontend": "gemini",
+    "tester": "codex",
+    "security": "codex",
+    "review": "codex"
+  },
+  "spec": "docs/features/HARDEN-001.md",
+  "contracts": [
+    "contracts/openapi.yaml"
+  ],
+  "scope": {
+    "database": [],
+    "backend": [
+      "backend/app/gemini.py",
+      "tests/backend/**"
+    ],
+    "frontend": [],
+    "other": [
+      "requirements-agent.txt",
+      "requirements.lock",
+      ".github/workflows/**",
+      ".ai/project.json"
+    ]
+  },
+  "permissions": {
+    "orchestrator": {
+      "allowed_write_paths": [
+        ".ai/tasks/HARDEN-001/task.json",
+        "docs/features/HARDEN-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "contracts/**",
+        ".ai/project.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "tests/**",
+        "docs/standards/**"
+      ],
+      "forbidden_paths": []
+    },
+    "architecture": {
+      "allowed_write_paths": [
+        "docs/features/HARDEN-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        ".ai/tasks/HARDEN-001/architecture-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "docs/standards/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ],
+      "forbidden_paths": [
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    },
+    "database": {
+      "allowed_write_paths": [
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/HARDEN-001/database-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "backend/**",
+        ".ai/tasks/HARDEN-001/task.json",
+        ".ai/tasks/HARDEN-001/architecture-report.json"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    },
+    "backend": {
+      "allowed_write_paths": [
+        "backend/**",
+        "tests/backend/**",
+        "requirements-agent.txt",
+        "requirements.lock",
+        ".github/workflows/**",
+        ".ai/project.json",
+        ".ai/tasks/HARDEN-001/backend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/HARDEN-001/task.json",
+        ".ai/tasks/HARDEN-001/architecture-report.json",
+        ".ai/tasks/HARDEN-001/database-report.json"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    },
+    "frontend": {
+      "allowed_write_paths": [
+        "frontend/**",
+        "tests/frontend/**",
+        ".ai/tasks/HARDEN-001/frontend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/HARDEN-001/task.json",
+        ".ai/tasks/HARDEN-001/architecture-report.json",
+        ".ai/tasks/HARDEN-001/database-report.json",
+        ".ai/tasks/HARDEN-001/backend-report.json"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    },
+    "tester": {
+      "allowed_write_paths": [
+        "tests/**",
+        ".ai/tasks/HARDEN-001/test-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/HARDEN-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    },
+    "security": {
+      "allowed_write_paths": [
+        ".ai/tasks/HARDEN-001/security-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/HARDEN-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    },
+    "review": {
+      "allowed_write_paths": [
+        ".ai/tasks/HARDEN-001/review-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/HARDEN-001/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/HARDEN-001/task.json"
+      ]
+    }
+  },
+  "state_write_policy": {
+    "task_file": ".ai/tasks/HARDEN-001/task.json",
+    "single_writer": "orchestrator",
+    "worker_agents_must_use_reports": true
+  },
+  "dependencies": [
+    "DEMO-001"
+  ],
+  "acceptance_criteria": [
+    "Place the fixed Gemini safety policy in GenerateContentConfig.system_instruction and send only labeled serialized synthetic data through user contents without duplicating the policy.",
+    "Preserve the combined 128 KiB input limit, zero-or-one-call behavior, no-tools boundary, structured output, evidence validation, sanitized failures, deterministic fallback, and all existing public API behavior.",
+    "Add adversarial tests proving instruction/data role separation, absence of environment values, no tool configuration, and zero provider calls when the combined input limit is exceeded.",
+    "Commit a fully resolved Python 3.12-compatible dependency lock with SHA-256 artifact hashes and prove a clean pip --require-hashes installation.",
+    "Run a pinned dependency audit as a required project security check and CI gate that fails on known applicable advisories or audit errors without application credentials.",
+    "Pass project/task/report/OpenAPI validation, backend tests, agentic tests, dependency consistency, dependency audit, secret baseline, and source-dataset immutability checks.",
+    "Do not change the public API contract, frontend, database, dataset, or approved local synthetic-only product scope."
+  ],
+  "created_by": "human"
+}

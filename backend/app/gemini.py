@@ -25,6 +25,7 @@ evidence, and state limitations. Every candidate finding must cite one or more s
 are non-authoritative candidates. Do not determine fraud; approve or deny claims; make payment, coverage,
 coding, medical-necessity, diagnostic, or clinical decisions; request external facts; use tools; or modify data.
 Return only JSON matching the supplied response schema."""
+USER_CONTENT_LABEL = "SUPPLIED_SYNTHETIC_DATA_JSON:\n"
 
 
 @dataclass(frozen=True)
@@ -72,8 +73,9 @@ class GeminiSummarizer:
                 call_count=0,
             )
         prompt_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
-        contents = f"{SYSTEM_INSTRUCTION}\n\nSUPPLIED_SYNTHETIC_DATA_JSON:\n{prompt_json}"
-        if len(contents.encode("utf-8")) > MAX_PROMPT_BYTES:
+        contents = f"{USER_CONTENT_LABEL}{prompt_json}"
+        request_bytes = len(SYSTEM_INSTRUCTION.encode("utf-8")) + len(contents.encode("utf-8"))
+        if request_bytes > MAX_PROMPT_BYTES:
             return self._failure(
                 "configuration_error",
                 "The minimized model request exceeds the configured prompt limit.",
@@ -88,6 +90,7 @@ class GeminiSummarizer:
                 model=self._model,
                 contents=contents,
                 config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_INSTRUCTION,
                     response_mime_type="application/json",
                     response_json_schema=GeminiOutput.model_json_schema(),
                     max_output_tokens=MAX_OUTPUT_TOKENS,

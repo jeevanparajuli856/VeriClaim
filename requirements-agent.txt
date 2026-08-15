@@ -1,7 +1,14 @@
 # Tooling required by the reusable agentic control plane and CI.
 # Keep application/runtime dependencies in the project-specific backend/frontend manifests.
+# Regenerate requirements.lock in a clean Python 3.12 environment; do not hand-edit it:
+# python3.12 -m venv /tmp/vericlaim-lock-env
+# /tmp/vericlaim-lock-env/bin/python -m pip install --disable-pip-version-check pip-tools==7.5.0
+# /tmp/vericlaim-lock-env/bin/python -m piptools compile --upgrade --generate-hashes --allow-unsafe --resolver=backtracking --strip-extras --output-file=requirements.lock requirements-agent.txt
+# Verify/audit after installing the lock with --require-hashes:
+# python -m pip_audit --strict --require-hashes --no-deps --disable-pip --progress-spinner off -r requirements.lock
 -r backend/requirements.txt
 
 jsonschema>=4.26,<5
 openapi-spec-validator>=0.9,<1
+pip-audit==2.10.1
 pytest>=9.1,<10
