@@ -3,7 +3,7 @@
   "task_id": "FRONTEND-001",
   "title": "Build the local investigation dashboard prototype",
   "type": "feature",
-  "status": "CONTRACT_READY",
+  "status": "IMPLEMENTATION",
   "priority": "medium",
   "owners": {
     "orchestrator": "codex",

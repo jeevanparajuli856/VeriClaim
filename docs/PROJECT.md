@@ -14,7 +14,7 @@ VeriClaim is a polished local demonstration that extracts a small supported subs
 
 ### Status
 
-**INCEPTION_READY.** The backend milestone is complete and the final local-prototype task, FRONTEND-001, is contract-ready. ADR-0005 approves and enables a Node.js 24 LTS/React/TypeScript/Vite dashboard over the unchanged API; implementation, verification, security, review, and human merge gates remain.
+**INCEPTION_READY.** The backend milestone is complete and the final local-prototype task, FRONTEND-001, is ready for its human-started Gemini implementation. ADR-0005 approves and enables a Node.js 24 LTS/React/TypeScript/Vite dashboard over the unchanged API; integration, verification, security, review, and human merge gates remain.
 
 ## 2. Problem statement
 
@@ -248,7 +248,7 @@ These records reflect completed work and the user-approved task order. A PROPOSE
 | Order | Task ID | Status | Title | Purpose | Depends on |
 |---:|---|---|---|---|---|
 | 1 | HARDEN-001 | DONE | Harden prompt isolation and dependency reproducibility | Closed the accepted DEMO-001 defense-in-depth findings without changing the API or product boundary. | DEMO-001 (DONE) |
-| 2 | FRONTEND-001 | CONTRACT_READY | Build the local investigation dashboard prototype | Add the final accessible local visual prototype over the unchanged API using ADR-0005. | HARDEN-001 (DONE) |
+| 2 | FRONTEND-001 | IMPLEMENTATION | Build the local investigation dashboard prototype | Add the final accessible local visual prototype over the unchanged API using ADR-0005. | HARDEN-001 (DONE) |
 
 **Final planned project task:** FRONTEND-001. Architecture/source-of-truth reconciliation precedes contract validation and the manually started Gemini implementation gate.
 
