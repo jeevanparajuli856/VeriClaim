@@ -92,6 +92,10 @@ class GeminiSummarizer:
                     response_json_schema=GeminiOutput.model_json_schema(),
                     max_output_tokens=MAX_OUTPUT_TOKENS,
                     temperature=0.1,
+                    thinking_config=types.ThinkingConfig(
+                        thinking_budget=0,
+                        include_thoughts=False,
+                    ),
                 ),
             )
         except Exception as exc:

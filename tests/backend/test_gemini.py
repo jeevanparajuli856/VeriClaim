@@ -64,7 +64,12 @@ def test_valid_structured_output_and_known_evidence_use_one_no_tools_call() -> N
     assert result.metadata.output_validated is True
     assert result.metadata.input_tokens == 100
     assert len(client.models.calls) == 1
-    assert "tools" not in client.models.calls[0]["config"].model_dump(exclude_none=True)
+    config = client.models.calls[0]["config"].model_dump(exclude_none=True)
+    assert "tools" not in config
+    assert config["thinking_config"] == {
+        "include_thoughts": False,
+        "thinking_budget": 0,
+    }
 
 
 @pytest.mark.parametrize(

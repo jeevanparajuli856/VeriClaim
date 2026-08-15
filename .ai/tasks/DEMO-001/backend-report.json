@@ -3,7 +3,7 @@
   "task_id": "DEMO-001",
   "agent": "codex-backend",
   "status": "COMPLETE",
-  "summary": "Implemented the contract-aligned local FastAPI demo with fixed synthetic-source loading, bounded extraction, stable evidence, five deterministic rules, one-call Vertex AI Gemini integration, graceful typed failure behavior, focused tests, and runnable documentation.",
+  "summary": "Completed the contract-aligned local FastAPI demo and remediated the authorized Vertex smoke truncation by disabling Gemini thinking so the full 2,048-token structured-output budget remains available while preserving the one-call, no-tools boundary.",
   "files_changed": [
     ".env.example",
     "README.md",
@@ -29,13 +29,15 @@
   "tests": {
     "passed": true,
     "commands": [
+      "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/backend/test_gemini.py",
       "PATH=\"$PWD/.venv/bin:$PATH\" python -m pytest -q tests/backend",
       "PATH=\"$PWD/.venv/bin:$PATH\" python scripts/agentctl.py scope check DEMO-001 backend"
     ],
-    "notes": "17 focused tests passed in 2.80 seconds. The only warning was pytest cache write denial from the managed read-only cache mount; it did not affect test collection or execution. Tests use injected fakes and no live credentials. Scope check passed for all 17 changed files before this report update and was repeated after it."
+    "notes": "The remediation assertion requires the exact Google Gen AI SDK thinking configuration include_thoughts=false and thinking_budget=0. The focused Gemini suite passed 7 tests in 4.04 seconds, and the full backend suite passed 34 tests in 5.31 seconds. Tests use injected fakes and no live credentials. The backend scope check passed after the report update."
   },
   "blockers": [],
   "notes_for_next_agent": [
+    "An authorized live Vertex smoke previously returned finish_reason=MAX_TOKENS because thinking consumed 1,936 tokens of the 2,048 output-token ceiling. GenerateContentConfig now disables thinking while retaining JSON schema mode, the existing token ceiling, one invocation, and no tools; the orchestrator should rerun exactly one controlled live smoke.",
     "The unchanged fixed sample yields 155 observed facts, no REF-001 signals, DATE-001 insufficient evidence because referenced Part D Coverage has no period bounds, one REPEAT-001 opaque-code repetition, three AMOUNT-001 mismatches under the exact formula, and one OUTLIER-001 100 USD signal above the frozen 50 USD threshold.",
     "Run the approved human-authorized live smoke test separately with external .env/ADC values; automated tests deliberately require no credentials and do not print configuration.",
     "Independent testing, integrated verification, security review, and final review remain orchestration gates."
