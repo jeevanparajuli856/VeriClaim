@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "task_id": "DATA-001",
-  "status": "BLOCKED_INCOMPATIBLE_SEED",
+  "status": "BLOCKED_NO_AUTHORITATIVE_SYNTHETIC_STRICT_CORPUS",
   "selected_profile_package": "hl7.fhir.us.carin-bb#2.2.0",
   "resolution_policy": {
     "allow_latest": false,
@@ -310,12 +310,70 @@
       "dependencies": ["hl7.fhir.r4.core#4.0.1"]
     }
   ],
+  "authoritative_corpus_evidence": {
+    "archive": {
+      "package": "hl7.fhir.us.carin-bb",
+      "version": "2.2.0",
+      "source_uri": "https://hl7.org/fhir/us/carin-bb/STU2.2/package.tgz",
+      "sha256": "29b7f427899be281ad242154d2e0d136900a679d839347778191f883420a196a",
+      "license": "CC0-1.0",
+      "license_provenance": "package/package.json in the exact checksum-pinned official archive",
+      "classification": "official-hl7-publication-example",
+      "synthetic_classification": "UNVERIFIED_AS_SYNTHETIC",
+      "synthetic_classification_basis": "The official artifacts page labels these resources as example instances showing what conforming data might look like, but neither the package manifest nor the example resources attest a synthetic generation method or no-real-person provenance. They therefore cannot be promoted to the required authoritative-synthetic classification by inference."
+    },
+    "members": [
+      {
+        "archive_path": "package/example/Patient-Patient2.json",
+        "sha256": "5126c680cdcb0ccd1d0c0c032b720f1a92224fff2f5bf3fa30ab7319e437a188",
+        "profile": "http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-Patient|2.2.0",
+        "publisher_expected_result": "CONFORMANT_EXAMPLE",
+        "pinned_offline_validator_result": "0 errors, 3 warnings, 2 information",
+        "eligibility": "STRUCTURAL_POSITIVE_ONLY; synthetic classification remains unverified"
+      },
+      {
+        "archive_path": "package/example/Coverage-Coverage3.json",
+        "sha256": "e72295932c41b57291e0013dfb3e81d2ae37fbcf549090fdf14932a6fefc7d83",
+        "profile": "http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-Coverage|2.2.0",
+        "publisher_expected_result": "CONFORMANT_EXAMPLE",
+        "pinned_offline_validator_result": "0 errors, 3 warnings",
+        "eligibility": "STRUCTURAL_POSITIVE_ONLY; synthetic classification remains unverified"
+      },
+      {
+        "archive_path": "package/example/ExplanationOfBenefit-EOBPharmacy1.json",
+        "sha256": "46952eba56089a44272d2707c87accc5f16325ec8d91acdf7eed107a1080fe62",
+        "profile": "http://hl7.org/fhir/us/carin-bb/StructureDefinition/C4BB-ExplanationOfBenefit-Pharmacy|2.2.0",
+        "publisher_expected_result": "0 errors, 5 warnings",
+        "pinned_offline_validator_result": "8 errors, 5 warnings, 9 information",
+        "eligibility": "NOT_A_STRICT_OFFLINE_POSITIVE"
+      }
+    ],
+    "publisher_validation": {
+      "summary_archive_path": "package/other/validation-summary.json",
+      "summary_sha256": "39dfcb19c9e522e8e812778f327f22766c0405f53a10e6cfc550e1d33a48514e",
+      "operation_outcome_archive_path": "package/other/validation-oo.json",
+      "operation_outcome_sha256": "d214c310a03f88cc1384d76945417395a7ae92cee04d906c87c72e9f29d07aaf",
+      "limitation": "Publisher QA is authoritative publication evidence but is not a substitute for the required reproducible, network-disabled strict validation gate because its external terminology inputs are not packaged."
+    },
+    "blocking_terminology": {
+      "binding_strength": "required",
+      "systems": [
+        "http://terminology.hl7.org/CodeSystem/NCPDPDispensedAsWrittenOrProductSelectionCode",
+        "http://terminology.hl7.org/CodeSystem/NCPDPBrandGenericIndicator",
+        "http://terminology.hl7.org/CodeSystem/NCPDPPrescriptionOriginCode",
+        "http://terminology.hl7.org/CodeSystem/NCPDPCompoundCode"
+      ],
+      "package_state": "The exact CARIN ValueSets contain compose/include references only; no expansion or CodeSystem concepts are distributed in the pinned closure.",
+      "rights_provenance": "The exact ValueSet resources direct users to https://standards.ncpdp.org/Access-to-Standards.aspx and state restrictive NCPDP copyright/usage terms. No NCPDP-authorized offline content or usage approval was supplied for DATA-001.",
+      "decision": "Do not invent concepts, downgrade required-binding errors, use a live terminology service, or substitute another CARIN version. Stop until authoritative, versioned, checksum-pinned, usage-approved offline NCPDP artifacts and an authoritative synthetic classification are available."
+    }
+  },
   "compatibility_evidence": {
     "validated_at": "2026-08-15",
     "network_control": "Validator -no-http-access, -tx n/a, and loopback-only HTTP/HTTPS proxy properties",
     "dataset_mutated": false,
     "result": "INCOMPATIBLE",
-    "summary": "The exact official CARIN 2.2.0 closure loads offline and contains the Patient, Coverage, and ExplanationOfBenefit Pharmacy canonicals, but the unchanged three-resource seed produces structural/profile errors. Contract and downstream gates remain blocked.",
+    "summary": "The exact official CARIN 2.2.0 closure loads offline and contains the Patient, Coverage, and ExplanationOfBenefit Pharmacy canonicals. The unchanged repository seed is preserved as negative rejection evidence. The official Patient and Coverage examples have zero offline errors, but the official pharmacy EOB example cannot pass the required offline terminology gate because authoritative NCPDP code content is not distributed or usage-approved; the complete positive corpus and downstream gates remain blocked.",
     "representative_findings": [
       "Patient meta.profile is unversioned while CARIN 2.2.0 requires version-qualified conformance.",
       "Patient.identifier does not satisfy the required memberid slice.",
