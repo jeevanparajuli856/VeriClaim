@@ -1,0 +1,225 @@
+{
+  "schema_version": "1.0",
+  "task_id": "FOUNDATION-001",
+  "title": "Define synthetic benchmark and evaluation protocol",
+  "type": "research",
+  "status": "PR_READY",
+  "priority": "medium",
+  "owners": {
+    "orchestrator": "codex",
+    "architecture": "codex",
+    "database": "codex",
+    "backend": "codex",
+    "frontend": "gemini",
+    "tester": "codex",
+    "security": "codex",
+    "review": "codex"
+  },
+  "spec": "docs/features/FOUNDATION-001.md",
+  "contracts": [],
+  "scope": {
+    "database": [],
+    "backend": [],
+    "frontend": [],
+    "other": [
+      "docs/features/FOUNDATION-001.md",
+      ".ai/tasks/FOUNDATION-001/**"
+    ]
+  },
+  "permissions": {
+    "orchestrator": {
+      "allowed_write_paths": [
+        ".ai/tasks/FOUNDATION-001/task.json",
+        "docs/features/FOUNDATION-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        "contracts/**"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "tests/**",
+        "docs/standards/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": []
+    },
+    "architecture": {
+      "allowed_write_paths": [
+        "docs/features/FOUNDATION-001.md",
+        "docs/architecture/**",
+        "docs/adr/**",
+        ".ai/tasks/FOUNDATION-001/architecture-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "docs/standards/**",
+        ".ai/tasks/FOUNDATION-001/task.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    },
+    "database": {
+      "allowed_write_paths": [
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/FOUNDATION-001/database-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "backend/**",
+        ".ai/tasks/FOUNDATION-001/task.json",
+        ".ai/tasks/FOUNDATION-001/architecture-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    },
+    "backend": {
+      "allowed_write_paths": [
+        "backend/**",
+        "tests/backend/**",
+        ".ai/tasks/FOUNDATION-001/backend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        "database/**",
+        "supabase/**",
+        ".ai/tasks/FOUNDATION-001/task.json",
+        ".ai/tasks/FOUNDATION-001/architecture-report.json",
+        ".ai/tasks/FOUNDATION-001/database-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "frontend/**",
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    },
+    "frontend": {
+      "allowed_write_paths": [
+        "frontend/**",
+        "tests/frontend/**",
+        ".ai/tasks/FOUNDATION-001/frontend-report.json"
+      ],
+      "read_only_paths": [
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/FOUNDATION-001/task.json",
+        ".ai/tasks/FOUNDATION-001/architecture-report.json",
+        ".ai/tasks/FOUNDATION-001/database-report.json",
+        ".ai/tasks/FOUNDATION-001/backend-report.json",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    },
+    "tester": {
+      "allowed_write_paths": [
+        "tests/**",
+        ".ai/tasks/FOUNDATION-001/test-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        ".ai/tasks/FOUNDATION-001/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    },
+    "security": {
+      "allowed_write_paths": [
+        ".ai/tasks/FOUNDATION-001/security-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/FOUNDATION-001/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    },
+    "review": {
+      "allowed_write_paths": [
+        ".ai/tasks/FOUNDATION-001/review-report.json"
+      ],
+      "read_only_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "docs/**",
+        "tests/**",
+        ".ai/tasks/FOUNDATION-001/**",
+        "dataset/**"
+      ],
+      "forbidden_paths": [
+        "backend/**",
+        "frontend/**",
+        "database/**",
+        "supabase/**",
+        "contracts/**",
+        "tests/**",
+        ".ai/tasks/FOUNDATION-001/task.json"
+      ]
+    }
+  },
+  "state_write_policy": {
+    "task_file": ".ai/tasks/FOUNDATION-001/task.json",
+    "single_writer": "orchestrator",
+    "worker_agents_must_use_reports": true
+  },
+  "dependencies": [],
+  "acceptance_criteria": [
+    "Record a deterministic inventory and immutable identification method for the selected source files, with origin, synthetic classification, usage/license evidence status, and material limitations, without modifying dataset/.",
+    "Recommend one bounded scenario family, line of business, and policy-jurisdiction scope grounded in the available evidence, clearly identifying any remaining sponsor or qualified-domain-expert approval.",
+    "Specify additional synthetic cases or perturbation classes, their provenance, labels, independent review needs, and separation from untouched source records.",
+    "Define controlled comparison rules for research variants A-E, including common inputs and evidence, frozen configuration, repeated runs where applicable, scoring, and treatment of failed, abstained, or escalated output.",
+    "Define benchmark versioning and freeze rules, partitions, leakage prevention, random seeds or deterministic alternatives, run manifests, and change invalidation rules.",
+    "Define applicable metric calculations, evidence, aggregation, uncertainty reporting, evaluator authority, and a baseline-driven threshold approval method without using model judges as the sole basis for safety claims.",
+    "Record validity limits and preserve the synthetic/public-only Vertex AI boundary, human authority, and prohibition on production, clinical, fraud, coverage, or payment-validity claims.",
+    "Provide concrete downstream inputs and explicitly deferred decisions for DATA-001, POLICY-001, PLATFORM-001, and later experiment tasks without selecting unapproved contracts, schemas, frameworks, providers, or hosting."
+  ],
+  "created_by": "human"
+}
