@@ -1,9 +1,0 @@
-{
-  "schema_version": "1.0",
-  "task_id": "FOUNDATION-001",
-  "reviewer": "codex-security",
-  "reviewed_commit": "36d44b8b8cadc086d480f7287ce179eceb23b4f5",
-  "status": "APPROVED",
-  "summary": "Approved the documentation-only benchmark protocol at the exact current commit. The verified integrated source revision is b0a4d53ecdb1e0489f8cf52d2c0ebeecf72b62bb; the current commit adds only current verification evidence and the lifecycle status. The task leaves dataset bytes unchanged and hash-pinned, preserves the synthetic/public-only Vertex AI boundary, treats dataset/retrieved/model/tool/evaluator content as untrusted, requires deterministic validation and human consequential authority, defines injection/leakage/permission/budget failure handling, blocks benchmark freeze on missing provenance/license evidence, and introduces no secrets, private runtime values, write-capable tools, production approval, hosting/framework selection, or unsupported safety claim.",
-  "findings": []
-}

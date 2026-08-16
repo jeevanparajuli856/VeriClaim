@@ -1,52 +1,114 @@
 # VeriClaim
 
-VeriClaim is a local, evidence-grounded FHIR anomaly investigation demo. It loads three fixed synthetic FHIR R4 JSON files, extracts a deliberately small Patient/Coverage/ExplanationOfBenefit subset, runs five transparent deterministic checks, and optionally asks Vertex AI Gemini for one structured candidate summary. The complete flow is available through FastAPI's built-in `/docs` interface.
+<div align="center">
+  <img src="frontend/img/logo1.png" alt="VeriClaim dashboard showing source and sample metadata" width="100%">
+</div>
 
-This is a demonstration and research prototype. Deterministic signals and model text are review aids, not fraud findings or healthcare decisions.
+VeriClaim is a local, evidence-grounded investigation application for synthetic FHIR R4 claim data. It combines transparent deterministic checks with an optional, tightly bounded Vertex AI Gemini summary, then presents every result in an accessible React dashboard with traceable evidence citations.
 
-## What it demonstrates
+The system analyzes a fixed CMS Blue Button sample containing `Patient`, `Coverage`, and `ExplanationOfBenefit` resources. Deterministic rules identify review signals; Gemini can summarize only the supplied facts and signals. Model output never creates rules, changes evidence, or makes claim, fraud, payment, coverage, coding, or clinical decisions.
 
-- allowlisted, read-only local JSON loading with file hashes and bounded structural checks;
-- narrow FHIR-shaped extraction with stable RFC 6901-based evidence IDs;
-- deterministic, independently tested anomaly signals with explicit formulas and limitations;
-- one no-tools Google Gen AI SDK call configured for Vertex AI;
-- Pydantic structured-output and evidence-citation validation;
-- graceful model failure that never discards the deterministic report; and
-- a small FastAPI contract that is easy to run and inspect locally.
+## Highlights
 
-## Local setup
+- **Explainable analysis:** five deterministic rules expose their formulas, inputs, signals, missing evidence, and limitations.
+- **Traceable evidence:** stable RFC 6901-based identifiers connect observed facts, rule signals, and candidate findings to their source locations.
+- **Safe model boundary:** Gemini receives minimized structured data, has no tools, and may be called at most once per analysis.
+- **Resilient results:** deterministic output remains available when model configuration, provider calls, timeouts, schema validation, or evidence validation fail.
+- **Accessible dashboard:** keyboard-friendly evidence navigation, responsive layouts, visible focus states, reduced-motion support, and WCAG-oriented contrast.
+- **Contract-driven integration:** FastAPI publishes the OpenAPI contract used to generate strict TypeScript types for the frontend.
+- **Local-first data boundary:** source files are read-only, processing is in memory, and the browser never receives cloud credentials or provider configuration.
 
-Python 3.10 or newer is recommended. From the repository root:
+## Dashboard
+
+The dashboard separates source metadata, observed facts, deterministic rule results, Gemini candidate findings, and the evidence index so each layer can be inspected independently.
+
+<div align="center">
+  <img src="frontend/img/logo2.png" alt="VeriClaim deterministic rule results with evidence citations" width="94%">
+</div>
+
+## How it works
+
+```text
+React dashboard
+  -> POST /api/v1/analyze-demo through the local Vite /api proxy
+  -> FastAPI loads three allowlisted, read-only FHIR JSON files
+  -> bounded Patient/Coverage/EOB extraction
+  -> stable observed-fact evidence index
+  -> five deterministic anomaly checks
+  -> zero or one Vertex AI Gemini structured-summary call
+  -> Pydantic schema and evidence-reference validation
+  -> deterministic-first report with navigable citations
+```
+
+All analysis is performed in memory. There is no database, arbitrary file upload, remote input URL, authentication layer, RAG pipeline, agent loop, or browser-side model access.
+
+## Deterministic rules
+
+| Rule | Purpose | Behavior |
+|---|---|---|
+| `REF-001` | Reference integrity | Checks that required local `Patient/<id>` and `Coverage/<id>` references resolve exactly once; distinguishes missing, malformed, wrong-type, unresolved, and ambiguous references. |
+| `DATE-001` | Coverage date bounds | Compares each available `item.servicedDate` with the present bounds of its uniquely resolved Coverage period. Missing dates or bounds are reported as missing evidence. |
+| `REPEAT-001` | Exact repetition | Detects exact supported-field item signatures and repeated opaque product/service system-and-code pairs across distinct sample items. It performs no near matching or terminology interpretation. |
+| `AMOUNT-001` | Amount relationship | Checks whether `abs(drugcost - (benefit + paidbypatient)) > 0.01` when exactly one same-currency value exists for every required component. |
+| `OUTLIER-001` | Sample-relative high amount | Groups `drugcost` observations by exact currency and applies the Tukey threshold `Q3 + 1.5 × IQR` when at least four values are available. |
+
+Signal priorities such as `information` and `review` are presentation aids, not risk scores or determinations.
+
+## Technology
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, strict TypeScript, Vite, generated OpenAPI types |
+| Backend | Python 3.12, FastAPI, Pydantic |
+| Model integration | Google Gen AI SDK configured for Vertex AI Gemini |
+| Testing | pytest, Vitest, React Testing Library, Playwright, axe-core |
+| Contract | OpenAPI 3.1 |
+| Data | Versioned synthetic CMS Blue Button FHIR R4 JSON |
+
+## Getting started
+
+### Prerequisites
+
+- Python 3.12
+- Node.js 24 LTS and npm
+- Optional: a Google Cloud project with Vertex AI access and Application Default Credentials
+
+### 1. Set up the backend
+
+From the repository root:
 
 ```bash
 python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -r backend/requirements.txt
 cp .env.example .env
 ```
 
-Set the non-secret Vertex AI identifiers in `.env`. Authentication uses Application Default Credentials; credential files and real values stay outside Git. If model configuration is absent, the API still runs and returns `gemini.status: configuration_error` with all deterministic output.
+The Vertex AI integration is optional. To enable it, replace the placeholders in `.env` and configure Application Default Credentials outside the repository:
 
-Start the local server, loading `.env` without committing it:
-
-```bash
-.venv/bin/python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --env-file .env
+```dotenv
+GOOGLE_CLOUD_PROJECT=your-google-cloud-project
+GOOGLE_CLOUD_LOCATION=your-vertex-ai-region
+GOOGLE_GENAI_USE_VERTEXAI=true
+VERTEX_GEMINI_MODEL=your-approved-gemini-model
 ```
 
-Open `http://127.0.0.1:8000/docs`, expand `POST /api/v1/analyze-demo`, and select **Execute**. The endpoint has no request body, upload, URL, or path parameter. It always analyzes only:
+When model configuration is absent, VeriClaim still returns the complete deterministic report and sets `gemini.status` to `configuration_error`.
 
-- `dataset/patient_bbuser29999.json`
-- `dataset/coverage_bundle_bbuser29999.json`
-- `dataset/eob_bundle_bbuser29999.json`
-
-The same operation can be invoked with:
+Start the API:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/analyze-demo
+.venv/bin/python -m uvicorn backend.app.main:app \
+  --host 127.0.0.1 \
+  --port 8000 \
+  --env-file .env
 ```
 
-### Frontend dashboard
+FastAPI documentation is available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-In a separate terminal, start the local React/Vite dashboard:
+### 2. Start the dashboard
+
+In a second terminal:
 
 ```bash
 cd frontend
@@ -54,38 +116,25 @@ npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173` to explore the interactive investigation interface. The frontend proxies `/api` directly to `http://127.0.0.1:8000`.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173) and select **Run analysis**. Vite proxies the browser's relative `/api` request to the local FastAPI server at `http://127.0.0.1:8000`.
 
-## Architecture
+### 3. Call the API directly
 
-```text
-POST /api/v1/analyze-demo
-  -> fixed allowlisted loader (1 MiB/file; read-only)
-  -> bounded Patient/Coverage/EOB subset extractor
-  -> stable observed-fact evidence index
-  -> five pure deterministic rules
-  -> zero or one Vertex AI Gemini call (no tools)
-  -> Pydantic schema + supplied-evidence validation
-  -> combined JSON response
+The analysis operation has no request body, file parameter, path parameter, or remote URL:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/analyze-demo
 ```
 
-Everything is processed in memory. The local React single-page frontend communicates with the local FastAPI backend via a same-origin proxy. There is no database, persistence, authentication, arbitrary file upload, RAG layer, agent loop, or cloud deployment component. The route stays thin; loading, extraction, rules, model integration, and response assembly live in separate modules under `backend/app/`.
+It always analyzes these versioned synthetic inputs:
 
-## Deterministic checks
+- `dataset/patient_bbuser29999.json`
+- `dataset/coverage_bundle_bbuser29999.json`
+- `dataset/eob_bundle_bbuser29999.json`
 
-| Rule | Exact demonstration behavior |
-|---|---|
-| `REF-001` | A required local `Patient/<id>` or `Coverage/<id>` reference must resolve to exactly one supplied supported resource. Missing, malformed, wrong-type, unresolved, and ambiguous references are separate signals. |
-| `DATE-001` | Compares each present `item.servicedDate` inclusively with each present bound of a uniquely resolved Coverage period. It never substitutes `billablePeriod`; absent dates, unresolved Coverage, and absent bounds become missing evidence. |
-| `REPEAT-001` | Signals exact supported-field duplicate item signatures and, separately, exact opaque product/service `(system, code)` values occurring on at least two distinct items across this supplied sample. An item with any missing signature slot, including any Coverage-reference slot, is excluded and reported as missing evidence. It performs no near matching or code interpretation. |
-| `AMOUNT-001` | When exactly one same-currency `benefit`, `paidbypatient`, and `drugcost` component is present, signals when `abs(drugcost - (benefit + paidbypatient)) > 0.01`. Missing, duplicate, or currency-conflicting components are not treated as zero. |
-| `OUTLIER-001` | Per exact currency, with at least four `drugcost` observations, uses Tukey hinges and signals values strictly above `Q3 + 1.5 × IQR`. For the unchanged ten-value USD sample, `Q1=0`, `Q3=20`, and the threshold is `50`. |
+## Response model
 
-The labels `information` and `review` are presentation priorities only. The rules do not interpret payer policy, product meaning, coding, medical necessity, clinical meaning, fraud, or payment correctness.
-
-## Response shape
-
-The full response is intentionally verbose and evidence-oriented. A shortened response looks like:
+The API response keeps deterministic evidence and model-generated text separate:
 
 ```json
 {
@@ -93,35 +142,39 @@ The full response is intentionally verbose and evidence-oriented. A shortened re
   "source": {
     "dataset_name": "cms-blue-button-local-sample",
     "synthetic": true,
-    "files": [{"alias": "patient", "path": "dataset/patient_bbuser29999.json", "sha256": "...", "size_bytes": 6196}],
-    "resource_counts": {"Patient": 1, "Coverage": 4, "ExplanationOfBenefit": 10}
+    "resource_counts": {
+      "Patient": 1,
+      "Coverage": 4,
+      "ExplanationOfBenefit": 10
+    }
   },
-  "observed_facts": [
-    {"evidence_id": "ev:eob:/entry/0/resource/item/0/servicedDate", "source_alias": "eob", "json_pointer": "/entry/0/resource/item/0/servicedDate", "fact_type": "service_date", "value": "2015-10-01"}
-  ],
-  "rule_results": [
-    {"rule_id": "OUTLIER-001", "status": "completed", "signals": [{"evidence_id": "sig:OUTLIER-001:0001", "priority": "information", "evidence_refs": ["ev:eob:/entry/8/resource/item/0/adjudication/7/amount/value"]}]}
-  ],
+  "observed_facts": [],
+  "rule_results": [],
   "evidence_index": [],
   "gemini": {
     "status": "success",
     "summary": "Bounded candidate summary based only on supplied synthetic evidence.",
-    "candidate_findings": [{"title": "Candidate review item", "explanation": "...", "evidence_refs": ["sig:OUTLIER-001:0001"]}],
+    "candidate_findings": [],
     "missing_evidence": [],
-    "limitations": ["Candidate model text is non-authoritative."]
+    "limitations": []
   },
-  "model_metadata": {"provider": "vertex-ai", "sdk": "google-genai", "model": "...", "invoked": true, "call_count": 1, "output_validated": true},
-  "limitations": ["This local demonstration uses a small synthetic sample."]
+  "model_metadata": {
+    "provider": "vertex-ai",
+    "invoked": true,
+    "call_count": 1,
+    "output_validated": true
+  },
+  "limitations": []
 }
 ```
 
-The actual contract requires complete rule metadata, evidence records, and model metadata; see `contracts/openapi.yaml` or `/docs`.
+The complete schema, including rule metadata, evidence records, typed model failures, and the sanitized deterministic-pipeline error response, is defined in [`contracts/openapi.yaml`](contracts/openapi.yaml).
 
-## Model boundary and failure behavior
+## Model safety and failure handling
 
-Gemini receives only minimized structured synthetic facts, deterministic signals, supplied evidence IDs, and limitations. It receives no credentials, full FHIR resources, unnecessary patient attributes, real PHI, production claims, tools, file access, or external retrieval. The adapter permits at most one call, limits the prompt to 128 KiB, output to 2,048 tokens/64 KiB, and uses a 30-second client timeout.
+Gemini receives only minimized synthetic facts, deterministic signals, supplied evidence identifiers, and explicit limitations. It does not receive credentials, full FHIR resources, unnecessary patient attributes, tools, file access, or external retrieval.
 
-Model output is accepted only if it matches the bounded Pydantic schema and every candidate finding cites supplied evidence. The typed model states are:
+Structured output must pass both Pydantic validation and evidence-reference allowlisting. The supported model states are:
 
 - `success`
 - `configuration_error`
@@ -130,27 +183,55 @@ Model output is accepted only if it matches the bounded Pydantic schema and ever
 - `invalid_output`
 - `invalid_evidence`
 
-All five failure states return HTTP 200 after deterministic success, with empty candidate findings and the complete deterministic report. Source, JSON, supported-shape, or extraction-limit failures return a sanitized HTTP 500 error and make no model call. There is no retry, repair call, or silent fallback model.
+Every model failure state returns HTTP 200 after deterministic analysis succeeds, with the full deterministic report preserved and no candidate findings. Unsafe source, JSON, shape, or extraction failures return a sanitized HTTP 500 response and do not invoke Gemini.
 
-## Tests
+## Verification
 
-Automated tests use injected fake model clients and require no cloud credentials:
+Run the backend test suite from the repository root:
 
 ```bash
-PATH="$PWD/.venv/bin:$PATH" python -m pytest -q tests/backend
+.venv/bin/python -m pytest -q tests/backend
 ```
 
-The focused suite covers extraction and evidence IDs, every rule's signal/no-signal/missing-evidence paths, sample quartile math, model configuration/provider/timeout/schema/citation failures, one-call enforcement, minimized prompts, endpoint responses, OpenAPI exposure, and source-file hash immutability.
+Run the frontend checks:
 
-## Limitations
+```bash
+npm --prefix frontend run check:api
+npm --prefix frontend run lint
+npm --prefix frontend run typecheck
+npm --prefix frontend run test:unit
+npm --prefix frontend run build
+```
 
-- The three files contain a small synthetic sample and do not represent a payer, population, benchmark, or production distribution.
-- Extraction is a narrow, explicit FHIR-shaped subset, not comprehensive FHIR profiling or strict CARIN conformance.
-- Opaque codes and observed amount categories are not terminology, coding, clinical, coverage, payment, or medical-necessity judgments.
-- Gemini output remains variable, candidate-only, and non-authoritative even when schema-valid and evidence-grounded.
-- The unauthenticated local `/docs` interface is not approved for shared or cloud deployment.
-- The project does not process real PHI and makes no HIPAA compliance, healthcare-validity, production-readiness, or autonomous-action claim.
+For the complete frontend pipeline, install the lock-matched Chromium browser once and run:
 
-## Resume-ready summary
+```bash
+npm --prefix frontend exec playwright install chromium
+npm --prefix frontend run verify
+```
 
-Built a local FastAPI/Pydantic research demo that performs bounded extraction from synthetic FHIR R4 Patient, Coverage, and ExplanationOfBenefit JSON; generates five reproducible anomaly signals with stable evidence citations; and safely integrates one structured Vertex AI Gemini summarization call with strict output validation, citation allowlisting, deterministic fallback, and focused automated tests.
+The test suites cover extraction boundaries, stable evidence IDs, every rule path, model failures, one-call enforcement, endpoint contracts, source immutability, safe rendering, response states, keyboard navigation, responsive layouts, and accessibility-critical behavior.
+
+## Project structure
+
+```text
+VeriClaim/
+├── backend/app/          FastAPI service, extraction, rules, and Gemini boundary
+├── contracts/            Authoritative OpenAPI and FHIR interface artifacts
+├── dataset/              Read-only synthetic FHIR R4 sample files
+├── docs/                 Product, architecture, ADR, and feature documentation
+├── frontend/             React and TypeScript dashboard
+│   ├── img/              README and dashboard images
+│   └── src/              UI, API adapter, generated types, and tests
+├── tests/backend/        Backend unit and integration tests
+└── .ai/                  Deterministic project and task configuration
+```
+
+## Scope and limitations
+
+- VeriClaim supports a deliberately narrow FHIR-shaped subset; it is not a comprehensive FHIR validator or a strict CARIN conformance implementation.
+- The included data is synthetic and too small to represent a payer, population, benchmark, or production distribution.
+- Product/service codes remain opaque values. The system does not infer terminology, policy, clinical meaning, medical necessity, or payment correctness.
+- Gemini output is variable, candidate-only, and non-authoritative even after schema and citation validation.
+- The local unauthenticated API and dashboard are not a deployment security model. Shared or production use would require a separately approved architecture.
+- The project does not accept or process real PHI and makes no compliance or production-readiness claim.
