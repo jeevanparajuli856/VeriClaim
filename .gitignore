@@ -46,3 +46,19 @@ supabase/.branches/
 
 # Local worktrees
 .worktrees/
+
+# GitHub project-artifact whitelist
+# Keep all other root-level files and directories local and untracked.
+/*
+!/.gitignore
+!/README.md
+!/requirements*.txt
+!/requirements*.lock
+!/backend/
+!/database/
+!/frontend/
+!/supabase/
+
+# Generated Supabase state remains local inside the retained directory.
+/supabase/.temp/
+/supabase/.branches/
